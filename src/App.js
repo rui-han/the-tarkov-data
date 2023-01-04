@@ -1,15 +1,13 @@
-import React from 'react';
+import React from "react";
 
-import './App.css';
+import "./App.css";
 
-import Nav from './components/Nav';
-import SearchBar from './components/SearchBar';
+import Nav from "./components/Nav";
 
 function App() {
   return (
     <div className="App">
       <Nav />
-      <SearchBar />
     </div>
   );
 }

@@ -1,20 +1,29 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
-import { IconButton, TextField } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search';
+import { Grid, TextField } from "@mui/material";
 
-import SearchResult from './SearchResult';
+import SearchResult from "./SearchResult";
 
 export default function SearchBar() {
   const [searchInput, setSearchInput] = useState("");
 
   return (
-    <div>
-      <TextField placeholder='search for ammunition here' onChange={e => setSearchInput(e.target.value)} />
-      <IconButton>
-        <SearchIcon />
-      </IconButton>
-      <SearchResult searchInput={searchInput} />
-    </div>
-  )
+    <Grid
+      container
+      spacing={0}
+      direction="column"
+      alignItems="center"
+      justify="center"
+    >
+      <Grid item xs={10}>
+        <TextField
+          placeholder="search for ammunition here"
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={4}>
+        <SearchResult searchInput={searchInput} />
+      </Grid>
+    </Grid>
+  );
 }

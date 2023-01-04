@@ -1,31 +1,32 @@
-import React from 'react'
+import { Box, Card, CardContent, Typography } from "@mui/material";
+import React from "react";
 
-import RawAmmunitionData from '../data/ammunition.json'
+import RawAmmunitionData from "../data/ammunition.json";
 
-const AmmunitionData = Object.values(RawAmmunitionData)
+const AmmunitionData = Object.values(RawAmmunitionData);
 
 export default function SearchResult(props) {
-  let searchInput = props.searchInput;
+  let { searchInput } = props;
 
-  let filteredData = AmmunitionData.filter(data => {
-    if (searchInput === '') {
+  let filteredData = AmmunitionData.filter((data) => {
+    if (searchInput === "") {
       return searchInput;
     } else if (data.name.toLowerCase().includes(searchInput.toLowerCase())) {
-      return data.name
+      return data.name;
     }
-  })
+  });
 
   return (
-    <div>
-      {
-        filteredData.map((data, index) => (
-          <div key={index} style={{borderStyle: "dashed"}}>
-            <p>Name: {data.name}</p>
-            <p>Damage: {data.ballistics.damage}</p>
-            <p>Armor Damage: {data.ballistics.armorDamage}</p>
-          </div>
-        ))
-      }
-    </div>
-  )
+    <Box>
+      {filteredData.map((data, index) => (
+        <Card key={index} sx={{ maxWidth: "400px", marginTop: "50px" }}>
+          <CardContent>
+            <Typography>{data.name}</Typography>
+            <Typography>Flesh Damage: {data.ballistics.damage}</Typography>
+            <Typography>Armor Damage: {data.ballistics.armorDamage}</Typography>
+          </CardContent>
+        </Card>
+      ))}
+    </Box>
+  );
 }
