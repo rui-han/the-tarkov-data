@@ -14,9 +14,11 @@ export default function SearchBar() {
       direction="column"
       alignItems="center"
       justify="center"
+      sx={{ marginLeft: "10vw" }}
     >
       <Grid item xs={10}>
         <TextField
+          sx={{ width: "60vw" }}
           placeholder="search for ammunition here"
           onChange={(e) => setSearchInput(e.target.value)}
         />

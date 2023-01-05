@@ -1,7 +1,5 @@
 import React from "react";
-
-import SearchBar from "./SearchBar";
-import SearchResult from "./SearchResult";
+import { Link } from "react-router-dom";
 
 import {
   AppBar,
@@ -17,9 +15,12 @@ import {
   Typography,
 } from "@mui/material";
 
-const drawerWidth = 240;
-
 export default function Nav() {
+  const linkStyle = {
+    color: "inherit",
+    textDecoration: "inherit",
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -36,14 +37,18 @@ export default function Nav() {
         <Divider />
         <List>
           <ListItem>
-            <ListItemButton>
-              <ListItemText>Ammunition</ListItemText>
-            </ListItemButton>
+            <Link to="/" style={linkStyle}>
+              <ListItemButton>
+                <ListItemText>Ammunition</ListItemText>
+              </ListItemButton>
+            </Link>
           </ListItem>
           <ListItem>
-            <ListItemButton>
-              <ListItemText>Quests</ListItemText>
-            </ListItemButton>
+            <Link to="/hideout" style={linkStyle}>
+              <ListItemButton>
+                <ListItemText>Hideout</ListItemText>
+              </ListItemButton>
+            </Link>
           </ListItem>
         </List>
         <Divider />
@@ -55,10 +60,6 @@ export default function Nav() {
           </ListItem>
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar />
-        <SearchBar />
-      </Box>
     </Box>
   );
 }
