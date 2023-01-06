@@ -11,25 +11,28 @@ import {
   ListItemButton,
   ListItemText,
   Drawer,
-  CssBaseline,
   Typography,
 } from "@mui/material";
 
 export default function Nav() {
-  const linkStyle = {
-    color: "inherit",
-    textDecoration: "inherit",
+  const styles = {
+    box: {
+      display: "flex",
+    },
+    appbar: {
+      zIndex: (theme) => theme.zIndex.drawer + 1,
+    },
+    link: {
+      color: "inherit",
+      textDecoration: "inherit",
+    },
   };
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-      >
+    <Box sx={styles.box}>
+      <AppBar position="fixed" sx={styles.appbar}>
         <Toolbar>
-          <Typography variant="h6">The Tarkov Data</Typography>
+          <Typography variant="h5">The Tarkov Data</Typography>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" anchor="left">
@@ -37,14 +40,14 @@ export default function Nav() {
         <Divider />
         <List>
           <ListItem>
-            <Link to="/" style={linkStyle}>
+            <Link to="/" style={styles.link}>
               <ListItemButton>
                 <ListItemText>Ammunition</ListItemText>
               </ListItemButton>
             </Link>
           </ListItem>
           <ListItem>
-            <Link to="/hideout" style={linkStyle}>
+            <Link to="/hideout" style={styles.link}>
               <ListItemButton>
                 <ListItemText>Hideout</ListItemText>
               </ListItemButton>
@@ -55,7 +58,7 @@ export default function Nav() {
         <List>
           <ListItem>
             <ListItemButton>
-              <ListItemText>FAQ</ListItemText>
+              <ListItemText>Github Page</ListItemText>
             </ListItemButton>
           </ListItem>
         </List>
