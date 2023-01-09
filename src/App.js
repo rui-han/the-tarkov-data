@@ -8,6 +8,7 @@ import Nav from "./components/Nav";
 import AmmunitionPage from "./components/pages/AmmunitionPage";
 import HideoutPage from "./components/pages/HideoutPage";
 
+// dark theme with customization
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -27,7 +28,13 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Nav />
-        <Box component="main" sx={{ marginLeft: "7vw", marginTop: "10vh" }}>
+        <Box
+          component="main"
+          sx={{
+            marginLeft: "7vw",
+            marginTop: "10vh",
+          }}
+        >
           <Routes>
             <Route path="/" element={<AmmunitionPage />} />
             <Route path="/hideout" element={<HideoutPage />} />
