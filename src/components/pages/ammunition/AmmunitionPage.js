@@ -1,6 +1,6 @@
 import React from "react";
 
-import SearchBar from "../SearchBar";
+import SearchBar from "./AmmunitionSearchBar";
 
 export default function AmmunitionPage() {
   return (

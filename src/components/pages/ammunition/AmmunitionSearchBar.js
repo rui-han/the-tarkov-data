@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { Grid, TextField } from "@mui/material";
 
-import SearchResult from "./SearchResult";
+import SearchResult from "./AmmunitionSearchResult";
 
 export default function SearchBar() {
   const [searchInput, setSearchInput] = useState("");

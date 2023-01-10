@@ -40,7 +40,7 @@ export default function Nav() {
         <Divider />
         <List>
           <ListItem>
-            <Link to="/" style={styles.link}>
+            <Link to="/ammunition" style={styles.link}>
               <ListItemButton>
                 <ListItemText>Ammunition</ListItemText>
               </ListItemButton>
