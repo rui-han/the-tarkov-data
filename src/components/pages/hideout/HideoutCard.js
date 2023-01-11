@@ -9,14 +9,24 @@ import {
   Box,
 } from "@mui/material";
 
-export default function HideoutCard({ data }) {
+import { useOutletContext, useParams } from "react-router-dom";
+
+export default function HideoutCard() {
+  const { hideoutId } = useParams();
+  const { hideoutData } = useOutletContext();
+
+  const data = hideoutData.filter((data) => data.id === hideoutId)[0];
+
   return (
     <Grid item xs={6} sx={{ margin: "2vh" }}>
       <Card>
         <CardContent>
-          <Typography sx={{ margin: "2vh" }}>{data.name}</Typography>
+          <Typography variant="h4">{data.name}</Typography>
           {data.levels.map((levelData) => (
             <>
+              <Box key={levelData.id} sx={{ marginTop: "3vh" }}>
+                <Typography>Level {levelData.level}</Typography>
+              </Box>
               {levelData.itemRequirements.map((itemData) => (
                 <Box
                   key={itemData.id}
@@ -24,6 +34,7 @@ export default function HideoutCard({ data }) {
                     display: "flex",
                     alignItems: "center",
                     justify: "center",
+                    margin: "1vh",
                   }}
                 >
                   <CardMedia
@@ -36,12 +47,9 @@ export default function HideoutCard({ data }) {
                   </Typography>
                 </Box>
               ))}
-              <Box key={levelData.id}>
-                <Typography>Level {levelData.level}</Typography>
-                <Typography>
-                  Construction Time: {levelData.constructionTime}
-                </Typography>
-              </Box>
+              <Typography>
+                Construction Time: {levelData.constructionTime}
+              </Typography>
             </>
           ))}
         </CardContent>

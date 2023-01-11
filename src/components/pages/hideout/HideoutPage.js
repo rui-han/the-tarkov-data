@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
 
-import HideoutCard from "./HideoutCard";
 import HideoutNav from "./HideoutNav";
 
 // MUI
@@ -47,7 +47,6 @@ export default function HideoutPage() {
       .then((response) => response.json())
       .then((result) => {
         setHideoutData(result.data.hideoutStations);
-        console.log(hideoutData);
       });
   }, []);
 
@@ -62,9 +61,7 @@ export default function HideoutPage() {
       {hideoutData ? (
         <>
           <HideoutNav hideoutData={hideoutData} />
-          {hideoutData.map((data) => (
-            <HideoutCard key={data.id} data={data} />
-          ))}
+          <Outlet context={{ hideoutData }} />
         </>
       ) : (
         <h3>Loading...</h3>
