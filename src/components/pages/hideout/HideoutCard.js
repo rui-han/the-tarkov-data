@@ -23,8 +23,8 @@ export default function HideoutCard() {
         <CardContent>
           <Typography variant="h4">{data.name}</Typography>
           {data.levels.map((levelData) => (
-            <>
-              <Box key={levelData.id} sx={{ marginTop: "3vh" }}>
+            <Box key={levelData.id}>
+              <Box sx={{ marginTop: "3vh" }}>
                 <Typography>Level {levelData.level}</Typography>
               </Box>
               {levelData.itemRequirements.map((itemData) => (
@@ -50,7 +50,7 @@ export default function HideoutCard() {
               <Typography>
                 Construction Time: {levelData.constructionTime}
               </Typography>
-            </>
+            </Box>
           ))}
         </CardContent>
       </Card>

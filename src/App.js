@@ -35,8 +35,8 @@ function App() {
         <Box
           component="main"
           sx={{
-            marginLeft: "15vw",
-            marginTop: "8vh",
+            marginLeft: "12vw",
+            marginTop: "12vh",
           }}
         >
           <Routes>

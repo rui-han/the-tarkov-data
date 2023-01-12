@@ -17,7 +17,7 @@ export default function SearchBar() {
     >
       <Grid item xs={10}>
         <TextField
-          sx={{ width: "70vw" }}
+          sx={{ width: "50vw" }}
           placeholder="search for ammunition here"
           onChange={(e) => setSearchInput(e.target.value)}
         />
