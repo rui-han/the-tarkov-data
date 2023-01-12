@@ -22,6 +22,8 @@ const GET_HIDEOUT_DATA = `{
         item {
           name
           iconLink
+          low24hPrice
+          avg24hPrice
         }
         quantity
       }
