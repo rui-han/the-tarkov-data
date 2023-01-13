@@ -57,7 +57,11 @@ export default function Nav() {
         <Divider />
         <List>
           <ListItem>
-            <ListItemButton>
+            <ListItemButton
+              onClick={() =>
+                window.open("https://github.com/rui-han/the-tarkov-data")
+              }
+            >
               <ListItemText>Github Page</ListItemText>
             </ListItemButton>
           </ListItem>
