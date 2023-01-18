@@ -10,6 +10,7 @@ import Home from "./components/pages/home/Home";
 import AmmunitionPage from "./components/pages/ammunition/AmmunitionPage";
 import HideoutPage from "./components/pages/hideout/HideoutPage";
 import HideoutCard from "./components/pages/hideout/HideoutCard";
+import QuestsPage from "./components/pages/quests/QuestsPage";
 import ErrorPage from "./components/pages/ErrorPage";
 
 // dark theme with customization
@@ -45,6 +46,7 @@ function App() {
             <Route path="/hideout" element={<HideoutPage />}>
               <Route path=":hideoutId" element={<HideoutCard />} />
             </Route>
+            <Route path="/quests" element={<QuestsPage />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </Box>

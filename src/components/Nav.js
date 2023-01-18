@@ -66,6 +66,13 @@ export default function Nav() {
               </ListItemButton>
             </Link>
           </ListItem>
+          <ListItem>
+            <Link to="/quests" style={styles.link}>
+              <ListItemButton>
+                <ListItemText>Quests</ListItemText>
+              </ListItemButton>
+            </Link>
+          </ListItem>
         </List>
         <Divider />
         {/* Github link */}
