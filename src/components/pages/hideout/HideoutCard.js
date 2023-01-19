@@ -11,6 +11,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Table,
 } from "@mui/material";
 
 import { useOutletContext, useParams } from "react-router-dom";
@@ -51,8 +52,8 @@ export default function HideoutCard() {
             <Typography variant="h5" sx={styles.title}>
               LEVEL {levelData.level}
             </Typography>
-            <Typography>
-              {/* Prerequisites (hideout stations) */}
+            {/* Prerequisites (hideout stations) */}
+            <Typography component="div">
               {levelData.stationLevelRequirements
                 ? levelData.stationLevelRequirements.map((preStationData) => (
                     <Box key={preStationData.id} style={styles.requirement}>
@@ -68,8 +69,8 @@ export default function HideoutCard() {
                   ))
                 : null}
             </Typography>
-            <Typography>
-              {/* Prerequisites (traders) */}
+            {/* Prerequisites (traders) */}
+            <Typography component="div">
               {levelData.traderRequirements
                 ? levelData.traderRequirements.map((preTraderData) => (
                     <Box
@@ -89,9 +90,9 @@ export default function HideoutCard() {
                 : null}
             </Typography>
             {/* Items table */}
-            <Typography>
-              {levelData.itemRequirements[0] ? (
-                <TableContainer>
+            {levelData.itemRequirements[0] ? (
+              <TableContainer>
+                <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell align="center"></TableCell>
@@ -131,17 +132,22 @@ export default function HideoutCard() {
                       );
                     })}
                   </TableBody>
-                </TableContainer>
-              ) : (
-                <p>No items required</p>
-              )}
-            </Typography>
+                </Table>
+              </TableContainer>
+            ) : (
+              <p>No items required</p>
+            )}
+
             {/* Construction time */}
             <Typography sx={styles.time}>
               Construction Time:{" "}
-              {new Date(levelData.constructionTime * 1000)
-                .toISOString()
-                .slice(11, 19)}
+              {levelData.constructionTime ? (
+                new Date(levelData.constructionTime * 1000)
+                  .toISOString()
+                  .slice(11, 19)
+              ) : (
+                <span>N/A</span>
+              )}
             </Typography>
           </CardContent>
         </Card>

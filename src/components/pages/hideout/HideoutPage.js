@@ -1,73 +1,60 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Outlet } from "react-router-dom";
+import { useQuery, gql } from "@apollo/client";
 
 import HideoutNav from "./HideoutNav";
 
 // MUI
 import { Grid } from "@mui/material";
 
-const uri = "https://api.tarkov.dev/graphql";
-
-// GraphQL query
-const GET_HIDEOUT_DATA = `{
-  hideoutStations {
-    id
-    name
-    normalizedName
-    levels {
+const GET_HIDEOUT_DATA = gql`
+  query GetHideoutData {
+    hideoutStations {
       id
-      level
-      constructionTime
-      stationLevelRequirements {
+      name
+      normalizedName
+      levels {
         id
-        station {
-          name
-          normalizedName
-        }
         level
-      }
-      traderRequirements {
-        trader {
+        constructionTime
+        stationLevelRequirements {
           id
-          name
-          normalizedName
+          station {
+            name
+            normalizedName
+          }
+          level
         }
-        level
-      }
-      itemRequirements {
-        id
-        item {
-          name
-          iconLink
-          low24hPrice
-          avg24hPrice
+        traderRequirements {
+          trader {
+            id
+            name
+            normalizedName
+          }
+          level
         }
-        quantity
+        itemRequirements {
+          id
+          item {
+            name
+            iconLink
+            low24hPrice
+            avg24hPrice
+          }
+          quantity
+        }
       }
     }
   }
-}`;
+`;
 
 export default function HideoutPage() {
-  const [hideoutData, setHideoutData] = useState();
+  const { data, loading, error } = useQuery(GET_HIDEOUT_DATA);
 
-  // get data from tarkov.dev
-  useEffect(() => {
-    fetch(uri, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        query: GET_HIDEOUT_DATA,
-      }),
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        setHideoutData(result.data.hideoutStations);
-      });
-  }, []);
+  if (loading) return <h3>Loading...</h3>;
+  if (error) return <h3>Error : {error.message}</h3>;
+
+  const hideoutData = data.hideoutStations;
 
   return (
     <Grid
@@ -77,14 +64,8 @@ export default function HideoutPage() {
       alignItems="center"
       justify="center"
     >
-      {hideoutData ? (
-        <>
-          <HideoutNav hideoutData={hideoutData} />
-          <Outlet context={{ hideoutData }} />
-        </>
-      ) : (
-        <h3>Loading...</h3>
-      )}
+      <HideoutNav hideoutData={hideoutData} />
+      <Outlet context={{ hideoutData }} />
     </Grid>
   );
 }
