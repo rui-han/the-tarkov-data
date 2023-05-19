@@ -2,10 +2,12 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 
 // MUI
-import { Box, createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import { createTheme, CssBaseline, Grid, ThemeProvider } from "@mui/material";
 
-// components
-import Nav from "./components/Nav";
+// navigation
+import ResponsiveDrawer from "./components/navigation/ResponsiveDrawer";
+
+// pages
 import Home from "./components/pages/home/Home";
 import AmmunitionPage from "./components/pages/ammunition/AmmunitionPage";
 import HideoutPage from "./components/pages/hideout/HideoutPage";
@@ -30,27 +32,32 @@ const theme = createTheme({
 function App() {
   return (
     <div className="App">
-      <ThemeProvider theme={theme}>
+      {/* 
+        In this Grid container, first row is the appbar navigation fixed on top,
+        first column is the permanent drawer (sidebar navigation, when displayed on large screen) on the left,
+        the remaining space is for main pages (ammunition, hideout, etc.)
+      */}
+      <Grid container sx={{ flexGrow: 1, height: "100vh" }}>
         <CssBaseline />
-        <Nav />
-        <Box
-          component="main"
-          sx={{
-            marginLeft: "12vw",
-            marginTop: "12vh",
-          }}
-        >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/ammunition" element={<AmmunitionPage />} />
-            <Route path="/hideout" element={<HideoutPage />}>
-              <Route path=":hideoutId" element={<HideoutCard />} />
-            </Route>
-            <Route path="/quests" element={<QuestsPage />} />
-            <Route path="*" element={<ErrorPage />} />
-          </Routes>
-        </Box>
-      </ThemeProvider>
+        <ThemeProvider theme={theme}>
+          <ResponsiveDrawer />
+          {/* 
+            main pages content goes here, with a padding-top 64px, which is the height of the AppBar component (fixed top nav)
+            the left {3} is for drawer side nav, the rest {9} of 12 is for the main pages content
+          */}
+          <Grid item xs={9} sx={{ paddingTop: "64px" }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/ammunition" element={<AmmunitionPage />} />
+              <Route path="/hideout" element={<HideoutPage />}>
+                <Route path=":hideoutId" element={<HideoutCard />} />
+              </Route>
+              <Route path="/quests" element={<QuestsPage />} />
+              <Route path="*" element={<ErrorPage />} />
+            </Routes>
+          </Grid>
+        </ThemeProvider>
+      </Grid>
     </div>
   );
 }
