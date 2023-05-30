@@ -5,7 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import { createTheme, CssBaseline, Grid, ThemeProvider } from "@mui/material";
 
 // navigation
-import ResponsiveDrawer from "./components/navigation/ResponsiveDrawer";
+import Nav from "./components/navigation/Nav";
 
 // pages
 import Home from "./components/pages/home/Home";
@@ -40,7 +40,7 @@ function App() {
       <Grid container sx={{ flexGrow: 1, height: "100vh" }}>
         <CssBaseline />
         <ThemeProvider theme={theme}>
-          <ResponsiveDrawer />
+          <Nav />
           {/* 
             main pages content goes here, with a padding-top 64px, which is the height of the AppBar component (fixed top nav)
             the left {3} is for drawer side nav, the rest {9} of 12 is for the main pages content
