@@ -31,34 +31,66 @@ const theme = createTheme({
 
 function App() {
   return (
-    <div className="App">
-      {/* 
-        In this Grid container, first row is the appbar navigation fixed on top,
-        first column is the permanent drawer (sidebar navigation, when displayed on large screen) on the left,
-        the remaining space is for main pages (ammunition, hideout, etc.)
-      */}
-      <Grid container sx={{ flexGrow: 1, height: "100vh" }}>
-        <CssBaseline />
-        <ThemeProvider theme={theme}>
-          <Nav />
-          {/* 
-            main pages content goes here, with a padding-top 64px, which is the height of the AppBar component (fixed top nav)
-            the left {3} is for drawer side nav, the rest {9} of 12 is for the main pages content
-          */}
-          <Grid item xs={9} sx={{ paddingTop: "64px" }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/ammunition" element={<AmmunitionPage />} />
-              <Route path="/hideout" element={<HideoutPage />}>
-                <Route path=":hideoutId" element={<HideoutCard />} />
-              </Route>
-              <Route path="/quests" element={<QuestsPage />} />
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-          </Grid>
-        </ThemeProvider>
-      </Grid>
-    </div>
+    <Grid className="App" container sx={{ flexGrow: 1, height: "100vh" }}>
+      <CssBaseline />
+      <ThemeProvider theme={theme}>
+        <Nav />
+        {/* 
+          main pages content goes here, 
+          with a margin-top 64px, which is the height of the fixed top nav;
+        */}
+        <Grid
+          item
+          xs={12}
+          sx={{ mt: "64px", pt: "5vh", height: "100%", ml: { sm: "240px" } }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/ammunition"
+              element={
+                <Grid container justifyContent="center">
+                  <AmmunitionPage />
+                </Grid>
+              }
+            />
+            <Route
+              path="/hideout"
+              element={
+                <Grid container justifyContent="center">
+                  <HideoutPage />
+                </Grid>
+              }
+            >
+              <Route
+                path=":hideoutId"
+                element={
+                  <Grid container justifyContent="center">
+                    <HideoutCard />
+                  </Grid>
+                }
+              />
+            </Route>
+            <Route
+              path="/quests"
+              element={
+                <Grid container justifyContent="center">
+                  <QuestsPage />
+                </Grid>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <Grid container justifyContent="center">
+                  <ErrorPage />
+                </Grid>
+              }
+            />
+          </Routes>
+        </Grid>
+      </ThemeProvider>
+    </Grid>
   );
 }
 

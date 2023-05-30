@@ -10,7 +10,6 @@ import {
   CssBaseline,
   Typography,
   IconButton,
-  Grid,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
@@ -28,43 +27,36 @@ export default function Nav({ window }) {
   };
 
   return (
-    <Box>
+    <>
       <CssBaseline />
       {/* the horizontal nav */}
-      {/* 
-        Grid item that is children to Grid container in App.js,
-        takes up the first row
-      */}
-      <Grid item xs={12}>
-        <AppBar
-          position="fixed"
-          sx={{
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
-            ml: { sm: `${drawerWidth}px` },
-            height: `${appbarHeight}px`,
-          }}
-        >
-          <Toolbar sx={{ padding: 0 }}>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ ml: 2, mr: 2, display: { sm: "none" } }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              sx={{
-                fontWeight: "bold",
-                fontSize: "30px",
-              }}
-            >
-              The Tarkov Data
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      </Grid>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          height: `${appbarHeight}px`,
+        }}
+      >
+        <Toolbar sx={{ padding: 0 }}>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ ml: 2, mr: 2, display: { sm: "none" } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography
+            sx={{
+              fontWeight: "bold",
+              fontSize: 30,
+            }}
+          >
+            The Tarkov Data
+          </Typography>
+        </Toolbar>
+      </AppBar>
       {/* the responsive drawer */}
       <Box
         component="nav"
@@ -86,27 +78,21 @@ export default function Nav({ window }) {
           {drawer}
         </Drawer>
         {/* for larger screens, permanent */}
-        {/* 
-          Grid item that is also children to Grid container in App.js,
-          takes up the first column
-        */}
-        <Grid item xs={3}>
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawerWidth,
-              },
-              flexShrink: 0,
-            }}
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Grid>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+            flexShrink: 0,
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
       </Box>
-    </Box>
+    </>
   );
 }

@@ -13,7 +13,7 @@ const styles = {
 
 export default function HideoutNav({ hideoutData }) {
   return (
-    <Grid item xs={12} sx={{ margin: "1vh" }}>
+    <>
       <Breadcrumbs maxItems={30} sx={{ maxWidth: "60vw" }}>
         {hideoutData.map((data) => (
           <Link key={data.id} to={data.id} style={styles.inherit}>
@@ -27,6 +27,6 @@ export default function HideoutNav({ hideoutData }) {
           </Link>
         ))}
       </Breadcrumbs>
-    </Grid>
+    </>
   );
 }

@@ -17,7 +17,7 @@ export default function SearchResult(props) {
   });
 
   return (
-    <Box>
+    <>
       {filteredData.map((data, index) => (
         <Card key={index} sx={{ maxWidth: "400px", marginTop: "50px" }}>
           <CardContent>
@@ -27,6 +27,6 @@ export default function SearchResult(props) {
           </CardContent>
         </Card>
       ))}
-    </Box>
+    </>
   );
 }

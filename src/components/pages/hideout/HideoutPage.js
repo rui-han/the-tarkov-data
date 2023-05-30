@@ -57,15 +57,9 @@ export default function HideoutPage() {
   const hideoutData = data.hideoutStations;
 
   return (
-    <Grid
-      container
-      spacing={0}
-      direction="column"
-      alignItems="center"
-      justify="center"
-    >
+    <>
       <HideoutNav hideoutData={hideoutData} />
       <Outlet context={{ hideoutData }} />
-    </Grid>
+    </>
   );
 }
