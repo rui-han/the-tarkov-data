@@ -1,20 +1,22 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { Grid, Breadcrumbs, Tooltip } from "@mui/material";
+import { Breadcrumbs, Tooltip, Box, Divider } from "@mui/material";
+
+import HideoutFlowchart from "../../../images/hideout-flowchart.jpeg";
 
 const styles = {
   inherit: {
     color: "inherit",
     textDecoration: "inherit",
   },
-  icon: { height: "60px", width: "60px" },
+  icon: { height: "64px", width: "64px" },
 };
 
 export default function HideoutNav({ hideoutData }) {
   return (
     <>
-      <Breadcrumbs maxItems={30} sx={{ maxWidth: "60vw" }}>
+      <Breadcrumbs maxItems={30} sx={{ width: "75%" }}>
         {hideoutData.map((data) => (
           <Link key={data.id} to={data.id} style={styles.inherit}>
             <Tooltip title={data.name} arrow>
@@ -27,6 +29,10 @@ export default function HideoutNav({ hideoutData }) {
           </Link>
         ))}
       </Breadcrumbs>
+      <Box width="75%" borderBottom={1} mt={2} mb={2}>
+        <Divider />
+      </Box>
+      <img src={HideoutFlowchart} alt="" style={{ width: "95%" }} />
     </>
   );
 }

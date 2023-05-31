@@ -24,32 +24,45 @@ export default function HideoutCard() {
 
   const styles = {
     grid: { marginBottom: "2vh", textAlign: "center" },
-    card: { maxWidth: "70vw" },
-    title: { margin: "2vh" },
+    card: { width: "100%" },
+    title: {
+      margin: "2vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cardTitle: {
+      margin: "2vh",
+    },
     requirement: {
       display: "inline-flex",
       justifyContent: "center",
       alignItems: "center",
     },
     requirementIcon: {
-      height: "2vw",
-      width: "2vw",
+      height: "48px",
+      width: "48px",
       margin: "0.5vw",
     },
     time: { margin: "3vh" },
   };
 
   return (
-    <Grid item xs={6} sx={styles.grid}>
+    <Grid item xs={9} sx={styles.grid}>
       <Box>
         <Typography variant="h3" sx={styles.title}>
+          <img
+            src={`${process.env.PUBLIC_URL}/images/hideout-icons/${data.normalizedName}-icon.png`}
+            alt={data.name}
+            style={{ height: "60px", marginRight: "2vw" }}
+          />
           {data.name}
         </Typography>
       </Box>
       {data.levels.map((levelData) => (
         <Card key={levelData.id} sx={styles.card}>
           <CardContent>
-            <Typography variant="h5" sx={styles.title}>
+            <Typography variant="h4" sx={styles.cardTitle}>
               LEVEL {levelData.level}
             </Typography>
             {/* Prerequisites (hideout stations) */}
@@ -91,9 +104,9 @@ export default function HideoutCard() {
             </Typography>
             {/* Items table */}
             {levelData.itemRequirements[0] ? (
-              <TableContainer>
+              <TableContainer sx={{ border: "0.5px solid #9a8866" }}>
                 <Table>
-                  <TableHead>
+                  <TableHead sx={{ backgroundColor: "#2d2d2f" }}>
                     <TableRow>
                       <TableCell align="center"></TableCell>
                       <TableCell align="center">Item</TableCell>

@@ -4,9 +4,6 @@ import { useQuery, gql } from "@apollo/client";
 
 import HideoutNav from "./HideoutNav";
 
-// MUI
-import { Grid } from "@mui/material";
-
 const GET_HIDEOUT_DATA = gql`
   query GetHideoutData {
     hideoutStations {

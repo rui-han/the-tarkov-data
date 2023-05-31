@@ -14,7 +14,6 @@ import Icon from "@mdi/react";
 // icons
 import BSG from "../../images/BSG-logo.png";
 import Nikita from "../../images/nikita.jpeg";
-import EFT from "../../images/EFT-logo.png";
 import {
   mdiAmmunition,
   mdiHome,
@@ -31,16 +30,6 @@ const drawerItems = [
 
 const drawer = (
   <>
-    {/* logo, which redirects to home page onclick */}
-    <Link
-      to="/"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <img src={EFT} alt="The Tarkov Data" style={{ width: "90%" }} />
-    </Link>
     {/* main pages link */}
     <List>
       {drawerItems.map((item) => (

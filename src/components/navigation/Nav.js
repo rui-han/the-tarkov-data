@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import drawer from "./ResponsiveDrawer";
+import EFT from "../../images/EFT-logo.png";
 
 // MUI
 import {
@@ -32,25 +34,40 @@ export default function Nav({ window }) {
       {/* the horizontal nav */}
       <AppBar
         position="fixed"
+        color="secondary"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          height: `${appbarHeight}px`,
+          width: "100%",
+          height: appbarHeight,
         }}
       >
-        <Toolbar sx={{ padding: 0 }}>
+        <Toolbar disableGutters={true}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ ml: 2, mr: 2, display: { sm: "none" } }}
+            sx={{ ml: 1, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
+          {/* logo, which redirects to home page onclick */}
+          <Box
+            sx={{
+              width: drawerWidth,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Link to="/">
+              <img src={EFT} alt="The Tarkov Data" style={{ height: "64px" }} />
+            </Link>
+          </Box>
           <Typography
             sx={{
               fontWeight: "bold",
               fontSize: 30,
+              display: "flex",
+              justifyContent: "center",
             }}
           >
             The Tarkov Data
@@ -83,8 +100,11 @@ export default function Nav({ window }) {
           sx={{
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
+              pt: "64px",
               boxSizing: "border-box",
               width: drawerWidth,
+              backgroundColor: "#2d2d2f",
+              zIndex: (theme) => theme.zIndex.appBar - 1,
             },
             flexShrink: 0,
           }}

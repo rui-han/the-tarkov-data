@@ -19,9 +19,8 @@ import ErrorPage from "./components/pages/ErrorPage";
 const theme = createTheme({
   palette: {
     mode: "dark",
-    primary: { main: "#2d2df" },
     background: {
-      main: "#2d2df",
+      default: "#2D2D2F",
     },
     text: {
       primary: "#9a8866",
@@ -31,66 +30,68 @@ const theme = createTheme({
 
 function App() {
   return (
-    <Grid className="App" container sx={{ flexGrow: 1, height: "100vh" }}>
-      <CssBaseline />
+    <div className="App">
       <ThemeProvider theme={theme}>
-        <Nav />
-        {/* 
+        <Grid container sx={{ flexGrow: 1, height: "100vh" }}>
+          <CssBaseline />
+          <Nav />
+          {/* 
           main pages content goes here, 
           with a margin-top 64px, which is the height of the fixed top nav;
         */}
-        <Grid
-          item
-          xs={12}
-          sx={{ mt: "64px", pt: "5vh", height: "100%", ml: { sm: "240px" } }}
-        >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/ammunition"
-              element={
-                <Grid container justifyContent="center">
-                  <AmmunitionPage />
-                </Grid>
-              }
-            />
-            <Route
-              path="/hideout"
-              element={
-                <Grid container justifyContent="center">
-                  <HideoutPage />
-                </Grid>
-              }
-            >
+          <Grid
+            item
+            xs={12}
+            sx={{ mt: "64px", pt: "5vh", height: "100%", ml: { sm: "240px" } }}
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
               <Route
-                path=":hideoutId"
+                path="/ammunition"
                 element={
                   <Grid container justifyContent="center">
-                    <HideoutCard />
+                    <AmmunitionPage />
                   </Grid>
                 }
               />
-            </Route>
-            <Route
-              path="/quests"
-              element={
-                <Grid container justifyContent="center">
-                  <QuestsPage />
-                </Grid>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <Grid container justifyContent="center">
-                  <ErrorPage />
-                </Grid>
-              }
-            />
-          </Routes>
+              <Route
+                path="/hideout"
+                element={
+                  <Grid container justifyContent="center">
+                    <HideoutPage />
+                  </Grid>
+                }
+              >
+                <Route
+                  path=":hideoutId"
+                  element={
+                    <Grid container justifyContent="center">
+                      <HideoutCard />
+                    </Grid>
+                  }
+                />
+              </Route>
+              <Route
+                path="/quests"
+                element={
+                  <Grid container justifyContent="center">
+                    <QuestsPage />
+                  </Grid>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <Grid container justifyContent="center">
+                    <ErrorPage />
+                  </Grid>
+                }
+              />
+            </Routes>
+          </Grid>
         </Grid>
       </ThemeProvider>
-    </Grid>
+    </div>
   );
 }
 
