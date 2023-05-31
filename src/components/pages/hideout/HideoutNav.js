@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { Breadcrumbs, Tooltip, Box, Divider } from "@mui/material";
+import { Breadcrumbs, Tooltip } from "@mui/material";
 
 import HideoutFlowchart from "../../../images/hideout-flowchart.jpeg";
 
@@ -29,10 +29,11 @@ export default function HideoutNav({ hideoutData }) {
           </Link>
         ))}
       </Breadcrumbs>
-      <Box width="75%" borderBottom={1} mt={2} mb={2}>
-        <Divider />
-      </Box>
-      <img src={HideoutFlowchart} alt="" style={{ width: "95%" }} />
+      <img
+        src={HideoutFlowchart}
+        alt=""
+        style={{ width: "95%", margin: "15px" }}
+      />
     </>
   );
 }
