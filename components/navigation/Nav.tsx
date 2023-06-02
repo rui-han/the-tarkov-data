@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import drawer from "./ResponsiveDrawer";
-import EFT from "../../images/EFT-logo.png";
 
 // MUI
 import {
@@ -14,15 +16,16 @@ import {
   IconButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import EFT from "../../public/logos/EFT-logo.png";
 
 const drawerWidth = 240;
 const appbarHeight = 64;
 
-export default function Nav({ window }) {
+export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const container =
-    window !== undefined ? () => window().document.body : undefined;
+    window !== undefined ? () => window.document.body : undefined;
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -58,8 +61,12 @@ export default function Nav({ window }) {
               justifyContent: "center",
             }}
           >
-            <Link to="/">
-              <img src={EFT} alt="The Tarkov Data" style={{ height: "64px" }} />
+            <Link href="/">
+              <Image
+                src={EFT}
+                alt="The Tarkov Data"
+                style={{ height: "64px", width: "auto" }}
+              />
             </Link>
           </Box>
           <Typography

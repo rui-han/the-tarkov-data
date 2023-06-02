@@ -1,5 +1,7 @@
-import React from "react";
-import { Link } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
 
 import {
   List,
@@ -10,10 +12,8 @@ import {
   Divider,
 } from "@mui/material";
 import Icon from "@mdi/react";
-
-// icons
-import BSG from "../../images/BSG-logo.png";
-import Nikita from "../../images/nikita.jpeg";
+import BSG from "../../public/logos/BSG-logo.png";
+import Nikita from "../../public/images/nikita.jpeg";
 import {
   mdiAmmunition,
   mdiHome,
@@ -35,8 +35,7 @@ const drawer = (
       {drawerItems.map((item) => (
         <Link
           key={item.to}
-          to={item.to}
-          text={item.text}
+          href={item.to}
           style={{ color: "inherit", textDecoration: "inherit", padding: 0 }}
         >
           <ListItem>
@@ -74,7 +73,11 @@ const drawer = (
           onClick={() => window.open("https://twitter.com/nikgeneburn")}
         >
           <ListItemIcon>
-            <img src={Nikita} style={{ height: "30px" }} alt="Nikita Buyanov" />
+            <Image
+              src={Nikita}
+              style={{ height: "30px", width: "30px" }}
+              alt="Nikita Buyanov"
+            />
           </ListItemIcon>
           <ListItemText>Nikita</ListItemText>
         </ListItemButton>
@@ -85,9 +88,9 @@ const drawer = (
         >
           <ListItemIcon>
             {" "}
-            <img
+            <Image
               src={BSG}
-              style={{ height: "30px" }}
+              style={{ height: "30px", width: "30px" }}
               alt="Battle State Games"
             />
           </ListItemIcon>
