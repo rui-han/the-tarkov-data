@@ -23,8 +23,6 @@ export default function TopLevelLayout({
             mt: "64px",
             height: "100%",
             ml: { sm: "240px" },
-            display: "flex",
-            justifyContent: "center",
           }}
         >
           {children}

@@ -1,4 +1,5 @@
 import TopLevelLayout from "@/components/layout/TopLevelLayout";
+import { ApolloWrapper } from "@/graphql/lib/apollo-wrapper";
 
 export const metadata = {
   title: "The Tarkov Data",
@@ -13,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TopLevelLayout children={children} />
+        <ApolloWrapper>
+          <TopLevelLayout children={children} />
+        </ApolloWrapper>
       </body>
     </html>
   );
