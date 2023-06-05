@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import drawer from "./ResponsiveDrawer";
@@ -24,8 +24,11 @@ const appbarHeight = 64;
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const container =
-    window !== undefined ? () => window.document.body : undefined;
+  // const container = window !== undefined ? () => window.document.body : undefined;
+  let container;
+  useEffect(() => {
+    container = document.body;
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
