@@ -4,11 +4,13 @@ import { Breadcrumbs, Tooltip } from "@mui/material";
 
 import HideoutFlowchart from "../../public/images/hideout-flowchart.jpeg";
 
-export default function HideoutNav({ hideoutData }) {
+import { FetchedData } from "@/types/hideout";
+
+export default function HideoutNav({ hideoutStations }: FetchedData) {
   return (
     <>
       <Breadcrumbs maxItems={30} sx={{ width: "75%" }}>
-        {hideoutData.map((data) => (
+        {hideoutStations.map((data) => (
           <Link
             key={data.id}
             href={data.id}
