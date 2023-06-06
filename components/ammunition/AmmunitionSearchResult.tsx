@@ -2,9 +2,11 @@ import { Card, CardContent, Typography } from "@mui/material";
 
 import RawAmmunitionData from "../../data/ammunition.json";
 
+import { SearchInput } from "@/types/ammunition";
+
 const AmmunitionData = Object.values(RawAmmunitionData);
 
-export default function SearchResult({ searchInput }) {
+export default function SearchResult({ searchInput }: SearchInput) {
   let filteredData = AmmunitionData.filter((data) => {
     if (searchInput === "") {
       return searchInput;
