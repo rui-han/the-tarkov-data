@@ -1,9 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, Tooltip } from "@mui/material";
-
-import HideoutFlowchart from "../../public/images/hideout-flowchart.jpeg";
-
 import { FetchedData } from "@/types/hideout";
 
 export default function HideoutNav({ hideoutStations }: FetchedData) {
@@ -27,11 +24,6 @@ export default function HideoutNav({ hideoutStations }: FetchedData) {
           </Link>
         ))}
       </Breadcrumbs>
-      <Image
-        src={HideoutFlowchart}
-        alt=""
-        style={{ width: "95%", height: "auto" }}
-      />
     </>
   );
 }
