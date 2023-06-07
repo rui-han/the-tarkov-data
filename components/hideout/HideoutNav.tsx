@@ -13,7 +13,7 @@ export default function HideoutNav({ hideoutStations }: FetchedData) {
         {hideoutStations.map((data) => (
           <Link
             key={data.id}
-            href={data.id}
+            href={`/hideout/${data.id}`}
             style={{ color: "inherit", textDecoration: "inherit" }}
           >
             <Tooltip title={data.name} arrow>

@@ -52,3 +52,10 @@ interface Item {
   low24hPrice: number | null;
   avg24hPrice: number;
 }
+
+export interface HideoutParams {
+  params: {
+    hideoutId: string;
+  };
+  searchParams: {};
+}
