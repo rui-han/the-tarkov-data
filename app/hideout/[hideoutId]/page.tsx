@@ -19,7 +19,6 @@ import {
 } from "@mui/material";
 
 const styles = {
-  grid: { marginBottom: "2vh", textAlign: "center" },
   card: { width: "100%" },
   title: {
     margin: "2vh",
@@ -50,7 +49,7 @@ export default function HideoutCard({ params }: HideoutParams) {
   )[0];
 
   return (
-    <Grid item xs={9} sx={styles.grid}>
+    <Grid sx={{ textAlign: "center", width: "85%" }}>
       <Box>
         <Typography variant="h3" sx={styles.title}>
           <img
