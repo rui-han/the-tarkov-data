@@ -1,5 +1,23 @@
 import { gql } from "@apollo/client";
 
+export const GET_SERVER_STATUS = gql`
+  query GET_SERVER_STATUS {
+    status {
+      generalStatus {
+        name
+        message
+        status
+      }
+      messages {
+        time
+        type
+        content
+        solveTime
+      }
+    }
+  }
+`;
+
 export const GET_HIDEOUT_DATA = gql`
   query GetHideoutData {
     hideoutStations {

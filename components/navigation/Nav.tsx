@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+// components
 import drawer from "./ResponsiveDrawer";
+import ServerStatus from "./ServerStatus";
 
 // MUI
 import {
@@ -46,7 +49,10 @@ export default function Nav() {
           height: appbarHeight,
         }}
       >
-        <Toolbar disableGutters={true}>
+        <Toolbar
+          disableGutters={true}
+          sx={{ display: "flex", justifyContent: "space-between" }}
+        >
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -80,8 +86,9 @@ export default function Nav() {
               justifyContent: "center",
             }}
           >
-            The Tarkov Data
+            THE TARKOV DATA
           </Typography>
+          <ServerStatus />
         </Toolbar>
       </AppBar>
       {/* the responsive drawer */}
