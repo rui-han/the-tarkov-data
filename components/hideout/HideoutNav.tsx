@@ -6,7 +6,7 @@ import { FetchedData } from "@/types/hideout";
 export default function HideoutNav({ hideoutStations }: FetchedData) {
   return (
     <>
-      <Breadcrumbs maxItems={30} sx={{ width: "75%" }}>
+      <Breadcrumbs maxItems={30} sx={{ width: "75%", marginTop: "3vh" }}>
         {hideoutStations.map((data) => (
           <Link
             key={data.id}

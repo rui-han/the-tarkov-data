@@ -24,12 +24,7 @@ export default function TopLevelLayout({
             ml: { sm: "240px" }, // for small screen devices, margin left is 0
           }}
         >
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            mt="5vh"
-          >
+          <Box display="flex" flexDirection="column" alignItems="center">
             {children}
           </Box>
         </Grid>
