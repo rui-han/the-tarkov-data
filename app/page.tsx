@@ -2,7 +2,6 @@
 
 import { Grid, Box } from "@mui/material";
 import { TwitterTimelineEmbed } from "react-twitter-embed";
-import YouTube from "react-youtube";
 
 export default function Home() {
   return (
@@ -20,7 +19,7 @@ export default function Home() {
             screenName="bstategames"
             theme="dark"
             tweetLimit={5}
-            options={{ height: "700" }}
+            options={{ height: "600" }}
           />
         </Grid>
         <Grid item xs={5}>
@@ -29,25 +28,32 @@ export default function Home() {
             screenName="LVNDMARK_tv"
             theme="dark"
             tweetLimit={5}
-            options={{ height: "700" }}
+            options={{ height: "600" }}
           />
         </Grid>
-        {/* <div style={{ width: "100%" }}>
-          <YouTube
-            videoId="q9OIT7W24V8"
-            opts={{
-              width: "100%",
-              height: "0",
-              padding: "56.25% 0 0 0", // Responsive aspect ratio (16:9)
-              position: "relative",
-            }}
-          />
-        </div> */}
-        <Grid item xs={5}>
-          <YouTube videoId="q9OIT7W24V8" />
+        <Grid item xs={12}>
+          <Box display="flex" justifyContent="center" width="100%">
+            <iframe
+              style={{ width: "90%", aspectRatio: "16/9" }}
+              src="https://www.youtube.com/embed/_cdGKiXsQ8o"
+              title="Escape from Tarkov Beta - 0.13 Patch trailer (feat. the Streets of Tarkov)"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </Box>
         </Grid>
-        <Grid item xs={5}>
-          <YouTube videoId="_cdGKiXsQ8o" />
+        <Grid item xs={12}>
+          <Box display="flex" justifyContent="center" width="100%">
+            <iframe
+              style={{ width: "90%", aspectRatio: "16/9" }}
+              src="https://www.youtube.com/embed/q9OIT7W24V8"
+              title="Escape from Tarkov. Raid. Full film."
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </Box>
         </Grid>
       </Grid>
     </>
