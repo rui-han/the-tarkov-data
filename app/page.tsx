@@ -1,6 +1,8 @@
 "use client";
 
-import { Grid } from "@mui/material";
+import { Grid, Box } from "@mui/material";
+import { TwitterTimelineEmbed } from "react-twitter-embed";
+import YouTube from "react-youtube";
 
 export default function Home() {
   return (
@@ -13,46 +15,39 @@ export default function Home() {
         justifyContent="center"
       >
         <Grid item xs={5}>
-          <a
-            className="twitter-timeline"
-            data-lang="en"
-            data-height="700"
-            data-theme="dark"
-            href="https://twitter.com/bstategames?ref_src=twsrc%5Etfw"
-          >
-            Tweets by bstategames
-          </a>
-          <script
-            async
-            src="https://platform.twitter.com/widgets.js"
-            charSet="utf-8"
-          ></script>
+          <TwitterTimelineEmbed
+            sourceType="profile"
+            screenName="bstategames"
+            theme="dark"
+            tweetLimit={5}
+            options={{ height: "700" }}
+          />
         </Grid>
         <Grid item xs={5}>
-          <a
-            className="twitter-timeline"
-            data-lang="en"
-            data-height="700"
-            data-theme="dark"
-            href="https://twitter.com/NoiceGuy_?ref_src=twsrc%5Etfw"
-          >
-            Tweets by NoiceGuy_
-          </a>
-          <script
-            async
-            src="https://platform.twitter.com/widgets.js"
-            charSet="utf-8"
-          ></script>
+          <TwitterTimelineEmbed
+            sourceType="profile"
+            screenName="LVNDMARK_tv"
+            theme="dark"
+            tweetLimit={5}
+            options={{ height: "700" }}
+          />
         </Grid>
-        <Grid item>
-          <iframe
-            style={{ width: "80vw", height: "80vh" }}
-            src="https://www.youtube.com/embed/q9OIT7W24V8"
-            title="Escape from Tarkov. Raid. Full film."
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          ></iframe>
+        {/* <div style={{ width: "100%" }}>
+          <YouTube
+            videoId="q9OIT7W24V8"
+            opts={{
+              width: "100%",
+              height: "0",
+              padding: "56.25% 0 0 0", // Responsive aspect ratio (16:9)
+              position: "relative",
+            }}
+          />
+        </div> */}
+        <Grid item xs={5}>
+          <YouTube videoId="q9OIT7W24V8" />
+        </Grid>
+        <Grid item xs={5}>
+          <YouTube videoId="_cdGKiXsQ8o" />
         </Grid>
       </Grid>
     </>
