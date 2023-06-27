@@ -19,7 +19,7 @@ export const GET_SERVER_STATUS = gql`
 `;
 
 export const GET_HIDEOUT_DATA = gql`
-  query GetHideoutData {
+  query GET_HIDEOUT_DATA {
     hideoutStations {
       id
       name
@@ -55,6 +55,22 @@ export const GET_HIDEOUT_DATA = gql`
           quantity
         }
       }
+    }
+  }
+`;
+
+export const GET_AMMO_DATA = gql`
+  query GET_AMMO_DATA {
+    ammo {
+      item {
+        id
+        name
+      }
+      damage
+      penetrationPower
+      armorDamage
+      accuracyModifier
+      recoilModifier
     }
   }
 `;
