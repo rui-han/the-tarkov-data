@@ -62,6 +62,7 @@ export const GET_HIDEOUT_DATA = gql`
 export const GET_AMMO_DATA = gql`
   query GET_AMMO_DATA {
     ammo {
+      caliber
       item {
         id
         name

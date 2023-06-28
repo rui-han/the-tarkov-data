@@ -3,6 +3,7 @@ export interface FetchedData {
 }
 
 interface Ammo {
+  caliber: string;
   item: Item;
   damage: number;
   penetrationPower: number;
