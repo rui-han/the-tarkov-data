@@ -1,7 +1,6 @@
 "use client";
 
 import { Grid, Box } from "@mui/material";
-import { TwitterTimelineEmbed } from "react-twitter-embed";
 
 export default function Home() {
   return (
@@ -13,24 +12,6 @@ export default function Home() {
         display="flex"
         justifyContent="center"
       >
-        <Grid item xs={5}>
-          <TwitterTimelineEmbed
-            sourceType="profile"
-            screenName="bstategames"
-            theme="dark"
-            tweetLimit={5}
-            options={{ height: "600" }}
-          />
-        </Grid>
-        <Grid item xs={5}>
-          <TwitterTimelineEmbed
-            sourceType="profile"
-            screenName="LVNDMARK_tv"
-            theme="dark"
-            tweetLimit={5}
-            options={{ height: "600" }}
-          />
-        </Grid>
         <Grid item xs={12}>
           <Box display="flex" justifyContent="center" width="100%">
             <iframe
