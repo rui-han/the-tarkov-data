@@ -43,7 +43,6 @@ export default function AmmoTable({
     <TableContainer
       sx={{
         width: "90%",
-        maxHeight: "80vh",
         m: "3vh",
       }}
     >
