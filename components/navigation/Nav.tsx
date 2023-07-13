@@ -6,7 +6,10 @@ import Image from "next/image";
 
 // components
 import drawer from "./ResponsiveDrawer";
-import ServerStatus from "./ServerStatus";
+
+import LoginButton from "../authentication/LoginButton";
+import LogoutButton from "../authentication/LogoutButton";
+import UserProfile from "../authentication/UserProfile";
 
 // MUI
 import {
@@ -20,6 +23,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import EFT from "../../public/logos/EFT-logo.png";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const drawerWidth = 240;
 const appbarHeight = 64;
@@ -37,6 +41,8 @@ export default function Nav() {
     setMobileOpen(!mobileOpen);
   };
 
+  const { isAuthenticated } = useAuth0();
+
   return (
     <>
       <CssBaseline />
@@ -49,10 +55,7 @@ export default function Nav() {
           height: appbarHeight,
         }}
       >
-        <Toolbar
-          disableGutters={true}
-          sx={{ display: "flex", justifyContent: "space-between" }}
-        >
+        <Toolbar disableGutters={true}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -84,11 +87,25 @@ export default function Nav() {
               fontSize: 30,
               display: "flex",
               justifyContent: "center",
+              flexGrow: 1,
             }}
           >
             THE TARKOV DATA
           </Typography>
-          <ServerStatus />
+          <Box sx={{ mr: "1vw", display: "flex", alignItems: "center" }}>
+            {isAuthenticated ? (
+              <>
+                <Box>
+                  <UserProfile />
+                </Box>
+                <Box>
+                  <LogoutButton />
+                </Box>
+              </>
+            ) : (
+              <LoginButton />
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
       {/* the responsive drawer */}

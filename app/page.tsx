@@ -5,7 +5,7 @@ import { Grid, Box } from "@mui/material";
 export default function Home() {
   return (
     <>
-      <Grid
+      {/* <Grid
         container
         mt="1vh"
         spacing={4}
@@ -36,7 +36,7 @@ export default function Home() {
             />
           </Box>
         </Grid>
-      </Grid>
+      </Grid> */}
     </>
   );
 }
