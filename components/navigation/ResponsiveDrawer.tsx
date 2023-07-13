@@ -20,6 +20,7 @@ import {
   mdiTooltipCheckOutline,
   mdiGithub,
 } from "@mdi/js";
+import ServerStatus from "./ServerStatus";
 
 // the sidebar drawer
 const drawerItems = [
@@ -96,6 +97,12 @@ const drawer = (
           </ListItemIcon>
           <ListItemText>BSG</ListItemText>
         </ListItemButton>
+      </ListItem>
+    </List>
+    {/* server status */}
+    <List>
+      <ListItem>
+        <ServerStatus />
       </ListItem>
     </List>
   </>
