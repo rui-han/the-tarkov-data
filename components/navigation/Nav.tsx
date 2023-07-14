@@ -6,10 +6,8 @@ import Image from "next/image";
 
 // components
 import drawer from "./ResponsiveDrawer";
-
-import LoginButton from "../authentication/LoginButton";
-import LogoutButton from "../authentication/LogoutButton";
-import UserProfile from "../authentication/UserProfile";
+import LoginButton from "../users/LoginButton";
+import UserMenu from "../users/UserMenu";
 
 // MUI
 import {
@@ -92,19 +90,16 @@ export default function Nav() {
           >
             THE TARKOV DATA
           </Typography>
-          <Box sx={{ mr: "1vw", display: "flex", alignItems: "center" }}>
-            {isAuthenticated ? (
-              <>
-                <Box>
-                  <UserProfile />
-                </Box>
-                <Box>
-                  <LogoutButton />
-                </Box>
-              </>
-            ) : (
-              <LoginButton />
-            )}
+          {/* signed in or not? */}
+          <Box
+            sx={{
+              mr: "1vw",
+              display: "flex",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            {isAuthenticated ? <UserMenu /> : <LoginButton />}
           </Box>
         </Toolbar>
       </AppBar>
