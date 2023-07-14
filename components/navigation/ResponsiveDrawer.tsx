@@ -19,6 +19,7 @@ import {
   mdiHome,
   mdiTooltipCheckOutline,
   mdiGithub,
+  mdiServer,
 } from "@mdi/js";
 import ServerStatus from "./ServerStatus";
 
@@ -88,7 +89,6 @@ const drawer = (
           onClick={() => window.open("https://twitter.com/bstategames")}
         >
           <ListItemIcon>
-            {" "}
             <Image
               src={BSG}
               style={{ height: "30px", width: "30px" }}
@@ -99,10 +99,18 @@ const drawer = (
         </ListItemButton>
       </ListItem>
     </List>
+    <Divider />
     {/* server status */}
     <List>
       <ListItem>
-        <ServerStatus />
+        <ListItemButton
+          onClick={() => window.open("https://status.escapefromtarkov.com/")}
+        >
+          <ListItemIcon>
+            <Icon path={mdiServer} style={{ height: "30px" }} />
+          </ListItemIcon>
+          <ServerStatus />
+        </ListItemButton>
       </ListItem>
     </List>
   </>
