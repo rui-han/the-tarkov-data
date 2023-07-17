@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@auth0/nextjs-auth0/client";
 
 import {
   Avatar,
@@ -14,8 +14,9 @@ import { Settings, Dashboard } from "@mui/icons-material";
 import LogoutButton from "./LogoutButton";
 
 export default function UserProfile() {
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user, error, isLoading } = useUser();
   if (isLoading) return <div>loading...</div>;
+  if (error) return <div>{error.message}</div>;
 
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
@@ -27,7 +28,7 @@ export default function UserProfile() {
   };
 
   return (
-    isAuthenticated && (
+    user && (
       <>
         <IconButton
           onClick={handleClick}
@@ -36,8 +37,8 @@ export default function UserProfile() {
           aria-expanded={open ? "true" : undefined}
         >
           <Avatar
-            src={user?.picture}
-            alt={user?.name}
+            src={String(user?.picture)}
+            alt={String(user?.name)}
             sx={{ bgcolor: deepOrange[200] }}
           />
         </IconButton>

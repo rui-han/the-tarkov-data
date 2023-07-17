@@ -21,7 +21,8 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import EFT from "../../public/logos/EFT-logo.png";
-import { useAuth0 } from "@auth0/auth0-react";
+
+import { useUser } from "@auth0/nextjs-auth0/client";
 
 const drawerWidth = 240;
 const appbarHeight = 64;
@@ -39,7 +40,7 @@ export default function Nav() {
     setMobileOpen(!mobileOpen);
   };
 
-  const { isAuthenticated } = useAuth0();
+  const { user } = useUser();
 
   return (
     <>
@@ -99,7 +100,7 @@ export default function Nav() {
               textAlign: "center",
             }}
           >
-            {isAuthenticated ? <UserMenu /> : <LoginButton />}
+            {user ? <UserMenu /> : <LoginButton />}
           </Box>
         </Toolbar>
       </AppBar>

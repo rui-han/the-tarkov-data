@@ -1,22 +1,19 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import { ListItemIcon, MenuItem } from "@mui/material";
+import { ListItemIcon, MenuItem, Button } from "@mui/material";
 import { Logout } from "@mui/icons-material";
+import Link from "next/link";
 
 export default function LogoutButton() {
-  const { logout } = useAuth0();
-
   return (
-    <MenuItem
-      onClick={() =>
-        logout({
-          logoutParams: { returnTo: "https://the-tarkov-data.vercel.app/" },
-        })
-      }
-    >
+    <MenuItem>
       <ListItemIcon>
         <Logout />
       </ListItemIcon>
-      Log Out
+      <Link
+        href="/api/auth/logout"
+        style={{ color: "inherit", textDecoration: "none" }}
+      >
+        Log Out
+      </Link>
     </MenuItem>
   );
 }
