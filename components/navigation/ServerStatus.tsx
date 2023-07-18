@@ -4,10 +4,14 @@ import { ServerStatusData } from "@/types/server_status";
 import { ListItemText } from "@mui/material";
 
 export default function ServerStatus() {
-  const { data } = useSuspenseQuery<ServerStatusData>(GET_SERVER_STATUS);
+  const { data, error } = useSuspenseQuery<ServerStatusData>(GET_SERVER_STATUS);
+
+  if (error) {
+    console.log(`error loading server status: ${error}`);
+  }
 
   const dotColor =
-    Number(data.status.generalStatus.status) == 0 ? "#a2ff86" : "red";
+    Number(data?.status?.generalStatus?.status) == 0 ? "#a2ff86" : "red";
 
   return (
     <>
