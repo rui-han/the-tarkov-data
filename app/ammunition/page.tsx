@@ -8,6 +8,9 @@ import AmmoTable from "@/components/ammunition/AmmoTable";
 
 export default function Ammunition() {
   const { data } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+
+  if (!data) return null;
+
   // Caliber556x45NATO etc.
   const calibers = [...new Set(data.ammo.map((ammo) => ammo.caliber))];
   // remove "Caliber", now it is 556x45NATO etc.

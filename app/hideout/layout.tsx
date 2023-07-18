@@ -14,6 +14,8 @@ export default function HideoutLayout({
 }) {
   const { data } = useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
 
+  if (!data) return null;
+
   return (
     <>
       <HideoutNav hideoutStations={data.hideoutStations} />
