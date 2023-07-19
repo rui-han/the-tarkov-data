@@ -177,13 +177,11 @@ export default function HideoutCard({ params }: HideoutParams) {
                 )}
                 {/* Construction time */}
                 <Typography sx={styles.time}>
-                  Construction Time: {}
-                  {levelData.constructionTime ? (
-                    new Date(levelData.constructionTime * 1000)
-                      .toISOString()
-                      .slice(11, 19)
+                  Construction Time:{" "}
+                  {levelData.constructionTime > 0 ? (
+                    <span>{levelData.constructionTime / 3600} hours</span>
                   ) : (
-                    <span>immediately</span>
+                    <span>Immediately</span>
                   )}
                 </Typography>
               </CardContent>
