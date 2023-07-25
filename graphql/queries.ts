@@ -63,6 +63,8 @@ export const GET_AMMO_DATA = gql`
   query GET_AMMO_DATA {
     ammo {
       caliber
+      ammoType
+      projectileCount
       item {
         id
         name

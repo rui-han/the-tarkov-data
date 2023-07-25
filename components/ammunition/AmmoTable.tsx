@@ -9,6 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Typography,
 } from "@mui/material";
 
 const columns = [
@@ -22,21 +23,16 @@ const columns = [
 
 export default function AmmoTable({
   ammo,
-  calibers,
-  filteredCalibers,
   currentCaliber,
   setCurrentCaliber,
 }: AmmoTableProps) {
-  // to match states
-  const changeCaliberToFullName = (caliber: string) => {
-    return calibers.find((cal) => cal.replace("Caliber", "") === caliber);
-  };
-
+  // handle ammoType filter button clicks
   const handleFilterButtonClick = (caliber: string) => {
-    const caliberFullName = changeCaliberToFullName(caliber);
-    if (caliberFullName) {
-      setCurrentCaliber(caliberFullName);
-    }
+    if (caliber) setCurrentCaliber(caliber);
+  };
+  // to display caliber names in filter buttons
+  const changeCaliberToShortName = (caliber: string) => {
+    return caliber.replace("Caliber", "");
   };
 
   return (
@@ -46,21 +42,55 @@ export default function AmmoTable({
         m: "3vh",
       }}
     >
-      {filteredCalibers.map((caliber) => (
-        <Button
-          sx={{ m: "4px", fontSize: "1.1em" }}
-          key={caliber}
-          color="inherit"
-          variant={
-            changeCaliberToFullName(caliber) === currentCaliber
-              ? "contained"
-              : "outlined"
-          }
-          onClick={() => handleFilterButtonClick(caliber)}
-        >
-          {caliber}
-        </Button>
-      ))}
+      {/* filter buttons for ammoType: bullet */}
+      <Typography mt="2vh">
+        <h3>Bullets (Rifles, Pistols, etc):</h3>
+        {[
+          // using Set() to filter unique caliber values
+          ...new Set(
+            ammo
+              .filter((ammoData) => ammoData.ammoType === "bullet")
+              .map((ammoData) => ammoData.caliber),
+          ),
+        ].map((caliber) => (
+          <Button
+            sx={{ m: "4px", fontSize: "1.1em" }}
+            key={caliber}
+            color="inherit"
+            variant={caliber === currentCaliber ? "contained" : "outlined"}
+            onClick={() => handleFilterButtonClick(caliber)}
+          >
+            {changeCaliberToShortName(caliber)}
+          </Button>
+        ))}
+      </Typography>
+      {/* filter buttons for ammoType: buckshot / grenade / flashbang */}
+      <Typography mt="2vh">
+        <h3>Others (Buckshots, Grenades, Flashbangs):</h3>
+        {[
+          // using Set() to filter unique caliber values
+          ...new Set(
+            ammo
+              .filter((ammoData) =>
+                ["buckshot", "grenade", "flashbang"].includes(
+                  ammoData.ammoType,
+                ),
+              )
+              .map((ammoData) => ammoData.caliber),
+          ),
+        ].map((caliber) => (
+          <Button
+            sx={{ m: "4px", fontSize: "1.1em" }}
+            key={caliber}
+            color="inherit"
+            variant={caliber === currentCaliber ? "contained" : "outlined"}
+            onClick={() => handleFilterButtonClick(caliber)}
+          >
+            {changeCaliberToShortName(caliber)}
+          </Button>
+        ))}
+      </Typography>
+      {/* table for data displaying */}
       <Table stickyHeader sx={{ mt: "2vh", border: "3px solid #9a8866" }}>
         <TableHead>
           <TableRow>

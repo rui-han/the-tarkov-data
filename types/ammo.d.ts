@@ -6,6 +6,8 @@ export interface FetchedData {
 
 interface Ammo {
   caliber: string;
+  ammoType: string;
+  projectileCount: number;
   item: Item;
   damage: number;
   penetrationPower: number;
@@ -21,8 +23,6 @@ interface Item {
 
 export interface AmmoTableProps {
   ammo: Ammo[];
-  calibers: string[];
-  filteredCalibers: string[];
   currentCaliber: string;
   setCurrentCaliber: Dispatch<SetStateAction<string>>;
 }
