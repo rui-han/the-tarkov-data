@@ -31,3 +31,19 @@ export interface AmmoTableProps {
 export interface AmmoSearchbarProps {
   setInputText: Dispatch<SetStateAction<string>>;
 }
+
+type Order = "asc" | "desc";
+
+interface AmmoTableHeadProps {
+  onRequestSort: (
+    event: React.MouseEvent<unknown>,
+    property: keyof Ammo,
+  ) => void;
+  order: Order;
+  orderBy: string;
+}
+
+interface HeadCell {
+  id: keyof Ammo;
+  label: string;
+}
