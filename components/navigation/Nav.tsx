@@ -5,9 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 
 // components
-import drawer from "./ResponsiveDrawer";
+
 import LoginButton from "../users/LoginButton";
 import UserMenu from "../users/UserMenu";
+import ResponsiveDrawer from "./ResponsiveDrawer";
 
 // MUI
 import {
@@ -122,7 +123,7 @@ export default function Nav() {
             },
           }}
         >
-          {drawer}
+          <ResponsiveDrawer />
         </Drawer>
         {/* for larger screens, permanent */}
         <Drawer
@@ -140,7 +141,7 @@ export default function Nav() {
           }}
           open
         >
-          {drawer}
+          <ResponsiveDrawer />
         </Drawer>
       </Box>
     </>

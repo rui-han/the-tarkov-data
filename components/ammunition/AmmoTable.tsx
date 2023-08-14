@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ammo, Order, AmmoTableProps, FetchedData, Item } from "@/types/ammo";
+import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
 import {
   Box,
   Button,
