@@ -77,3 +77,19 @@ export const GET_AMMO_DATA = gql`
     }
   }
 `;
+
+export const GET_ALL_ITEMS_DATA = gql`
+  query GET_ITEM_DATA {
+    items {
+      id
+      name
+      lastLowPrice
+      sellFor {
+        vendor {
+          name
+        }
+        priceRUB
+      }
+    }
+  }
+`;

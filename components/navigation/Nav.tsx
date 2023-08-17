@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 
 // components
-
 import LoginButton from "../users/LoginButton";
 import UserMenu from "../users/UserMenu";
 import ResponsiveDrawer from "./ResponsiveDrawer";

@@ -21,6 +21,7 @@ import {
   mdiTooltipCheckOutline,
   mdiGithub,
   mdiServer,
+  mdiPackageVariant,
 } from "@mdi/js";
 import ServerStatus from "./ServerStatus";
 
@@ -28,6 +29,7 @@ import ServerStatus from "./ServerStatus";
 const drawerItems = [
   { to: "/ammunition", text: "Ammunition", iconPath: mdiAmmunition },
   { to: "/hideout", text: "Hideout", iconPath: mdiHome },
+  { to: "/items", text: "Items", iconPath: mdiPackageVariant },
   { to: "/quests", text: "Quests", iconPath: mdiTooltipCheckOutline },
 ];
 
