@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 
+import Link from "next/link";
+
 import {
   Avatar,
   IconButton,
@@ -51,12 +53,21 @@ export default function UserProfile() {
           onClose={handleClose}
         >
           {/* TODO dashboard */}
-          <MenuItem>
-            <ListItemIcon>
-              <Dashboard />
-            </ListItemIcon>
-            Dashboard
-          </MenuItem>
+          <Link
+            href="/dashboard"
+            style={{
+              color: "inherit",
+              textDecoration: "inherit",
+              padding: 0,
+            }}
+          >
+            <MenuItem>
+              <ListItemIcon>
+                <Dashboard />
+              </ListItemIcon>
+              Dashboard
+            </MenuItem>
+          </Link>
           {/* TODO settings  */}
           <MenuItem>
             <ListItemIcon>
