@@ -1,4 +1,5 @@
 import TopLevelLayout from "@/components/layout/TopLevelLayout";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ApolloWrapper } from "@/graphql/lib/apollo-wrapper";
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({
       <body>
         <ApolloWrapper>
           <TopLevelLayout children={children} />
+          <SpeedInsights />
         </ApolloWrapper>
       </body>
     </html>
