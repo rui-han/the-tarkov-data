@@ -1,5 +1,5 @@
 import Image from "next/image";
-import QuestImage from "../../public/images/quests.jpeg";
+import QuestImage from "../../public/images/quests.png";
 
 export default function Quests() {
   return (
