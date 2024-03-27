@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
 import {
   Box,
   Button,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
+  TablePagination,
   TableRow,
 } from "@mui/material";
 import AmmoTableHead from "./AmmoTableHead";
@@ -48,6 +50,10 @@ export default function AmmoTable({
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
   const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
+  // pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   // handle sorting
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -68,13 +74,80 @@ export default function AmmoTable({
     return caliber.replace("Caliber", "");
   };
 
+  // handle change page
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+  //  handle change rows per page
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // data to be displayed in the current table page
+  const visibleRows = useMemo(() => {
+    const filteredData = ammo
+      .filter((ammoData) => {
+        // filter data
+        if (currentCaliber && inputText) {
+          return (
+            ammoData.caliber === currentCaliber &&
+            ammoData.item.name.toLowerCase().includes(inputText.toLowerCase())
+          );
+        } else if (currentCaliber || inputText) {
+          if (currentCaliber) {
+            return ammoData.caliber === currentCaliber;
+          } else if (inputText) {
+            return ammoData.item.name
+              .toLowerCase()
+              .includes(inputText.toLowerCase());
+          }
+        } else {
+          return true; // return all data if nothing matched
+        }
+      })
+      .sort(getComparator(order, orderBy)); // sort filtered data
+
+    return filteredData.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage,
+    );
+  }, [ammo, currentCaliber, inputText, order, orderBy, page, rowsPerPage]);
+
+  // total counts for pagination
+  const totalRows = useMemo(() => {
+    return ammo.filter((ammoData) => {
+      // filter data
+      if (currentCaliber && inputText) {
+        return (
+          ammoData.caliber === currentCaliber &&
+          ammoData.item.name.toLowerCase().includes(inputText.toLowerCase())
+        );
+      } else if (currentCaliber || inputText) {
+        if (currentCaliber) {
+          return ammoData.caliber === currentCaliber;
+        } else if (inputText) {
+          return ammoData.item.name
+            .toLowerCase()
+            .includes(inputText.toLowerCase());
+        }
+      } else {
+        return true; // return all data if nothing matched
+      }
+    }).length;
+  }, [ammo, currentCaliber, inputText]);
+
   return (
     <>
       <TableContainer
         sx={{
           width: "90%",
           m: "3vh",
+          padding: "1rem",
         }}
+        component={Paper}
       >
         {/* filter buttons for ammoType: bullet */}
         <Box mt="2vh">
@@ -125,7 +198,10 @@ export default function AmmoTable({
           ))}
         </Box>
         {/* table for data displaying */}
-        <Table stickyHeader sx={{ mt: "2vh", border: "3px solid #9a8866" }}>
+        <Table
+          stickyHeader
+          sx={{ mt: "2vh", border: "3px solid #9a8866", maxWidth: "80vw" }}
+        >
           <AmmoTableHead
             onRequestSort={handleRequestSort}
             order={order}
@@ -134,7 +210,7 @@ export default function AmmoTable({
           <TableBody>
             {
               //stableSort(ammo, getComparator(order, orderBy))
-              ammo
+              visibleRows
                 .slice()
                 .sort(getComparator(order, orderBy))
                 .filter((ammoData) => {
@@ -163,7 +239,7 @@ export default function AmmoTable({
                 })
                 .map((ammoData) => {
                   return (
-                    <TableRow key={ammoData.item.id}>
+                    <TableRow hover key={ammoData.item.id}>
                       <TableCell>{ammoData.item.name}</TableCell>
                       <TableCell align="center">
                         {ammoData.projectileCount > 1
@@ -213,6 +289,15 @@ export default function AmmoTable({
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={totalRows}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </>
   );
 }

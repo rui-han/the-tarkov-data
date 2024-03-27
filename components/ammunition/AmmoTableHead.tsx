@@ -49,7 +49,7 @@ export default function AmmoTableHead(props: AmmoTableHeadProps) {
         {headCells.map((headCell) => (
           <TableCell
             sx={{
-              fontSize: "1.1em",
+              fontSize: "1.1rem",
               fontWeight: "bold",
               backgroundColor: "#1a120b",
             }}

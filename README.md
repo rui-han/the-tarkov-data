@@ -62,7 +62,7 @@ touch .env.local
 Include the following variables:
 
 ```
-AUTH0_SECRET='...generate with openssl...'
+AUTH0_SECRET='use [openssl rand -hex 32] to generate a 32 bytes value'
 AUTH0_BASE_URL='http://localhost:3000'
 AUTH0_ISSUER_BASE_URL='https://[your-domain].auth0.com'
 AUTH0_CLIENT_ID='[your-client-id]'
