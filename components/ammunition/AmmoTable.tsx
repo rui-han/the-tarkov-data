@@ -65,6 +65,8 @@ export default function AmmoTable({
   };
   // handle ammoType filter button clicks
   const handleFilterButtonClick = (caliber: string) => {
+    // return to the first page, in case that would return an empty table
+    setPage(0);
     // click and unclick
     if (currentCaliber === caliber) setCurrentCaliber("");
     else setCurrentCaliber(caliber);
