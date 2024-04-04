@@ -11,7 +11,7 @@ export default function ServerStatus() {
   }
 
   const dotColor =
-    Number(data?.status?.generalStatus?.status) == 0 ? "#a2ff86" : "red";
+    Number(data?.status?.generalStatus?.status) === 0 ? "#a2ff86" : "red";
 
   return (
     <>

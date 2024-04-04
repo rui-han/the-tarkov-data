@@ -64,26 +64,28 @@ export default function Nav() {
           >
             <MenuIcon />
           </IconButton>
-          {/* logo, which redirects to home page onclick */}
+          {/* logo, which redirects to home page onclick, hidden under xs screens */}
           <Box
             sx={{
               width: drawerWidth,
-              display: "flex",
+              display: { xs: "none", sm: "flex" },
               justifyContent: "center",
             }}
           >
-            <Link href="/">
-              <Image
-                src={EFT}
-                alt="The Tarkov Data"
-                style={{ height: "64px", width: "auto" }}
-              />
-            </Link>
+            {mobileOpen ? null : (
+              <Link href="/">
+                <Image
+                  src={EFT}
+                  alt="The Tarkov Data"
+                  style={{ height: "64px", width: "auto" }}
+                />
+              </Link>
+            )}
           </Box>
           <Typography
             sx={{
               fontWeight: "bold",
-              fontSize: 30,
+              fontSize: { sx: 18, sm: 24, md: 26, lg: 30 },
               display: "flex",
               justifyContent: "center",
               flexGrow: 1,
@@ -122,7 +124,7 @@ export default function Nav() {
             },
           }}
         >
-          <ResponsiveDrawer />
+          <ResponsiveDrawer drawerWidth={drawerWidth} />
         </Drawer>
         {/* for larger screens, permanent */}
         <Drawer
@@ -140,7 +142,7 @@ export default function Nav() {
           }}
           open
         >
-          <ResponsiveDrawer />
+          <ResponsiveDrawer drawerWidth={drawerWidth} />
         </Drawer>
       </Box>
     </>

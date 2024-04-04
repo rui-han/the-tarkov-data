@@ -11,6 +11,7 @@ import {
   ListItemButton,
   ListItemIcon,
   Divider,
+  Box,
 } from "@mui/material";
 import Icon from "@mdi/react";
 import BSG from "../../public/logos/BSG-logo.png";
@@ -24,6 +25,7 @@ import {
   mdiPackageVariant,
 } from "@mdi/js";
 import ServerStatus from "./ServerStatus";
+import EFT from "../../public/logos/EFT-logo.png";
 
 // the sidebar drawer
 const drawerItems = [
@@ -33,11 +35,34 @@ const drawerItems = [
   { to: "/quests", text: "Quests", iconPath: mdiTooltipCheckOutline },
 ];
 
-export default function ResponsiveDrawer() {
+interface ResponsiveDrawerProps {
+  drawerWidth: number;
+}
+
+export default function ResponsiveDrawer({
+  drawerWidth,
+}: ResponsiveDrawerProps) {
   const currentRoute = usePathname();
 
   return (
     <>
+      <Box
+        sx={{
+          width: drawerWidth,
+          mt: "2vh",
+          display: { xs: "flex", sm: "none" },
+          justifyContent: "center",
+        }}
+      >
+        <Link href="/">
+          <Image
+            src={EFT}
+            alt="The Tarkov Data"
+            style={{ height: "64px", width: "auto" }}
+          />
+        </Link>
+      </Box>
+
       {/* main pages link */}
       <List>
         {drawerItems.map((item) => (
