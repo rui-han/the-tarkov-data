@@ -5,6 +5,7 @@ import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
 import {
   Box,
   Button,
+  Divider,
   Paper,
   Table,
   TableBody,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from "@mui/material";
 import AmmoTableHead from "./AmmoTableHead";
+import AmmoSearchbar from "./AmmoSearchbar";
 
 // basic comparator used to compare two elements (a and b, eg. M855A1 and M995)
 // based on a specified property (orderBy, eg. damage)
@@ -46,6 +48,7 @@ export default function AmmoTable({
   inputText,
   currentCaliber,
   setCurrentCaliber,
+  setInputText,
 }: AmmoTableProps) {
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
@@ -147,12 +150,12 @@ export default function AmmoTable({
         sx={{
           width: "90%",
           m: "3vh",
-          padding: "1rem",
+          padding: "2rem",
         }}
         component={Paper}
       >
         {/* filter buttons for ammoType: bullet */}
-        <Box mt="2vh">
+        <Box m="2vh 0">
           <Box component="h3">Bullets (Rifles, Pistols, etc):</Box>
           {[
             // using Set() to filter unique caliber values
@@ -174,7 +177,7 @@ export default function AmmoTable({
           ))}
         </Box>
         {/* filter buttons for ammoType: buckshot / grenade / flashbang */}
-        <Box mt="2vh">
+        <Box m="2vh 0">
           <Box component="h3">Others (Buckshots, Grenades, Flashbangs):</Box>
           {[
             // using Set() to filter unique caliber values
@@ -199,10 +202,16 @@ export default function AmmoTable({
             </Button>
           ))}
         </Box>
+
+        <Divider />
+
+        <Box sx={{ width: "100%", p: "3vh" }}>
+          <AmmoSearchbar setInputText={setInputText} />
+        </Box>
         {/* table for data displaying */}
         <Table
           stickyHeader
-          sx={{ mt: "2vh", border: "3px solid #9a8866", maxWidth: "80vw" }}
+          sx={{ mt: "2vh", border: "3px solid #9a8866", minWidth: "100%" }}
         >
           <AmmoTableHead
             onRequestSort={handleRequestSort}
@@ -242,21 +251,24 @@ export default function AmmoTable({
                 .map((ammoData) => {
                   return (
                     <TableRow hover key={ammoData.item.id}>
-                      <TableCell>{ammoData.item.name}</TableCell>
-                      <TableCell align="center">
+                      <TableCell sx={{ width: "20%" }}>
+                        {ammoData.item.name}
+                      </TableCell>
+                      <TableCell align="center" sx={{ width: "16%" }}>
                         {ammoData.projectileCount > 1
                           ? ammoData.projectileCount + " x " + ammoData.damage
                           : ammoData.damage}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ width: "16%" }}>
                         {ammoData.penetrationPower}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ width: "16%" }}>
                         {ammoData.armorDamage}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{
+                          width: "16%",
                           color:
                             // accuracy, the greater the better
                             ammoData.accuracyModifier > 0
@@ -272,6 +284,7 @@ export default function AmmoTable({
                       <TableCell
                         align="center"
                         sx={{
+                          width: "16%",
                           color:
                             // recoil, the greater the worse
                             ammoData.recoilModifier > 0
@@ -291,15 +304,17 @@ export default function AmmoTable({
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={totalRows}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+      <Box mb="3vh">
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalRows}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Box>
     </>
   );
 }

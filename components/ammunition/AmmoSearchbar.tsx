@@ -9,7 +9,7 @@ export default function AmmoSearchbar({ setInputText }: AmmoSearchbarProps) {
   };
 
   return (
-    <Box mt="2vh" width="90%">
+    <>
       <TextField
         fullWidth
         sx={{
@@ -34,6 +34,6 @@ export default function AmmoSearchbar({ setInputText }: AmmoSearchbarProps) {
         onChange={handleInputChange}
         label="Search for ammunition here..."
       />
-    </Box>
+    </>
   );
 }
