@@ -26,6 +26,7 @@ import {
 } from "@mdi/js";
 import ServerStatus from "./ServerStatus";
 import EFT from "../../public/logos/EFT-logo.png";
+import RaidTime from "./RaidTime";
 
 // the sidebar drawer
 const drawerItems = [
@@ -151,6 +152,25 @@ export default function ResponsiveDrawer({
             </ListItemIcon>
             <ServerStatus />
           </ListItemButton>
+        </ListItem>
+      </List>
+      <Divider />
+      {/* raid time */}
+      <List>
+        <ListItem>Raid Time:</ListItem>
+        <ListItem>
+          <Box
+            sx={{
+              color: "inherit",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <RaidTime />
+          </Box>
         </ListItem>
       </List>
     </>
