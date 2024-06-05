@@ -1,10 +1,15 @@
-import Link from "next/link";
 import { Button } from "@mui/material";
 
 export default function LoginButton() {
   return (
     <>
-      <Link href="/api/auth/login" style={{ color: "inherit" }}>
+      {/*  Next linting rules might suggest using the Link component instead of an anchor tag. 
+    The Link component is meant to perform client-side transitions between pages. 
+    As the link points to an API route and not to a page, you should keep it as an anchor tag. */}
+      <a
+        href="/api/auth/login"
+        style={{ color: "inherit", textDecoration: "none" }}
+      >
         <Button
           variant="outlined"
           sx={{
@@ -15,7 +20,7 @@ export default function LoginButton() {
         >
           LOGIN
         </Button>
-      </Link>
+      </a>
     </>
   );
 }
