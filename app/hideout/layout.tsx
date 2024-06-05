@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GET_HIDEOUT_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/hideout";
 import HideoutNav from "@/components/hideout/HideoutNav";
 import Image from "next/image";

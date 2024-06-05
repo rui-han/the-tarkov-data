@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FetchedData, HideoutParams } from "@/types/hideout";
 import { GET_HIDEOUT_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { useSuspenseQuery } from "@apollo/client";
 
 import {
   Box,

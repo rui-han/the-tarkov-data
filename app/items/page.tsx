@@ -1,7 +1,7 @@
 "use client";
 
 import { GET_ALL_ITEMS_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData, Item } from "@/types/item";
 import {
   Paper,

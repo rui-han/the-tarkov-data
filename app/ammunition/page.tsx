@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GET_AMMO_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/experimental-nextjs-app-support/ssr";
+import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/ammo";
 import HowToRead from "@/components/ammunition/HowToRead";
 import AmmoTable from "@/components/ammunition/AmmoTable";
