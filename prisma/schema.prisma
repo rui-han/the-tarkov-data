@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Uses connection pooling
+  url       = env("POSTGRES_PRISMA_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  image     String
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id           Int       @id @default(autoincrement())
+  name         String
+  lastLowPrice Float?
+  sellFor      SellFor[]
+  ammo         Ammo?
+}
+
+model SellFor {
+  id       Int    @id @default(autoincrement())
+  itemId   Int
+  item     Item   @relation(fields: [itemId], references: [id])
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+  vendorId Int
+  priceRUB Float
+}
+
+model Vendor {
+  id      Int       @id @default(autoincrement())
+  name    String
+  sellFor SellFor[]
+}
+
+model Ammo {
+  id               Int      @id @default(autoincrement())
+  caliber          String
+  ammoType         AmmoType
+  projectileCount  Int?
+  item             Item     @relation(fields: [itemId], references: [id])
+  itemId           Int      @unique
+  damage           Float
+  penetrationPower Float
+  armorDamage      Float
+  accuracyModifier Float
+  recoilModifier   Float
+
+  @@unique([caliber, ammoType, itemId])
+}
+
+enum AmmoType {
+  BULLET
+  BUCKSHOT
+  GRENADE
+  FLASHBANG
+}
