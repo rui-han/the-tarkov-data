@@ -1,13 +1,7 @@
-import { handleAuth, handleCallback, Session } from "@auth0/nextjs-auth0";
+import { handleAuth, handleCallback } from "@auth0/nextjs-auth0";
 import prisma from "@/prisma/db";
-import { NextApiRequest, NextApiResponse } from "next";
 
-const afterCallback = async (
-  req: NextApiRequest,
-  res: NextApiResponse,
-  session: Session,
-  state: any,
-): Promise<Session> => {
+const afterCallback = async (req, session) => {
   const { user } = session;
 
   const existingUser = await prisma.user.findUnique({
