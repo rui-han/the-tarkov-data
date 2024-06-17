@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
+
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
+
 import {
   Box,
   Button,
@@ -14,6 +16,9 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoSearchbar from "./AmmoSearchbar";
 
@@ -205,6 +210,7 @@ export default function AmmoTable({
 
         <Divider />
 
+        {/* ammo search bar */}
         <Box sx={{ width: "100%", p: "3vh" }}>
           <AmmoSearchbar setInputText={setInputText} />
         </Box>
@@ -251,6 +257,9 @@ export default function AmmoTable({
                 .map((ammoData) => {
                   return (
                     <TableRow hover key={ammoData.item.id}>
+                      <TableCell>
+                        <FavoriteBorderIcon />
+                      </TableCell>
                       <TableCell sx={{ width: "20%" }}>
                         {ammoData.item.name}
                       </TableCell>
