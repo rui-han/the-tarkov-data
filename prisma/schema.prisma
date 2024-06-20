@@ -12,21 +12,19 @@ datasource db {
 }
 
 model User {
-  auth0Id         String           @id
-  name            String
-  email           String           @unique
-  image           String
-  createdAt       DateTime         @default(now())
-  favoriteBullets FavoriteBullet[]
+  auth0Id       String          @id
+  name          String
+  email         String          @unique
+  image         String
+  createdAt     DateTime        @default(now())
+  favoriteItems FavoriteItems[]
 }
 
-model FavoriteBullet {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [auth0Id])
-  userId     String
-  bulletName String
-  bulletType String
-  createdAt  DateTime @default(now())
+model FavoriteItems {
+  itemId      String
+  userAuth0Id String
+  user        User     @relation(fields: [userAuth0Id], references: [auth0Id])
+  createdAt   DateTime @default(now())
 
-  @@unique([userId, bulletName]) // Ensure a user can only favorite a specific bullet once
+  @@id([userAuth0Id, itemId])
 }
