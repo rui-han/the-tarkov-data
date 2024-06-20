@@ -46,6 +46,15 @@ export default function AmmoTableHead(props: AmmoTableHeadProps) {
   return (
     <TableHead>
       <TableRow>
+        <TableCell
+          sx={{
+            fontSize: "1.1rem",
+            fontWeight: "bold",
+            backgroundColor: "#1a120b",
+          }}
+        >
+          {/* dummy table head cell for favorite button */}
+        </TableCell>
         {headCells.map((headCell) => (
           <TableCell
             sx={{

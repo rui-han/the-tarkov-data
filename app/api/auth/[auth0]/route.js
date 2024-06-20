@@ -21,7 +21,7 @@ const afterCallback = async (req, session) => {
           email: user.email,
           image: user.picture,
           createdAt: new Date(),
-          favoriteBullets: {},
+          favoriteItems: {},
         },
       });
       console.log(`Created new user: ${user.name}`);

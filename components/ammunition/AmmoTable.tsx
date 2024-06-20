@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
-
+import { useState, useMemo, useEffect } from "react";
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
+import { UserProfile, useUser } from "@auth0/nextjs-auth0/client";
+import prisma from "@/prisma/db";
 
+// components
+import AmmoTableHead from "./AmmoTableHead";
+import AmmoSearchbar from "./AmmoSearchbar";
+
+// MUI
 import {
   Box,
   Button,
   Divider,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -18,9 +25,6 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-
-import AmmoTableHead from "./AmmoTableHead";
-import AmmoSearchbar from "./AmmoSearchbar";
 
 // basic comparator used to compare two elements (a and b, eg. M855A1 and M995)
 // based on a specified property (orderBy, eg. damage)
@@ -55,12 +59,49 @@ export default function AmmoTable({
   setCurrentCaliber,
   setInputText,
 }: AmmoTableProps) {
+  const { user } = useUser();
+
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
   const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
   // pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  // users favorite ammos
+  const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<string[]>([]);
+
+  useEffect(() => {
+    getUsersFavoriteAmmo(user?.sub as string);
+
+    console.log(`${user?.name}'s favorite ammos are: ${userFavoriteAmmo}`);
+  }, [user]);
+
+  const getUsersFavoriteAmmo = async (auth0Id: string) => {
+    const res = await fetch(
+      `/api/users/ammo/get-favorite-ammo?auth0Id=${auth0Id}`,
+    );
+    const favoriteAmmos = await res.json();
+    setUserFavoriteAmmo(favoriteAmmos);
+  };
+
+  // handle favorite
+  const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {
+    // alert(`you clicked ammo id ${itemId} for user ${user.name}`);
+    const res = await fetch("/api/users/ammo/add-favorite-ammo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        auth0Id: user.sub,
+        itemId: itemId,
+      }),
+    });
+  };
+
+  // handle unfavorite
+  const handleRemoveFavoriteAmmo = async () => {};
 
   // handle sorting
   const handleRequestSort = (
@@ -258,7 +299,18 @@ export default function AmmoTable({
                   return (
                     <TableRow hover key={ammoData.item.id}>
                       <TableCell>
-                        <FavoriteBorderIcon />
+                        <IconButton
+                          color="inherit"
+                          onClick={() => {
+                            user
+                              ? handleFavoriteAmmo(user, ammoData.item.id)
+                              : alert(
+                                  "please LOGIN to use favorite feature!!!",
+                                );
+                          }}
+                        >
+                          <FavoriteBorderIcon />
+                        </IconButton>
                       </TableCell>
                       <TableCell sx={{ width: "20%" }}>
                         {ammoData.item.name}
