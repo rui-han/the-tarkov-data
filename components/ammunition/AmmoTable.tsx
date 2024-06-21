@@ -69,14 +69,17 @@ export default function AmmoTable({
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // users favorite ammos
-  const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<string[]>([]);
+  const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<
+    { itemId: string }[]
+  >([]);
 
   useEffect(() => {
-    getUsersFavoriteAmmo(user?.sub as string);
-
-    console.log(`${user?.name}'s favorite ammos are: ${userFavoriteAmmo}`);
+    if (user) {
+      getUsersFavoriteAmmo(user.sub as string);
+    }
   }, [user]);
 
+  // get user's all favorite ammo data, in array of objects
   const getUsersFavoriteAmmo = async (auth0Id: string) => {
     const res = await fetch(
       `/api/users/ammo/get-favorite-ammo?auth0Id=${auth0Id}`,
@@ -87,7 +90,6 @@ export default function AmmoTable({
 
   // handle favorite
   const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {
-    // alert(`you clicked ammo id ${itemId} for user ${user.name}`);
     const res = await fetch("/api/users/ammo/add-favorite-ammo", {
       method: "POST",
       headers: {
@@ -98,10 +100,37 @@ export default function AmmoTable({
         itemId: itemId,
       }),
     });
+
+    await getUsersFavoriteAmmo(user.sub as string);
   };
 
-  // handle unfavorite
-  const handleRemoveFavoriteAmmo = async () => {};
+  // handle remove favorite
+  const handleRemoveFavoriteAmmo = async (
+    user: UserProfile,
+    itemId: string,
+  ) => {
+    try {
+      const res = await fetch("/api/users/ammo/remove-favorite-ammo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auth0Id: user.sub,
+          itemId: itemId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to remove favorite ammo");
+      }
+
+      // update user's favs
+      await getUsersFavoriteAmmo(user.sub as string);
+    } catch (error) {
+      console.error("Error removing users favorite ammo: ", error);
+    }
+  };
 
   // handle sorting
   const handleRequestSort = (
@@ -302,14 +331,34 @@ export default function AmmoTable({
                         <IconButton
                           color="inherit"
                           onClick={() => {
-                            user
-                              ? handleFavoriteAmmo(user, ammoData.item.id)
-                              : alert(
-                                  "please LOGIN to use favorite feature!!!",
+                            if (!user) {
+                              // TODO: add a modal or something?
+                              alert("please LOGIN to use favorite feature!!!");
+                            } else {
+                              const isFavorite = userFavoriteAmmo.some(
+                                (fav) => fav.itemId === ammoData.item.id,
+                              );
+
+                              if (isFavorite) {
+                                // remove from favs
+                                handleRemoveFavoriteAmmo(
+                                  user,
+                                  ammoData.item.id,
                                 );
+                              } else {
+                                // add to favs
+                                handleFavoriteAmmo(user, ammoData.item.id);
+                              }
+                            }
                           }}
                         >
-                          <FavoriteBorderIcon />
+                          {userFavoriteAmmo.some(
+                            (fav) => fav.itemId === ammoData.item.id,
+                          ) ? (
+                            <FavoriteIcon />
+                          ) : (
+                            <FavoriteBorderIcon />
+                          )}
                         </IconButton>
                       </TableCell>
                       <TableCell sx={{ width: "20%" }}>
