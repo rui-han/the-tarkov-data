@@ -1,4 +1,4 @@
-import { Box, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import { AmmoSearchbarProps } from "@/types/ammo";
 
 export default function AmmoSearchbar({ setInputText }: AmmoSearchbarProps) {

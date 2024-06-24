@@ -3,12 +3,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
 import { UserProfile, useUser } from "@auth0/nextjs-auth0/client";
-import prisma from "@/prisma/db";
-
 // components
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoSearchbar from "./AmmoSearchbar";
-
 // MUI
 import {
   Box,
@@ -166,9 +163,14 @@ export default function AmmoTable({
     setPage(0);
   };
 
-  // data to be displayed in the current table page
-  const visibleRows = useMemo(() => {
-    const filteredData = ammo
+  const filterAndSortAmmo = (
+    ammo: Ammo[],
+    currentCaliber: string,
+    inputText: string,
+    order: Order,
+    orderBy: keyof Ammo,
+  ) => {
+    return ammo
       .filter((ammoData) => {
         // filter data
         if (currentCaliber && inputText) {
@@ -189,8 +191,19 @@ export default function AmmoTable({
         }
       })
       .sort(getComparator(order, orderBy)); // sort filtered data
+  };
 
-    return filteredData.slice(
+  // data to be displayed in the current table page
+  const visibleRows = useMemo(() => {
+    const filteredAndSortedAmmo = filterAndSortAmmo(
+      ammo,
+      currentCaliber,
+      inputText,
+      order,
+      orderBy,
+    );
+
+    return filteredAndSortedAmmo.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage,
     );
@@ -288,6 +301,7 @@ export default function AmmoTable({
         <Table
           stickyHeader
           sx={{ mt: "2vh", border: "3px solid #9a8866", minWidth: "100%" }}
+          aria-label="Ammunition table"
         >
           <AmmoTableHead
             onRequestSort={handleRequestSort}
