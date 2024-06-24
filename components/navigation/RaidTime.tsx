@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 
 function RaidTime() {
+  // use a combination of server-side rendering (SSR) and client-side rendering (CSR) techniques to avoid the React hydration error
+  // introduce an isClient state variable to track whether it is rendering on the client-side
+  const [isClient, setIsClient] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [futureTime, setFutureTime] = useState(new Date()); // 12 hours later
 
   useEffect(() => {
+    setIsClient(true);
     const gameSpeed = 7; // The speed of game time passing is 7 times that of the real world
     const twelveHoursInMilliseconds = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
@@ -28,6 +32,10 @@ function RaidTime() {
       clearInterval(timerId);
     };
   }, []);
+
+  if (!isClient) {
+    return <p>Raid Time loading...</p>;
+  }
 
   // Format the current game time as HH:MM:SS
   const formatCurrentTime = currentTime.toISOString().substr(11, 8);
