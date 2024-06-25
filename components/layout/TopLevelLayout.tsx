@@ -11,7 +11,7 @@ export default function TopLevelLayout({
 }) {
   return (
     <ThemeProvider theme={darkTheme}>
-      <Grid container sx={{ flexGrow: 1, height: "100vh" }}>
+      <Grid container sx={{ flexGrow: 1, height: "100%" }}>
         <CssBaseline />
         <Nav />
         <Grid
