@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
-import { UserProfile, useUser } from "@auth0/nextjs-auth0/client";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
 // components
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoSearchbar from "./AmmoSearchbar";
@@ -57,6 +58,12 @@ export default function AmmoTable({
   setInputText,
 }: AmmoTableProps) {
   const { user } = useUser();
+  const {
+    userFavoriteAmmo,
+    getUsersFavoriteAmmo,
+    handleFavoriteAmmo,
+    handleRemoveFavoriteAmmo,
+  } = useFavoriteAmmo();
 
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
@@ -65,69 +72,11 @@ export default function AmmoTable({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // users favorite ammos
-  const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<
-    { itemId: string }[]
-  >([]);
-
   useEffect(() => {
     if (user) {
       getUsersFavoriteAmmo(user.sub as string);
     }
   }, [user]);
-
-  // get user's all favorite ammo data, in array of objects
-  const getUsersFavoriteAmmo = async (auth0Id: string) => {
-    const res = await fetch(
-      `/api/users/ammo/get-favorite-ammo?auth0Id=${auth0Id}`,
-    );
-    const favoriteAmmos = await res.json();
-    setUserFavoriteAmmo(favoriteAmmos);
-  };
-
-  // handle favorite
-  const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {
-    const res = await fetch("/api/users/ammo/add-favorite-ammo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        auth0Id: user.sub,
-        itemId: itemId,
-      }),
-    });
-
-    await getUsersFavoriteAmmo(user.sub as string);
-  };
-
-  // handle remove favorite
-  const handleRemoveFavoriteAmmo = async (
-    user: UserProfile,
-    itemId: string,
-  ) => {
-    try {
-      const res = await fetch("/api/users/ammo/remove-favorite-ammo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          auth0Id: user.sub,
-          itemId: itemId,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to remove favorite ammo");
-      }
-
-      // update user's favs
-      await getUsersFavoriteAmmo(user.sub as string);
-    } catch (error) {
-      console.error("Error removing users favorite ammo: ", error);
-    }
-  };
 
   // handle sorting
   const handleRequestSort = (
