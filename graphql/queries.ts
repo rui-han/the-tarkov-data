@@ -68,6 +68,7 @@ export const GET_AMMO_DATA = gql`
       item {
         id
         name
+        inspectImageLink
       }
       damage
       penetrationPower

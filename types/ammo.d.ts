@@ -19,6 +19,7 @@ interface Ammo {
 interface Item {
   id: string;
   name: string;
+  inspectImageLink: string;
 }
 
 export interface AmmoTableProps {
