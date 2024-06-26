@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { UserProfile } from "@auth0/nextjs-auth0/client";
 
 export interface FavoriteAmmo {
@@ -9,14 +9,14 @@ export function useFavoriteAmmo() {
   const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<FavoriteAmmo[]>([]);
 
   // get user's all favorite ammo data, in array of objects
-  const getUsersFavoriteAmmo = async (auth0Id: string) => {
+  const getUsersFavoriteAmmo = useCallback(async (auth0Id: string) => {
     const res = await fetch(
       `/api/users/ammo/get-favorite-ammo?auth0Id=${auth0Id}`,
     );
     const favoriteAmmos = await res.json();
     setUserFavoriteAmmo(favoriteAmmos);
     return favoriteAmmos;
-  };
+  }, []);
 
   // handle favorite ammo
   const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {
