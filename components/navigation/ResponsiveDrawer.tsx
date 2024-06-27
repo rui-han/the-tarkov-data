@@ -16,6 +16,10 @@ import {
 import Icon from "@mdi/react";
 import BSG from "../../public/logos/BSG-logo.png";
 import Nikita from "../../public/images/nikita.jpeg";
+import ServerStatus from "./ServerStatus";
+import EFT from "../../public/logos/EFT-logo.png";
+import RaidTime from "./RaidTime";
+// icons
 import {
   mdiAmmunition,
   mdiHome,
@@ -23,10 +27,9 @@ import {
   mdiGithub,
   mdiServer,
   mdiPackageVariant,
+  mdiTrophy,
+  mdiMap,
 } from "@mdi/js";
-import ServerStatus from "./ServerStatus";
-import EFT from "../../public/logos/EFT-logo.png";
-import RaidTime from "./RaidTime";
 
 // the sidebar drawer
 const drawerItems = [
@@ -34,7 +37,17 @@ const drawerItems = [
   { to: "/hideout", text: "Hideout", iconPath: mdiHome },
   { to: "/items", text: "Items", iconPath: mdiPackageVariant },
   { to: "/quests", text: "Quests", iconPath: mdiTooltipCheckOutline },
+  // TODO
+  { to: "/achievements", text: "Achievements", iconPath: mdiTrophy },
+  { to: "/maps", text: "Maps", iconPath: mdiMap },
 ];
+
+// icon style
+const ICON_STYLE = {
+  // color: "#b5a27f",
+  height: "30px",
+  width: "30px",
+};
 
 interface ResponsiveDrawerProps {
   drawerWidth: number;
@@ -84,7 +97,7 @@ export default function ResponsiveDrawer({
                 }}
               >
                 <ListItemIcon>
-                  <Icon path={item.iconPath} style={{ height: "30px" }} />
+                  <Icon path={item.iconPath} style={ICON_STYLE} />
                 </ListItemIcon>
                 {item.text}
               </ListItemButton>
@@ -102,7 +115,7 @@ export default function ResponsiveDrawer({
             }
           >
             <ListItemIcon>
-              <Icon path={mdiGithub} style={{ height: "30px" }} />
+              <Icon path={mdiGithub} style={ICON_STYLE} />
             </ListItemIcon>
             <ListItemText>Github</ListItemText>
           </ListItemButton>
@@ -130,11 +143,7 @@ export default function ResponsiveDrawer({
             onClick={() => window.open("https://twitter.com/bstategames")}
           >
             <ListItemIcon>
-              <Image
-                src={BSG}
-                style={{ height: "30px", width: "30px" }}
-                alt="Battle State Games"
-              />
+              <Image src={BSG} style={ICON_STYLE} alt="Battle State Games" />
             </ListItemIcon>
             <ListItemText>BSG</ListItemText>
           </ListItemButton>
@@ -145,10 +154,16 @@ export default function ResponsiveDrawer({
       <List>
         <ListItem>
           <ListItemButton
-            onClick={() => window.open("https://status.escapefromtarkov.com/")}
+            onClick={() =>
+              window.open(
+                "https://github.com/rui-han/the-tarkov-data",
+                "_blank",
+                "noopener,noreferrer",
+              )
+            }
           >
             <ListItemIcon>
-              <Icon path={mdiServer} style={{ height: "30px" }} />
+              <Icon path={mdiServer} style={ICON_STYLE} />
             </ListItemIcon>
             <ServerStatus />
           </ListItemButton>
@@ -157,7 +172,6 @@ export default function ResponsiveDrawer({
       <Divider />
       {/* raid time */}
       <List>
-        <ListItem>Raid Time:</ListItem>
         <ListItem>
           <Box
             sx={{
