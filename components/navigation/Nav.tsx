@@ -52,6 +52,8 @@ export default function Nav() {
         sx={{
           width: "100%",
           height: appbarHeight,
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          background: "linear-gradient(to right, #2d2d2f, #3d3d3f)",
         }}
       >
         <Toolbar disableGutters={true}>
@@ -84,8 +86,10 @@ export default function Nav() {
           </Box>
           <Typography
             sx={{
-              fontWeight: "bold",
-              fontSize: { sx: 18, sm: 24, md: 26, lg: 30 },
+              color: "#c7c5b3",
+              fontWeight: 600,
+              fontSize: { xs: 16, sm: 20, md: 24 },
+              letterSpacing: 2,
               display: "flex",
               justifyContent: "center",
               flexGrow: 1,
@@ -136,7 +140,12 @@ export default function Nav() {
               boxSizing: "border-box",
               width: drawerWidth,
               backgroundColor: "#2d2d2f",
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+
+              boxShadow: "1px 0 3px rgba(0,0,0,0.1)",
               zIndex: (theme) => theme.zIndex.appBar - 1,
+              overflow: "hidden", // prevent from showing scroll bar at the bottom
             },
             flexShrink: 0,
           }}

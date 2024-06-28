@@ -44,7 +44,7 @@ const drawerItems = [
 
 // icon style
 const ICON_STYLE = {
-  // color: "#b5a27f",
+  color: "#aeaeb0",
   height: "30px",
   width: "30px",
 };
@@ -85,7 +85,7 @@ export default function ResponsiveDrawer({
       </Box>
 
       {/* main pages link */}
-      <Box sx={{ flexGrow: 1, overflow: "auto" }}>
+      <Box sx={{ flexGrow: 1 }}>
         <List>
           {drawerItems.map((item) => (
             <Link
@@ -104,6 +104,17 @@ export default function ResponsiveDrawer({
                       currentRoute === item.to
                         ? "rgba(219, 223, 234, 0.2)"
                         : "",
+                    my: 0.5, // increase gap
+                    borderRadius: 1,
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,0.1)",
+                    },
+                    "&.Mui-selected": {
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      "&:hover": {
+                        backgroundColor: "rgba(255,255,255,0.25)",
+                      },
+                    },
                   }}
                 >
                   <ListItemIcon>
@@ -167,7 +178,7 @@ export default function ResponsiveDrawer({
             <ListItemButton
               onClick={() =>
                 window.open(
-                  "https://github.com/rui-han/the-tarkov-data",
+                  "https://status.escapefromtarkov.com/",
                   "_blank",
                   "noopener,noreferrer",
                 )

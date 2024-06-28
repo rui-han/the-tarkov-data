@@ -16,7 +16,7 @@ export default function ServerStatus() {
   return (
     <>
       <ListItemText>
-        Server
+        EFT Server
         <span
           style={{
             backgroundColor: dotColor,
