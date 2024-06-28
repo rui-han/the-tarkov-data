@@ -59,7 +59,14 @@ export default function ResponsiveDrawer({
   const currentRoute = usePathname();
 
   return (
-    <>
+    <Box
+      sx={{
+        width: drawerWidth,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Box
         sx={{
           width: drawerWidth,
@@ -78,115 +85,119 @@ export default function ResponsiveDrawer({
       </Box>
 
       {/* main pages link */}
-      <List>
-        {drawerItems.map((item) => (
-          <Link
-            key={item.to}
-            href={item.to}
-            style={{
-              color: "inherit",
-              textDecoration: "inherit",
-              padding: 0,
-            }}
-          >
-            <ListItem>
-              <ListItemButton
-                sx={{
-                  backgroundColor:
-                    currentRoute === item.to ? "rgba(219, 223, 234, 0.2)" : "",
-                }}
-              >
-                <ListItemIcon>
-                  <Icon path={item.iconPath} style={ICON_STYLE} />
-                </ListItemIcon>
-                {item.text}
-              </ListItemButton>
-            </ListItem>
-          </Link>
-        ))}
-      </List>
-      <Divider />
-      {/* Github link */}
-      <List>
-        <ListItem>
-          <ListItemButton
-            onClick={() =>
-              window.open("https://github.com/rui-han/the-tarkov-data")
-            }
-          >
-            <ListItemIcon>
-              <Icon path={mdiGithub} style={ICON_STYLE} />
-            </ListItemIcon>
-            <ListItemText>Github</ListItemText>
-          </ListItemButton>
-        </ListItem>
-      </List>
-      <Divider />
-      {/* social media links */}
-      <List>
-        <ListItem>
-          <ListItemButton
-            onClick={() => window.open("https://twitter.com/nikgeneburn")}
-          >
-            <ListItemIcon>
-              <Image
-                src={Nikita}
-                style={{ height: "30px", width: "30px" }}
-                alt="Nikita Buyanov"
-              />
-            </ListItemIcon>
-            <ListItemText>Nikita</ListItemText>
-          </ListItemButton>
-        </ListItem>
-        <ListItem>
-          <ListItemButton
-            onClick={() => window.open("https://twitter.com/bstategames")}
-          >
-            <ListItemIcon>
-              <Image src={BSG} style={ICON_STYLE} alt="Battle State Games" />
-            </ListItemIcon>
-            <ListItemText>BSG</ListItemText>
-          </ListItemButton>
-        </ListItem>
-      </List>
-      <Divider />
-      {/* server status */}
-      <List>
-        <ListItem>
-          <ListItemButton
-            onClick={() =>
-              window.open(
-                "https://github.com/rui-han/the-tarkov-data",
-                "_blank",
-                "noopener,noreferrer",
-              )
-            }
-          >
-            <ListItemIcon>
-              <Icon path={mdiServer} style={ICON_STYLE} />
-            </ListItemIcon>
-            <ServerStatus />
-          </ListItemButton>
-        </ListItem>
-      </List>
-      <Divider />
+      <Box sx={{ flexGrow: 1, overflow: "auto" }}>
+        <List>
+          {drawerItems.map((item) => (
+            <Link
+              key={item.to}
+              href={item.to}
+              style={{
+                color: "inherit",
+                textDecoration: "inherit",
+                padding: 0,
+              }}
+            >
+              <ListItem>
+                <ListItemButton
+                  sx={{
+                    backgroundColor:
+                      currentRoute === item.to
+                        ? "rgba(219, 223, 234, 0.2)"
+                        : "",
+                  }}
+                >
+                  <ListItemIcon>
+                    <Icon path={item.iconPath} style={ICON_STYLE} />
+                  </ListItemIcon>
+                  {item.text}
+                </ListItemButton>
+              </ListItem>
+            </Link>
+          ))}
+        </List>
+
+        <Divider />
+        {/* Github link */}
+        <List>
+          <ListItem>
+            <ListItemButton
+              onClick={() =>
+                window.open("https://github.com/rui-han/the-tarkov-data")
+              }
+            >
+              <ListItemIcon>
+                <Icon path={mdiGithub} style={ICON_STYLE} />
+              </ListItemIcon>
+              <ListItemText>Github</ListItemText>
+            </ListItemButton>
+          </ListItem>
+        </List>
+        <Divider />
+        {/* social media links */}
+        <List>
+          <ListItem>
+            <ListItemButton
+              onClick={() => window.open("https://twitter.com/nikgeneburn")}
+            >
+              <ListItemIcon>
+                <Image
+                  src={Nikita}
+                  style={{ height: "30px", width: "30px" }}
+                  alt="Nikita Buyanov"
+                />
+              </ListItemIcon>
+              <ListItemText>Nikita</ListItemText>
+            </ListItemButton>
+          </ListItem>
+          <ListItem>
+            <ListItemButton
+              onClick={() => window.open("https://twitter.com/bstategames")}
+            >
+              <ListItemIcon>
+                <Image src={BSG} style={ICON_STYLE} alt="Battle State Games" />
+              </ListItemIcon>
+              <ListItemText>BSG</ListItemText>
+            </ListItemButton>
+          </ListItem>
+        </List>
+        <Divider />
+        {/* server status */}
+        <List>
+          <ListItem>
+            <ListItemButton
+              onClick={() =>
+                window.open(
+                  "https://github.com/rui-han/the-tarkov-data",
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
+            >
+              <ListItemIcon>
+                <Icon path={mdiServer} style={ICON_STYLE} />
+              </ListItemIcon>
+              <ServerStatus />
+            </ListItemButton>
+          </ListItem>
+        </List>
+        <Divider />
+      </Box>
       {/* raid time */}
-      <List>
-        <ListItem>
-          <Box
-            sx={{
-              color: "inherit",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              width: "100%",
-            }}
-          >
+      <Box
+        sx={{
+          mt: "auto",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          p: 1,
+        }}
+      >
+        <List>
+          <ListItem>
             <RaidTime />
-          </Box>
-        </ListItem>
-      </List>
-    </>
+          </ListItem>
+        </List>
+      </Box>
+    </Box>
   );
 }

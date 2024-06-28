@@ -1,25 +1,9 @@
 import { useState, useEffect } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { styled } from "@mui/system";
+// icons
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import NightsStayIcon from "@mui/icons-material/NightsStay";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-
-const RaidTimeContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: "rgba(41, 41, 41, 0.8)",
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(2),
-  boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-  width: "90%",
-}));
-
-const TitleBox = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  marginBottom: theme.spacing(1.5),
-  padding: theme.spacing(0.5, 1),
-  borderBottom: "1px solid rgba(154, 136, 102, 0.3)",
-}));
 
 const TimeBox = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -69,27 +53,18 @@ function RaidTime() {
   }, []);
 
   if (!isClient) {
-    return <CircularProgress size={24} />;
+    return <p>Loading Raid Time...</p>;
   }
 
-  const formatTime = (date: any) => date.toISOString().substr(11, 8);
+  const formatTime = (date: Date) => date.toISOString().substr(11, 8);
 
-  const isDaytime = (time: any) => {
+  const isDaytime = (time: Date) => {
     const hours = time.getHours();
     return hours >= 6 && hours < 18;
   };
 
   return (
-    <RaidTimeContainer>
-      <TitleBox>
-        <AccessTimeIcon sx={{ color: "#9a8866", marginRight: 1 }} />
-        <Typography
-          variant="subtitle1"
-          sx={{ color: "#9a8866", fontWeight: "medium" }}
-        >
-          Raid Time
-        </Typography>
-      </TitleBox>
+    <>
       <TimeBox>
         {isDaytime(currentTime) ? (
           <WbSunnyIcon sx={{ color: "#ffd700" }} />
@@ -110,7 +85,7 @@ function RaidTime() {
           {formatTime(futureTime)}
         </TimeTypography>
       </TimeBox>
-    </RaidTimeContainer>
+    </>
   );
 }
 
