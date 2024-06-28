@@ -56,10 +56,11 @@ function RaidTime() {
     return <p>Loading Raid Time...</p>;
   }
 
-  const formatTime = (date: Date) => date.toISOString().substr(11, 8);
+  const formatTime = (date: Date): string => date.toISOString().substr(11, 8);
 
-  const isDaytime = (time: Date) => {
-    const hours = time.getHours();
+  const isDaytime = (time: Date): boolean => {
+    let formattedTime = formatTime(time);
+    let hours = Number(formattedTime.split(":")[0]);
     return hours >= 6 && hours < 18;
   };
 
