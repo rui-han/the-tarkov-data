@@ -1,33 +1,51 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import Nav from "@/components/navigation/Nav";
-import { darkTheme } from "./theme";
-import { CssBaseline, ThemeProvider, Grid, Box } from "@mui/material";
+import { CssBaseline, ThemeProvider, Box, createTheme } from "@mui/material";
+
+// drawer width
+const drawerWidth = 240;
+
+// dark theme with customization
+export const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#2D2D2F",
+    },
+    text: {
+      primary: "#9a8866",
+    },
+  },
+});
 
 export default function TopLevelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
   return (
     <ThemeProvider theme={darkTheme}>
-      <Grid container sx={{ flexGrow: 1, height: "100%" }}>
+      <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <Nav />
-        <Grid
-          item
-          xs={12}
+        {!isHomePage && <Nav />}
+        <Box
+          component="main"
           sx={{
-            mt: "64px",
+            flexGrow: 1,
+            mt: isHomePage ? 0 : "64px",
+            mb: 4,
             height: "100%",
-            ml: { sm: "240px" }, // for small screen devices, margin left is 0
+            width: { sm: `calc(100% - ${drawerWidth}px)` },
           }}
         >
-          <Box display="flex" flexDirection="column" alignItems="center">
-            {children}
-          </Box>
-        </Grid>
-      </Grid>
+          {children}
+        </Box>
+      </Box>
     </ThemeProvider>
   );
 }

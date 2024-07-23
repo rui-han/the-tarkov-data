@@ -17,8 +17,9 @@ import Icon from "@mdi/react";
 import BSG from "../../public/logos/BSG-logo.png";
 import Nikita from "../../public/images/nikita.jpeg";
 import ServerStatus from "./ServerStatus";
-import EFT from "../../public/logos/EFT-logo.png";
+// import EFT from "../../public/logos/EFT-logo.png";
 import RaidTime from "./RaidTime";
+
 // icons
 import {
   mdiAmmunition,
@@ -67,23 +68,6 @@ export default function ResponsiveDrawer({
         flexDirection: "column",
       }}
     >
-      <Box
-        sx={{
-          width: drawerWidth,
-          mt: "2vh",
-          display: { xs: "flex", sm: "none" },
-          justifyContent: "center",
-        }}
-      >
-        <Link href="/">
-          <Image
-            src={EFT}
-            alt="The Tarkov Data"
-            style={{ height: "64px", width: "auto" }}
-          />
-        </Link>
-      </Box>
-
       {/* main pages link */}
       <Box sx={{ flexGrow: 1 }}>
         <List>
@@ -97,7 +81,7 @@ export default function ResponsiveDrawer({
                 padding: 0,
               }}
             >
-              <ListItem>
+              <ListItem disablePadding sx={{ display: "block" }}>
                 <ListItemButton
                   sx={{
                     backgroundColor:
@@ -130,7 +114,7 @@ export default function ResponsiveDrawer({
         <Divider />
         {/* Github link */}
         <List>
-          <ListItem>
+          <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               onClick={() =>
                 window.open("https://github.com/rui-han/the-tarkov-data")
@@ -146,7 +130,7 @@ export default function ResponsiveDrawer({
         <Divider />
         {/* social media links */}
         <List>
-          <ListItem>
+          <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               onClick={() => window.open("https://twitter.com/nikgeneburn")}
             >
@@ -160,7 +144,7 @@ export default function ResponsiveDrawer({
               <ListItemText>Nikita</ListItemText>
             </ListItemButton>
           </ListItem>
-          <ListItem>
+          <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               onClick={() => window.open("https://twitter.com/bstategames")}
             >
@@ -174,7 +158,7 @@ export default function ResponsiveDrawer({
         <Divider />
         {/* server status */}
         <List>
-          <ListItem>
+          <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               onClick={() =>
                 window.open(

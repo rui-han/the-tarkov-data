@@ -6,6 +6,7 @@ import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/ammo";
 import HowToRead from "@/components/ammunition/HowToRead";
 import AmmoTable from "@/components/ammunition/AmmoTable";
+import { Box } from "@mui/material";
 
 export default function Ammunition() {
   const { data } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
@@ -15,7 +16,9 @@ export default function Ammunition() {
   const [inputText, setInputText] = useState("");
 
   return (
-    <>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <HowToRead />
 
       <AmmoTable
@@ -25,6 +28,6 @@ export default function Ammunition() {
         setCurrentCaliber={setCurrentCaliber}
         setInputText={setInputText}
       />
-    </>
+    </Box>
   );
 }
