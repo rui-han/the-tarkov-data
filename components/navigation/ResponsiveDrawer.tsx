@@ -52,10 +52,12 @@ const ICON_STYLE = {
 
 interface ResponsiveDrawerProps {
   drawerWidth: number;
+  open: boolean;
 }
 
 export default function ResponsiveDrawer({
   drawerWidth,
+  open,
 }: ResponsiveDrawerProps) {
   const currentRoute = usePathname();
 
@@ -182,7 +184,7 @@ export default function ResponsiveDrawer({
         sx={{
           mt: "auto",
           width: "100%",
-          display: "flex",
+          display: open ? "flex" : "none",
           justifyContent: "center",
           p: 1,
         }}

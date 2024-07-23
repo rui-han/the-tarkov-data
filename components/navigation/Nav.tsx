@@ -185,7 +185,7 @@ export default function Nav() {
             )}
           </IconButton>
         </DrawerHeader>
-        <ResponsiveDrawer drawerWidth={drawerWidth} />
+        <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
       </Drawer>
       {/* For small screen devices, add a temporary drawer */}
       <MuiDrawer
@@ -203,7 +203,7 @@ export default function Nav() {
           },
         }}
       >
-        <ResponsiveDrawer drawerWidth={drawerWidth} />
+        <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
       </MuiDrawer>
     </Box>
   );
