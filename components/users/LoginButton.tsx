@@ -16,6 +16,11 @@ export default function LoginButton() {
             color: "inherit",
             borderColor: "inherit",
             fontSize: { xs: "12px", sm: "16px" },
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              borderColor: "rgba(255, 255, 255, 0.5)",
+              color: "inherit",
+            },
           }}
         >
           LOGIN
