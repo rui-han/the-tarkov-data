@@ -5,7 +5,6 @@ import Link from "next/link";
 import ResponsiveDrawer from "./ResponsiveDrawer";
 import LoginButton from "../users/LoginButton";
 import UserMenu from "../users/UserMenu";
-import RaidTime from "./RaidTime";
 // MUI
 import {
   Typography,
@@ -13,6 +12,7 @@ import {
   CssBaseline,
   IconButton,
   Toolbar,
+  Divider,
 } from "@mui/material";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MuiDrawer from "@mui/material/Drawer";
@@ -73,6 +73,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open", // to prevent the open prop from being passed to MUI's AppBar
 })<AppBarProps>(({ theme, open }) => ({
+  height: appbarHeight,
   zIndex: theme.zIndex.drawer + 1,
   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   background: "linear-gradient(to right, #2d2d2f, #3d3d3f)",
@@ -151,7 +152,7 @@ export default function Nav() {
               fontWeight: 600,
               fontSize: { xs: 16, sm: 20, md: 24 },
               letterSpacing: 2,
-              display: "flex",
+              display: { xs: "none", sm: "flex" },
               justifyContent: "center",
               flexGrow: 0,
             }}
@@ -165,7 +166,7 @@ export default function Nav() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "right",
+              justifyContent: "flex-end",
               flexGrow: 1,
             }}
           >
@@ -203,6 +204,8 @@ export default function Nav() {
           },
         }}
       >
+        <Toolbar />
+        <Divider />
         <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
       </MuiDrawer>
     </Box>
