@@ -7,6 +7,7 @@ import LoginButton from "../users/LoginButton";
 import UserMenu from "../users/UserMenu";
 // MUI
 import {
+  useMediaQuery,
   Typography,
   Box,
   CssBaseline,
@@ -118,6 +119,7 @@ export default function Nav() {
   const user = useUser();
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleMiniDrawerOpen = () => {
     setOpen(true);
@@ -144,7 +146,6 @@ export default function Nav() {
           >
             <MenuIcon />
           </IconButton>
-
           {/* title */}
           <Typography
             sx={{
@@ -161,7 +162,6 @@ export default function Nav() {
               THE TARKOV DATA
             </Link>
           </Typography>
-
           {/* user menu, if not signed in, display login button */}
           <Box
             sx={{
@@ -174,40 +174,42 @@ export default function Nav() {
           </Box>
         </Toolbar>
       </AppBar>
-
-      {/* For larger screen devices, add a permanent mini variant drawer */}
-      <Drawer variant="permanent" open={open}>
-        <DrawerHeader>
-          <IconButton sx={{ mb: "2vh" }} onClick={handleMiniDrawerClose}>
-            {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
-          </IconButton>
-        </DrawerHeader>
-        <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
-      </Drawer>
-      {/* For small screen devices, add a temporary drawer */}
-      <MuiDrawer
-        variant="temporary"
-        open={open}
-        onClose={handleMiniDrawerClose}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
-        sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": {
-            boxSizing: "border-box",
-            width: drawerWidth,
-          },
-        }}
-      >
-        <Toolbar />
-        <Divider />
-        <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
-      </MuiDrawer>
+      {isMobile ? (
+        //  For small screen devices, add a temporary drawer
+        <MuiDrawer
+          variant="temporary"
+          open={open}
+          onClose={handleMiniDrawerClose}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+        >
+          <Toolbar />
+          <Divider />
+          <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
+        </MuiDrawer>
+      ) : (
+        //  For larger screen devices, add a permanent mini variant drawer
+        <Drawer variant="permanent" open={open}>
+          <DrawerHeader>
+            <IconButton sx={{ mb: "2vh" }} onClick={handleMiniDrawerClose}>
+              {theme.direction === "rtl" ? (
+                <ChevronRightIcon />
+              ) : (
+                <ChevronLeftIcon />
+              )}
+            </IconButton>
+          </DrawerHeader>
+          <ResponsiveDrawer drawerWidth={drawerWidth} open={open} />
+        </Drawer>
+      )}
     </Box>
   );
 }
