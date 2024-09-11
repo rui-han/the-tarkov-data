@@ -60,7 +60,11 @@ const data = [
 
 export default function HowToRead() {
   return (
-    <TableContainer component={Paper} sx={{ width: "90%", m: "3vh" }}>
+    <TableContainer
+      component={Paper}
+      sx={{ width: "90%", m: "3vh" }}
+      elevation={4}
+    >
       <Table>
         <TableHead>
           <TableRow>

@@ -11,7 +11,6 @@ import AmmoSearchbar from "./AmmoSearchbar";
 import {
   Box,
   Button,
-  Divider,
   IconButton,
   Paper,
   Table,
@@ -182,18 +181,12 @@ export default function AmmoTable({
   }, [ammo, currentCaliber, inputText]);
 
   return (
-    <>
-      <TableContainer
-        sx={{
-          width: "90%",
-          m: "3vh",
-          padding: "2rem",
-        }}
-        component={Paper}
-      >
-        {/* filter buttons for ammoType: bullet */}
-        <Box m="2vh 0">
-          <Box component="h3">Bullets (Rifles, Pistols, etc):</Box>
+    <Box width="90%">
+      {/* filter buttons*/}
+      <Paper sx={{ my: 3 }} elevation={3}>
+        <Box p={4}>
+          {/* filter buttons for ammoType: bullet */}
+          <h4>Bullets (Rifles, Pistols, etc):</h4>
           {[
             // using Set() to filter unique caliber values
             ...new Set(
@@ -203,7 +196,7 @@ export default function AmmoTable({
             ),
           ].map((caliber) => (
             <Button
-              sx={{ m: "4px", fontSize: "1.1em" }}
+              sx={{ m: "4px", fontSize: "16px" }}
               key={caliber}
               color="inherit"
               variant={caliber === currentCaliber ? "contained" : "outlined"}
@@ -212,10 +205,8 @@ export default function AmmoTable({
               {changeCaliberToShortName(caliber)}
             </Button>
           ))}
-        </Box>
-        {/* filter buttons for ammoType: buckshot / grenade / flashbang */}
-        <Box m="2vh 0">
-          <Box component="h3">Others (Buckshots, Grenades, Flashbangs):</Box>
+          {/* filter buttons for ammoType: buckshot / grenade / flashbang */}
+          <h4>Others (Buckshots, Grenades, Flashbangs):</h4>
           {[
             // using Set() to filter unique caliber values
             ...new Set(
@@ -229,7 +220,7 @@ export default function AmmoTable({
             ),
           ].map((caliber) => (
             <Button
-              sx={{ m: "4px", fontSize: "1.1em" }}
+              sx={{ m: "4px", fontSize: "16px" }}
               key={caliber}
               color="inherit"
               variant={caliber === currentCaliber ? "contained" : "outlined"}
@@ -239,17 +230,26 @@ export default function AmmoTable({
             </Button>
           ))}
         </Box>
+      </Paper>
 
-        <Divider />
-
-        {/* ammo search bar */}
+      {/* ammo search bar */}
+      <Paper sx={{ my: 2 }} elevation={3}>
         <Box sx={{ width: "100%", p: "3vh" }}>
           <AmmoSearchbar setInputText={setInputText} />
         </Box>
-        {/* table for data displaying */}
+      </Paper>
+
+      {/* the data table */}
+      <TableContainer
+        sx={{
+          padding: "2rem",
+          mt: 4,
+        }}
+        component={Paper}
+        elevation={3}
+      >
         <Table
-          stickyHeader
-          sx={{ mt: "2vh", border: "3px solid #9a8866", minWidth: "100%" }}
+          sx={{ mt: "2vh", border: "3px solid #9a8866", width: "100%" }}
           aria-label="Ammunition table"
         >
           <AmmoTableHead
@@ -258,8 +258,8 @@ export default function AmmoTable({
             orderBy={orderBy}
           />
           <TableBody>
-            {
-              //stableSort(ammo, getComparator(order, orderBy))
+            {/* check if there is a result from the combination of searchbar text and filter button */}
+            {visibleRows.length > 0 ? (
               visibleRows
                 .slice()
                 .sort(getComparator(order, orderBy))
@@ -324,24 +324,28 @@ export default function AmmoTable({
                           )}
                         </IconButton>
                       </TableCell>
-                      <TableCell sx={{ width: "20%" }}>
+                      {/* name */}
+                      <TableCell component="th" scope="row">
                         {ammoData.item.name}
                       </TableCell>
-                      <TableCell align="center" sx={{ width: "16%" }}>
+                      {/* damage */}
+                      <TableCell align="center">
                         {ammoData.projectileCount > 1
                           ? ammoData.projectileCount + " x " + ammoData.damage
                           : ammoData.damage}
                       </TableCell>
-                      <TableCell align="center" sx={{ width: "16%" }}>
+                      {/* penetration power */}
+                      <TableCell align="center">
                         {ammoData.penetrationPower}
                       </TableCell>
-                      <TableCell align="center" sx={{ width: "16%" }}>
+                      {/* armor damage */}
+                      <TableCell align="center">
                         {ammoData.armorDamage}
                       </TableCell>
+                      {/* accuracy */}
                       <TableCell
                         align="center"
                         sx={{
-                          width: "16%",
                           color:
                             // accuracy, the greater the better
                             ammoData.accuracyModifier > 0
@@ -354,10 +358,10 @@ export default function AmmoTable({
                       >
                         {ammoData.accuracyModifier}
                       </TableCell>
+                      {/* recoil */}
                       <TableCell
                         align="center"
                         sx={{
-                          width: "16%",
                           color:
                             // recoil, the greater the worse
                             ammoData.recoilModifier > 0
@@ -373,11 +377,19 @@ export default function AmmoTable({
                     </TableRow>
                   );
                 })
-            }
+            ) : (
+              // otherwise return no results
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Box sx={{ py: 10 }}>No Results found</Box>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-      <Box mb="3vh">
+      {/* the pagination */}
+      <Box m="2vh" display="flex" justifyContent="center">
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
@@ -388,6 +400,6 @@ export default function AmmoTable({
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
-    </>
+    </Box>
   );
 }
