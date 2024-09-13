@@ -11,6 +11,7 @@ import AmmoSearchbar from "./AmmoSearchbar";
 import {
   Box,
   Button,
+  Grid,
   IconButton,
   Paper,
   Table,
@@ -180,8 +181,12 @@ export default function AmmoTable({
     }).length;
   }, [ammo, currentCaliber, inputText]);
 
+  // Avoid a layout jump when reaching the last page with empty rows.
+  const emptyRows =
+    page > 0 ? Math.max(0, (page + 1) * rowsPerPage - totalRows) : 0;
+
   return (
-    <Box width="90%">
+    <Grid width="90%">
       {/* filter buttons*/}
       <Paper sx={{ my: 3 }} elevation={3}>
         <Box p={4}>
@@ -231,26 +236,29 @@ export default function AmmoTable({
           ))}
         </Box>
       </Paper>
-
       {/* ammo search bar */}
       <Paper sx={{ my: 2 }} elevation={3}>
         <Box sx={{ width: "100%", p: "3vh" }}>
           <AmmoSearchbar setInputText={setInputText} />
         </Box>
       </Paper>
-
       {/* the data table */}
       <TableContainer
         sx={{
           padding: "2rem",
           mt: 4,
+          overflowX: "auto", // scroll x on small screens
         }}
         component={Paper}
         elevation={3}
       >
         <Table
-          sx={{ mt: "2vh", border: "3px solid #9a8866", width: "100%" }}
-          aria-label="Ammunition table"
+          sx={{
+            mt: "2vh",
+            border: "3px solid #9a8866",
+            minWidth: 650,
+          }}
+          size="small"
         >
           <AmmoTableHead
             onRequestSort={handleRequestSort}
@@ -259,147 +267,158 @@ export default function AmmoTable({
           />
           <TableBody>
             {/* check if there is a result from the combination of searchbar text and filter button */}
-            {visibleRows.length > 0 ? (
-              visibleRows
-                .slice()
-                .sort(getComparator(order, orderBy))
-                .filter((ammoData) => {
-                  // filter button is selected AND search text exsits
-                  if (currentCaliber && inputText) {
-                    return (
-                      ammoData.caliber === currentCaliber &&
-                      ammoData.item.name
-                        .toLocaleLowerCase()
-                        .includes(inputText.toLowerCase())
-                    );
-                  }
-                  // filter button is selected OR search text exsits
-                  else if (currentCaliber || inputText) {
-                    if (currentCaliber) {
-                      return ammoData.caliber === currentCaliber;
-                    } else if (inputText) {
-                      return ammoData.item.name
-                        .toLowerCase()
-                        .includes(inputText.toLowerCase());
-                    }
-                  } else {
-                    // no button selected AND no search input text, return all ammo data
-                    return ammoData;
-                  }
-                })
-                .map((ammoData) => {
+            {visibleRows
+              .slice()
+              .sort(getComparator(order, orderBy))
+              .filter((ammoData) => {
+                // filter button is selected AND search text exsits
+                if (currentCaliber && inputText) {
                   return (
-                    <TableRow hover key={ammoData.item.id}>
-                      <TableCell>
-                        <IconButton
-                          color="inherit"
-                          onClick={() => {
-                            if (!user) {
-                              // TODO: add a modal or something?
-                              alert("please LOGIN to use favorite feature!!!");
-                            } else {
-                              const isFavorite = userFavoriteAmmo.some(
-                                (fav) => fav.itemId === ammoData.item.id,
-                              );
-
-                              if (isFavorite) {
-                                // remove from favs
-                                handleRemoveFavoriteAmmo(
-                                  user,
-                                  ammoData.item.id,
-                                );
-                              } else {
-                                // add to favs
-                                handleFavoriteAmmo(user, ammoData.item.id);
-                              }
-                            }
-                          }}
-                        >
-                          {userFavoriteAmmo.some(
-                            (fav) => fav.itemId === ammoData.item.id,
-                          ) ? (
-                            <FavoriteIcon />
-                          ) : (
-                            <FavoriteBorderIcon />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                      {/* name */}
-                      <TableCell component="th" scope="row">
-                        {ammoData.item.name}
-                      </TableCell>
-                      {/* damage */}
-                      <TableCell align="center">
-                        {ammoData.projectileCount > 1
-                          ? ammoData.projectileCount + " x " + ammoData.damage
-                          : ammoData.damage}
-                      </TableCell>
-                      {/* penetration power */}
-                      <TableCell align="center">
-                        {ammoData.penetrationPower}
-                      </TableCell>
-                      {/* armor damage */}
-                      <TableCell align="center">
-                        {ammoData.armorDamage}
-                      </TableCell>
-                      {/* accuracy */}
-                      <TableCell
-                        align="center"
-                        sx={{
-                          color:
-                            // accuracy, the greater the better
-                            ammoData.accuracyModifier > 0
-                              ? "green"
-                              : ammoData.accuracyModifier === 0
-                              ? "grey"
-                              : "red",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {ammoData.accuracyModifier}
-                      </TableCell>
-                      {/* recoil */}
-                      <TableCell
-                        align="center"
-                        sx={{
-                          color:
-                            // recoil, the greater the worse
-                            ammoData.recoilModifier > 0
-                              ? "red"
-                              : ammoData.recoilModifier === 0
-                              ? "grey"
-                              : "green",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {ammoData.recoilModifier}
-                      </TableCell>
-                    </TableRow>
+                    ammoData.caliber === currentCaliber &&
+                    ammoData.item.name
+                      .toLocaleLowerCase()
+                      .includes(inputText.toLowerCase())
                   );
-                })
-            ) : (
-              // otherwise return no results
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Box sx={{ py: 10 }}>No Results found</Box>
-                </TableCell>
+                }
+                // filter button is selected OR search text exsits
+                else if (currentCaliber || inputText) {
+                  if (currentCaliber) {
+                    return ammoData.caliber === currentCaliber;
+                  } else if (inputText) {
+                    return ammoData.item.name
+                      .toLowerCase()
+                      .includes(inputText.toLowerCase());
+                  }
+                } else {
+                  // no button selected AND no search input text, return all ammo data
+                  return ammoData;
+                }
+              })
+              .map((ammoData) => {
+                return (
+                  <TableRow hover key={ammoData.item.id}>
+                    {/* the favorite icon */}
+                    <TableCell>
+                      <IconButton
+                        color="inherit"
+                        onClick={() => {
+                          if (!user) {
+                            // TODO: add a modal or something?
+                            alert("please LOGIN to use favorite feature!!!");
+                          } else {
+                            const isFavorite = userFavoriteAmmo.some(
+                              (fav) => fav.itemId === ammoData.item.id,
+                            );
+
+                            if (isFavorite) {
+                              // remove from favs
+                              handleRemoveFavoriteAmmo(user, ammoData.item.id);
+                            } else {
+                              // add to favs
+                              handleFavoriteAmmo(user, ammoData.item.id);
+                            }
+                          }
+                        }}
+                      >
+                        {userFavoriteAmmo.some(
+                          (fav) => fav.itemId === ammoData.item.id,
+                        ) ? (
+                          <FavoriteIcon />
+                        ) : (
+                          <FavoriteBorderIcon />
+                        )}
+                      </IconButton>
+                    </TableCell>
+                    {/* name */}
+                    <TableCell>
+                      {/* wrap text in a div, avoid horizontal layout jump */}
+                      <Box
+                        component="div"
+                        sx={{
+                          width: 300,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {ammoData.item.name}
+                      </Box>
+                    </TableCell>
+                    {/* damage */}
+                    <TableCell align="center">
+                      {ammoData.projectileCount > 1
+                        ? ammoData.projectileCount + " x " + ammoData.damage
+                        : ammoData.damage}
+                    </TableCell>
+                    {/* penetration power */}
+                    <TableCell align="center">
+                      {ammoData.penetrationPower}
+                    </TableCell>
+                    {/* armor damage */}
+                    <TableCell align="center">{ammoData.armorDamage}</TableCell>
+                    {/* accuracy */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color:
+                          // accuracy, the greater the better
+                          ammoData.accuracyModifier > 0
+                            ? "green"
+                            : ammoData.accuracyModifier === 0
+                            ? "grey"
+                            : "red",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {ammoData.accuracyModifier}
+                    </TableCell>
+                    {/* recoil */}
+                    <TableCell
+                      align="center"
+                      sx={{
+                        color:
+                          // recoil, the greater the worse
+                          ammoData.recoilModifier > 0
+                            ? "red"
+                            : ammoData.recoilModifier === 0
+                            ? "grey"
+                            : "green",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {ammoData.recoilModifier}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            {emptyRows > 0 && (
+              <TableRow style={{ height: 33 * emptyRows }}>
+                <TableCell colSpan={6} />
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
       {/* the pagination */}
-      <Box m="2vh" display="flex" justifyContent="center">
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalRows}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <TableRow>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalRows}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </TableRow>
       </Box>
-    </Box>
+    </Grid>
   );
 }
