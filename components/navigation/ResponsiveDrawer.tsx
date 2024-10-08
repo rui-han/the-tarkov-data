@@ -59,7 +59,7 @@ export default function ResponsiveDrawer({
   drawerWidth,
   open,
 }: ResponsiveDrawerProps) {
-  const currentRoute = usePathname();
+  const currentRoute = usePathname(); // returns "/dashboard" on /dashboard?foo=bar
 
   return (
     <Box
@@ -87,7 +87,8 @@ export default function ResponsiveDrawer({
                 <ListItemButton
                   sx={{
                     backgroundColor:
-                      currentRoute === item.to
+                      // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
+                      currentRoute.split("/").slice(0, 2).join("/") === item.to
                         ? "rgba(219, 223, 234, 0.2)"
                         : "",
                     my: 0.5, // increase gap
