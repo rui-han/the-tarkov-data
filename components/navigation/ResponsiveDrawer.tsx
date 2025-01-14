@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   List,
@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   Divider,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import Icon from "@mdi/react";
 import BSG from "../../public/logos/BSG-logo.png";
@@ -60,6 +61,30 @@ export default function ResponsiveDrawer({
   open,
 }: ResponsiveDrawerProps) {
   const currentRoute = usePathname(); // returns "/dashboard" on /dashboard?foo=bar
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [prevPath, setPrevPath] = useState(currentRoute); // save the previous route
+
+  // check route changes
+  useEffect(() => {
+    // if route changes, set loading state to null and set prevPath to current
+    if (currentRoute !== prevPath) {
+      setLoading(null);
+      setPrevPath(currentRoute);
+    }
+  }, [currentRoute, prevPath]);
+
+  // set the destination route to loading, then navigate to the destination
+  const handleNavigation = (to: string) => {
+    setLoading(to);
+    router.push(to);
+  };
+
+  // determine if drawer button should be highlighted
+  const isActiveRoute = (itemPath: string) => {
+    if (loading === itemPath) return true;
+    return currentRoute.split("/").slice(0, 2).join("/") === itemPath; // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
+  };
 
   return (
     <Box
@@ -74,43 +99,36 @@ export default function ResponsiveDrawer({
       <Box sx={{ flexGrow: 1 }}>
         <List>
           {drawerItems.map((item) => (
-            <Link
-              key={item.to}
-              href={item.to}
-              style={{
-                color: "inherit",
-                textDecoration: "inherit",
-                padding: 0,
-              }}
-            >
-              <ListItem disablePadding sx={{ display: "block" }}>
-                <ListItemButton
-                  sx={{
-                    backgroundColor:
-                      // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
-                      currentRoute.split("/").slice(0, 2).join("/") === item.to
-                        ? "rgba(219, 223, 234, 0.2)"
-                        : "",
-                    my: 0.5, // increase gap
-                    borderRadius: 1,
+            <ListItem key={item.to} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                onClick={() => handleNavigation(item.to)}
+                sx={{
+                  backgroundColor: isActiveRoute(item.to)
+                    ? "rgba(219, 223, 234, 0.2)"
+                    : "",
+                  my: 0.5, // increase gap
+                  borderRadius: 1,
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: "rgba(255,255,255,0.2)",
                     "&:hover": {
-                      backgroundColor: "rgba(255,255,255,0.1)",
+                      backgroundColor: "rgba(255,255,255,0.25)",
                     },
-                    "&.Mui-selected": {
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.25)",
-                      },
-                    },
-                  }}
-                >
-                  <ListItemIcon>
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  {loading === item.to ? (
+                    <CircularProgress style={ICON_STYLE} />
+                  ) : (
                     <Icon path={item.iconPath} style={ICON_STYLE} />
-                  </ListItemIcon>
-                  {item.text}
-                </ListItemButton>
-              </ListItem>
-            </Link>
+                  )}
+                </ListItemIcon>
+                {item.text}
+              </ListItemButton>
+            </ListItem>
           ))}
         </List>
 
