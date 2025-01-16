@@ -120,7 +120,7 @@ export default function ResponsiveDrawer({
                 }}
               >
                 <ListItemIcon>
-                  {loading === item.to ? (
+                  {loading === item.to && loading !== currentRoute ? (
                     <CircularProgress style={ICON_STYLE} />
                   ) : (
                     <Icon path={item.iconPath} style={ICON_STYLE} />
