@@ -4,13 +4,16 @@ import { useState, useMemo, useEffect } from "react";
 import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
+
 // components
-import AmmoTableHead from "./AmmoTableHead";
+import AmmoTableFilter from "./AmmoTableFilter";
 import AmmoSearchbar from "./AmmoSearchbar";
+import AmmoTableHead from "./AmmoTableHead";
+import AmmoTablePagination from "./AmmoTablePagination";
+
 // MUI
 import {
   Box,
-  Button,
   Grid,
   IconButton,
   Paper,
@@ -18,7 +21,6 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TablePagination,
   TableRow,
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -94,10 +96,6 @@ export default function AmmoTable({
     // click and unclick
     if (currentCaliber === caliber) setCurrentCaliber("");
     else setCurrentCaliber(caliber);
-  };
-  // to display caliber names inside filter buttons
-  const changeCaliberToShortName = (caliber: string) => {
-    return caliber.replace("Caliber", "");
   };
 
   // handle change page
@@ -188,60 +186,15 @@ export default function AmmoTable({
   return (
     <Grid width="90%">
       {/* filter buttons*/}
-      <Paper sx={{ my: 3 }} elevation={3}>
-        <Box p={4}>
-          {/* filter buttons for ammoType: bullet */}
-          <h4>Bullets (Rifles, Pistols, etc):</h4>
-          {[
-            // using Set() to filter unique caliber values
-            ...new Set(
-              ammo
-                .filter((ammoData) => ammoData.ammoType === "bullet")
-                .map((ammoData) => ammoData.caliber),
-            ),
-          ].map((caliber) => (
-            <Button
-              sx={{ m: "4px", fontSize: "16px" }}
-              key={caliber}
-              color="inherit"
-              variant={caliber === currentCaliber ? "contained" : "outlined"}
-              onClick={() => handleFilterButtonClick(caliber)}
-            >
-              {changeCaliberToShortName(caliber)}
-            </Button>
-          ))}
-          {/* filter buttons for ammoType: buckshot / grenade / flashbang */}
-          <h4>Others (Buckshots, Grenades, Flashbangs):</h4>
-          {[
-            // using Set() to filter unique caliber values
-            ...new Set(
-              ammo
-                .filter((ammoData) =>
-                  ["buckshot", "grenade", "flashbang"].includes(
-                    ammoData.ammoType,
-                  ),
-                )
-                .map((ammoData) => ammoData.caliber),
-            ),
-          ].map((caliber) => (
-            <Button
-              sx={{ m: "4px", fontSize: "16px" }}
-              key={caliber}
-              color="inherit"
-              variant={caliber === currentCaliber ? "contained" : "outlined"}
-              onClick={() => handleFilterButtonClick(caliber)}
-            >
-              {changeCaliberToShortName(caliber)}
-            </Button>
-          ))}
-        </Box>
-      </Paper>
+      <AmmoTableFilter
+        ammo={ammo}
+        currentCaliber={currentCaliber}
+        onFilterButtonClick={handleFilterButtonClick}
+      />
+
       {/* ammo search bar */}
-      <Paper sx={{ my: 2 }} elevation={3}>
-        <Box sx={{ width: "100%", p: "3vh" }}>
-          <AmmoSearchbar setInputText={setInputText} />
-        </Box>
-      </Paper>
+      <AmmoSearchbar setInputText={setInputText} />
+
       {/* the data table */}
       <TableContainer
         sx={{
@@ -400,23 +353,13 @@ export default function AmmoTable({
         </Table>
       </TableContainer>
       {/* the pagination */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalRows}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Box>
+      <AmmoTablePagination
+        totalRows={totalRows}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </Grid>
   );
 }

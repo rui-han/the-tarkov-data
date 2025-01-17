@@ -49,3 +49,17 @@ interface HeadCell {
   id: keyof Ammo;
   label: string;
 }
+
+interface AmmoTableFilterProps {
+  ammo: Ammo[];
+  currentCaliber: string;
+  onFilterButtonClick: (caliber: string) => void;
+}
+
+interface AmmoTablePaginationProps {
+  totalRows: number;
+  rowsPerPage: number;
+  page: number;
+  onPageChange: (event: unknown, newPage: number) => void;
+  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
