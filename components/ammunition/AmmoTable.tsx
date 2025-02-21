@@ -10,19 +10,14 @@ import AmmoTableFilter from "./AmmoTableFilter";
 import AmmoSearchbar from "./AmmoSearchbar";
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoTablePagination from "./AmmoTablePagination";
+import AmmoTableRow from "./AmmoTableRow";
 
 // utils
-import {
-  getComparator,
-  filterAndSortAmmo,
-  calculateEmptyRows,
-} from "@/utils/ammo-utils";
+import { filterAndSortAmmo, calculateEmptyRows } from "@/utils/ammo-utils";
 
 // MUI
 import {
-  Box,
   Grid,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -30,8 +25,6 @@ import {
   TableContainer,
   TableRow,
 } from "@mui/material";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 export default function AmmoTable({
   ammo,
@@ -112,6 +105,23 @@ export default function AmmoTable({
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows = calculateEmptyRows(page, rowsPerPage, totalRows);
 
+  // handle favorite icon click
+  const handleFavoriteClick = (itemId: string) => {
+    if (!user) {
+      alert("please LOGIN to use favorite feature!!!");
+      return;
+    }
+    const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
+
+    if (isFavorite) {
+      // remove from favs
+      handleRemoveFavoriteAmmo(user, itemId);
+    } else {
+      // add to favs
+      handleFavoriteAmmo(user, itemId);
+    }
+  };
+
   return (
     <Grid width="90%">
       {/* filter buttons*/}
@@ -148,104 +158,16 @@ export default function AmmoTable({
             orderBy={orderBy}
           />
           <TableBody>
-            {/* check if there is a result from the combination of searchbar text and filter button */}
-            {visibleRows.map((ammoData) => {
-              return (
-                <TableRow hover key={ammoData.item.id}>
-                  {/* the favorite icon */}
-                  <TableCell>
-                    <IconButton
-                      color="inherit"
-                      onClick={() => {
-                        if (!user) {
-                          // TODO: add a modal or something?
-                          alert("please LOGIN to use favorite feature!!!");
-                        } else {
-                          const isFavorite = userFavoriteAmmo.some(
-                            (fav) => fav.itemId === ammoData.item.id,
-                          );
-
-                          if (isFavorite) {
-                            // remove from favs
-                            handleRemoveFavoriteAmmo(user, ammoData.item.id);
-                          } else {
-                            // add to favs
-                            handleFavoriteAmmo(user, ammoData.item.id);
-                          }
-                        }
-                      }}
-                    >
-                      {userFavoriteAmmo.some(
-                        (fav) => fav.itemId === ammoData.item.id,
-                      ) ? (
-                        <FavoriteIcon />
-                      ) : (
-                        <FavoriteBorderIcon />
-                      )}
-                    </IconButton>
-                  </TableCell>
-                  {/* name */}
-                  <TableCell>
-                    {/* wrap text in a div, avoid horizontal layout jump */}
-                    <Box
-                      component="div"
-                      sx={{
-                        width: 300,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {ammoData.item.name}
-                    </Box>
-                  </TableCell>
-                  {/* damage */}
-                  <TableCell align="center">
-                    {ammoData.projectileCount > 1
-                      ? ammoData.projectileCount + " x " + ammoData.damage
-                      : ammoData.damage}
-                  </TableCell>
-                  {/* penetration power */}
-                  <TableCell align="center">
-                    {ammoData.penetrationPower}
-                  </TableCell>
-                  {/* armor damage */}
-                  <TableCell align="center">{ammoData.armorDamage}</TableCell>
-                  {/* accuracy */}
-                  <TableCell
-                    align="center"
-                    sx={{
-                      color:
-                        // accuracy, the greater the better
-                        ammoData.accuracyModifier > 0
-                          ? "green"
-                          : ammoData.accuracyModifier === 0
-                          ? "grey"
-                          : "red",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {ammoData.accuracyModifier}
-                  </TableCell>
-                  {/* recoil */}
-                  <TableCell
-                    align="center"
-                    sx={{
-                      color:
-                        // recoil, the greater the worse
-                        ammoData.recoilModifier > 0
-                          ? "red"
-                          : ammoData.recoilModifier === 0
-                          ? "grey"
-                          : "green",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {ammoData.recoilModifier}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {visibleRows.map((ammoData) => (
+              <AmmoTableRow
+                key={ammoData.item.id}
+                ammoData={ammoData}
+                isFavorite={userFavoriteAmmo.some(
+                  (fav) => fav.itemId === ammoData.item.id,
+                )}
+                onFavoriteClick={handleFavoriteClick}
+              />
+            ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 33 * emptyRows }}>
                 <TableCell colSpan={6} />

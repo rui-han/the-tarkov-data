@@ -63,3 +63,9 @@ interface AmmoTablePaginationProps {
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
+
+interface AmmoTableRowProps {
+  ammoData: Ammo;
+  isFavorite: boolean;
+  onFavoriteClick: (itemId: string) => void;
+}
