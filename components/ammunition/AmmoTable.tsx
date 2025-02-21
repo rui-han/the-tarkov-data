@@ -13,7 +13,7 @@ import AmmoTablePagination from "./AmmoTablePagination";
 import AmmoTableRow from "./AmmoTableRow";
 
 // utils
-import { filterAndSortAmmo, calculateEmptyRows } from "@/utils/ammo-utils";
+import { filterAndSortAmmo } from "@/utils/ammo-utils";
 
 // MUI
 import {
@@ -103,7 +103,7 @@ export default function AmmoTable({
   const totalRows = filteredAndSortedAmmo.length;
 
   // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows = calculateEmptyRows(page, rowsPerPage, totalRows);
+  const emptyRows = rowsPerPage - visibleRows.length;
 
   // handle favorite icon click
   const handleFavoriteClick = (itemId: string) => {
@@ -169,8 +169,8 @@ export default function AmmoTable({
               />
             ))}
             {emptyRows > 0 && (
-              <TableRow style={{ height: 33 * emptyRows }}>
-                <TableCell colSpan={6} />
+              <TableRow style={{ height: 53 * emptyRows }}>
+                <TableCell colSpan={7} />
               </TableRow>
             )}
           </TableBody>

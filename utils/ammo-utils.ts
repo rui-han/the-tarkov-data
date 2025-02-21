@@ -86,15 +86,6 @@ export function filterAndSortAmmo(
     .sort(getComparator(order, orderBy));
 }
 
-// calculate the number of empty rows to display in the table
-export function calculateEmptyRows(
-  page: number,
-  rowsPerPage: number,
-  totalRows: number,
-): number {
-  return page > 0 ? Math.max(0, (page + 1) * rowsPerPage - totalRows) : 0;
-}
-
 // get the color for the ammo property based on its value
 export function getAmmoPropertyColor(
   value: number,
