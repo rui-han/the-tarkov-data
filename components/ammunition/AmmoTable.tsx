@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
@@ -62,14 +62,14 @@ export default function AmmoTable({
   }, [user]);
 
   // handle table head sorting
-  const handleRequestSort = (
-    event: React.MouseEvent<unknown>,
-    property: keyof Ammo,
-  ) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
+  const handleRequestSort = useCallback(
+    (event: React.MouseEvent<unknown>, property: keyof Ammo) => {
+      const isAsc = orderBy === property && order === "asc";
+      setOrder(isAsc ? "desc" : "asc");
+      setOrderBy(property);
+    },
+    [order, orderBy],
+  );
 
   // handle ammoType filter button clicks
   const handleFilterButtonClick = (caliber: string) => {
@@ -149,130 +149,103 @@ export default function AmmoTable({
           />
           <TableBody>
             {/* check if there is a result from the combination of searchbar text and filter button */}
-            {visibleRows
-              .slice()
-              .sort(getComparator(order, orderBy))
-              .filter((ammoData) => {
-                // filter button is selected AND search text exsits
-                if (currentCaliber && inputText) {
-                  return (
-                    ammoData.caliber === currentCaliber &&
-                    ammoData.item.name
-                      .toLocaleLowerCase()
-                      .includes(inputText.toLowerCase())
-                  );
-                }
-                // filter button is selected OR search text exsits
-                else if (currentCaliber || inputText) {
-                  if (currentCaliber) {
-                    return ammoData.caliber === currentCaliber;
-                  } else if (inputText) {
-                    return ammoData.item.name
-                      .toLowerCase()
-                      .includes(inputText.toLowerCase());
-                  }
-                } else {
-                  // no button selected AND no search input text, return all ammo data
-                  return ammoData;
-                }
-              })
-              .map((ammoData) => {
-                return (
-                  <TableRow hover key={ammoData.item.id}>
-                    {/* the favorite icon */}
-                    <TableCell>
-                      <IconButton
-                        color="inherit"
-                        onClick={() => {
-                          if (!user) {
-                            // TODO: add a modal or something?
-                            alert("please LOGIN to use favorite feature!!!");
-                          } else {
-                            const isFavorite = userFavoriteAmmo.some(
-                              (fav) => fav.itemId === ammoData.item.id,
-                            );
+            {visibleRows.map((ammoData) => {
+              return (
+                <TableRow hover key={ammoData.item.id}>
+                  {/* the favorite icon */}
+                  <TableCell>
+                    <IconButton
+                      color="inherit"
+                      onClick={() => {
+                        if (!user) {
+                          // TODO: add a modal or something?
+                          alert("please LOGIN to use favorite feature!!!");
+                        } else {
+                          const isFavorite = userFavoriteAmmo.some(
+                            (fav) => fav.itemId === ammoData.item.id,
+                          );
 
-                            if (isFavorite) {
-                              // remove from favs
-                              handleRemoveFavoriteAmmo(user, ammoData.item.id);
-                            } else {
-                              // add to favs
-                              handleFavoriteAmmo(user, ammoData.item.id);
-                            }
+                          if (isFavorite) {
+                            // remove from favs
+                            handleRemoveFavoriteAmmo(user, ammoData.item.id);
+                          } else {
+                            // add to favs
+                            handleFavoriteAmmo(user, ammoData.item.id);
                           }
-                        }}
-                      >
-                        {userFavoriteAmmo.some(
-                          (fav) => fav.itemId === ammoData.item.id,
-                        ) ? (
-                          <FavoriteIcon />
-                        ) : (
-                          <FavoriteBorderIcon />
-                        )}
-                      </IconButton>
-                    </TableCell>
-                    {/* name */}
-                    <TableCell>
-                      {/* wrap text in a div, avoid horizontal layout jump */}
-                      <Box
-                        component="div"
-                        sx={{
-                          width: 300,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {ammoData.item.name}
-                      </Box>
-                    </TableCell>
-                    {/* damage */}
-                    <TableCell align="center">
-                      {ammoData.projectileCount > 1
-                        ? ammoData.projectileCount + " x " + ammoData.damage
-                        : ammoData.damage}
-                    </TableCell>
-                    {/* penetration power */}
-                    <TableCell align="center">
-                      {ammoData.penetrationPower}
-                    </TableCell>
-                    {/* armor damage */}
-                    <TableCell align="center">{ammoData.armorDamage}</TableCell>
-                    {/* accuracy */}
-                    <TableCell
-                      align="center"
-                      sx={{
-                        color:
-                          // accuracy, the greater the better
-                          ammoData.accuracyModifier > 0
-                            ? "green"
-                            : ammoData.accuracyModifier === 0
-                            ? "grey"
-                            : "red",
-                        fontWeight: "bold",
+                        }
                       }}
                     >
-                      {ammoData.accuracyModifier}
-                    </TableCell>
-                    {/* recoil */}
-                    <TableCell
-                      align="center"
+                      {userFavoriteAmmo.some(
+                        (fav) => fav.itemId === ammoData.item.id,
+                      ) ? (
+                        <FavoriteIcon />
+                      ) : (
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+                  </TableCell>
+                  {/* name */}
+                  <TableCell>
+                    {/* wrap text in a div, avoid horizontal layout jump */}
+                    <Box
+                      component="div"
                       sx={{
-                        color:
-                          // recoil, the greater the worse
-                          ammoData.recoilModifier > 0
-                            ? "red"
-                            : ammoData.recoilModifier === 0
-                            ? "grey"
-                            : "green",
-                        fontWeight: "bold",
+                        width: 300,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      {ammoData.recoilModifier}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      {ammoData.item.name}
+                    </Box>
+                  </TableCell>
+                  {/* damage */}
+                  <TableCell align="center">
+                    {ammoData.projectileCount > 1
+                      ? ammoData.projectileCount + " x " + ammoData.damage
+                      : ammoData.damage}
+                  </TableCell>
+                  {/* penetration power */}
+                  <TableCell align="center">
+                    {ammoData.penetrationPower}
+                  </TableCell>
+                  {/* armor damage */}
+                  <TableCell align="center">{ammoData.armorDamage}</TableCell>
+                  {/* accuracy */}
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color:
+                        // accuracy, the greater the better
+                        ammoData.accuracyModifier > 0
+                          ? "green"
+                          : ammoData.accuracyModifier === 0
+                          ? "grey"
+                          : "red",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {ammoData.accuracyModifier}
+                  </TableCell>
+                  {/* recoil */}
+                  <TableCell
+                    align="center"
+                    sx={{
+                      color:
+                        // recoil, the greater the worse
+                        ammoData.recoilModifier > 0
+                          ? "red"
+                          : ammoData.recoilModifier === 0
+                          ? "grey"
+                          : "green",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {ammoData.recoilModifier}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {emptyRows > 0 && (
               <TableRow style={{ height: 33 * emptyRows }}>
                 <TableCell colSpan={6} />
