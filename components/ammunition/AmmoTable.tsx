@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Ammo, Order, AmmoTableProps, Item } from "@/types/ammo";
+import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
 
@@ -10,6 +10,13 @@ import AmmoTableFilter from "./AmmoTableFilter";
 import AmmoSearchbar from "./AmmoSearchbar";
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoTablePagination from "./AmmoTablePagination";
+
+// utils
+import {
+  getComparator,
+  filterAndSortAmmo,
+  calculateEmptyRows,
+} from "@/utils/ammo-utils";
 
 // MUI
 import {
@@ -25,32 +32,6 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-
-// basic comparator used to compare two elements (a and b, eg. M855A1 and M995)
-// based on a specified property (orderBy, eg. damage)
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (orderBy == "item") return 0; // we don't sort names
-  if (b[orderBy] < a[orderBy]) {
-    return -1; // b should come before a in the sorted order
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0; // elements are considered equal in terms of the sorting criteria
-}
-
-// generate a comparator function based on the desired sorting order (order) and the property (orderBy)
-function getComparator<Key extends keyof any>(
-  order: Order, // "asc" | "desc"
-  orderBy: Key,
-): (
-  a: { [key in Key]: number | string | Item },
-  b: { [key in Key]: number | string | Item },
-) => number {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
 
 export default function AmmoTable({
   ammo,
@@ -80,7 +61,7 @@ export default function AmmoTable({
     }
   }, [user]);
 
-  // handle sorting
+  // handle table head sorting
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: keyof Ammo,
@@ -89,6 +70,7 @@ export default function AmmoTable({
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
+
   // handle ammoType filter button clicks
   const handleFilterButtonClick = (caliber: string) => {
     // return to the first page, in case that would return an empty table
@@ -102,6 +84,7 @@ export default function AmmoTable({
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
+
   //  handle change rows per page
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -110,78 +93,24 @@ export default function AmmoTable({
     setPage(0);
   };
 
-  const filterAndSortAmmo = (
-    ammo: Ammo[],
-    currentCaliber: string,
-    inputText: string,
-    order: Order,
-    orderBy: keyof Ammo,
-  ) => {
-    return ammo
-      .filter((ammoData) => {
-        // filter data
-        if (currentCaliber && inputText) {
-          return (
-            ammoData.caliber === currentCaliber &&
-            ammoData.item.name.toLowerCase().includes(inputText.toLowerCase())
-          );
-        } else if (currentCaliber || inputText) {
-          if (currentCaliber) {
-            return ammoData.caliber === currentCaliber;
-          } else if (inputText) {
-            return ammoData.item.name
-              .toLowerCase()
-              .includes(inputText.toLowerCase());
-          }
-        } else {
-          return true; // return all data if nothing matched
-        }
-      })
-      .sort(getComparator(order, orderBy)); // sort filtered data
-  };
+  // filter and sort the ammo data to be displayed
+  const filteredAndSortedAmmo = useMemo(() => {
+    return filterAndSortAmmo(ammo, currentCaliber, inputText, order, orderBy);
+  }, [ammo, currentCaliber, inputText, order, orderBy]);
 
   // data to be displayed in the current table page
   const visibleRows = useMemo(() => {
-    const filteredAndSortedAmmo = filterAndSortAmmo(
-      ammo,
-      currentCaliber,
-      inputText,
-      order,
-      orderBy,
-    );
-
     return filteredAndSortedAmmo.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage,
     );
-  }, [ammo, currentCaliber, inputText, order, orderBy, page, rowsPerPage]);
+  }, [filteredAndSortedAmmo, page, rowsPerPage]);
 
   // total counts for pagination
-  const totalRows = useMemo(() => {
-    return ammo.filter((ammoData) => {
-      // filter data
-      if (currentCaliber && inputText) {
-        return (
-          ammoData.caliber === currentCaliber &&
-          ammoData.item.name.toLowerCase().includes(inputText.toLowerCase())
-        );
-      } else if (currentCaliber || inputText) {
-        if (currentCaliber) {
-          return ammoData.caliber === currentCaliber;
-        } else if (inputText) {
-          return ammoData.item.name
-            .toLowerCase()
-            .includes(inputText.toLowerCase());
-        }
-      } else {
-        return true; // return all data if nothing matched
-      }
-    }).length;
-  }, [ammo, currentCaliber, inputText]);
+  const totalRows = filteredAndSortedAmmo.length;
 
   // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (page + 1) * rowsPerPage - totalRows) : 0;
+  const emptyRows = calculateEmptyRows(page, rowsPerPage, totalRows);
 
   return (
     <Grid width="90%">
