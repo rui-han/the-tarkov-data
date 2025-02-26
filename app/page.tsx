@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import Link from "next/link";
+// MUI
 import {
   Grid,
   Box,
@@ -10,8 +12,12 @@ import {
   CardContent,
   TextField,
   Divider,
+  Snackbar,
+  Alert,
+  Paper,
 } from "@mui/material";
-import Link from "next/link";
+import { useTheme } from "@mui/material/styles";
+// icons
 import Icon from "@mdi/react";
 import {
   mdiAmmunition,
@@ -20,28 +26,44 @@ import {
   mdiTooltipCheckOutline,
 } from "@mdi/js";
 
+// for big buttons on the home page
+const features = [
+  { icon: mdiAmmunition, title: "AMMUNITION", link: "/ammunition" },
+  { icon: mdiHome, title: "HIDEOUT", link: "/hideout" },
+  { icon: mdiPackageVariant, title: "ITEMS", link: "/items" },
+  { icon: mdiTooltipCheckOutline, title: "QUESTS", link: "/quests" },
+];
+// some hard coded news
+const latestUpdates = [
+  { title: "PVE ZONE is now available for purchase", date: "2024-07-18" },
+  { title: "Battlestate Games at TwitchCon Rotterdam", date: "2024-05-31" },
+  { title: "Reward for completing in-game event", date: "2024-05-15" },
+];
+
 export default function Home() {
+  const theme = useTheme();
+
   const [feedback, setFeedback] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  const features = [
-    { icon: mdiAmmunition, title: "AMMUNITION", link: "/ammunition" },
-    { icon: mdiHome, title: "HIDEOUT", link: "/hideout" },
-    { icon: mdiPackageVariant, title: "ITEMS", link: "/items" },
-    { icon: mdiTooltipCheckOutline, title: "QUESTS", link: "/quests" },
-  ];
+  // handle feedback submission
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      // don't need to submit empty feedback
+      if (feedback.trim() === "") return;
+      console.log("Feedback submitted:", feedback);
+      setFeedback("");
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000); // hide message after 5 seconds
+    },
+    [feedback],
+  );
 
-  const latestUpdates = [
-    { title: "PVE ZONE is now available for purchase", date: "2024-07-18" },
-    { title: "Battlestate Games at TwitchCon Rotterdam", date: "2024-05-31" },
-    { title: "Reward for completing in-game event", date: "2024-05-15" },
-  ];
-
-  const handleSubmit = (e: Event) => {
-    e.preventDefault();
-    // 处理反馈提交逻辑
-    console.log("Feedback submitted:", feedback);
-    setFeedback("");
-  };
+  // close snackbar
+  const handleSnackbarClose = useCallback(() => {
+    setSubmitted(false);
+  }, []);
 
   return (
     <Box
@@ -65,7 +87,7 @@ export default function Home() {
         },
       }}
     >
-      {/* title */}
+      {/* Title Section */}
       <Box
         sx={{
           height: "60vh",
@@ -75,7 +97,13 @@ export default function Home() {
           borderRadius: 2,
         }}
       >
-        <Box sx={{ textAlign: "center", color: "white" }}>
+        <Box
+          sx={{
+            textAlign: "center",
+            color: theme.palette.text.primary,
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+          }}
+        >
           <Typography variant="h1" component="h1" gutterBottom>
             The Ultimate EFT Data Hub
           </Typography>
@@ -84,8 +112,7 @@ export default function Home() {
           </Typography>
         </Box>
       </Box>
-
-      {/* main functionalities cards */}
+      {/* Main Functionalities Cards */}
       <Grid container spacing={4} sx={{ mb: 6 }}>
         {features.map((feature, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
@@ -116,6 +143,7 @@ export default function Home() {
                   },
                   cursor: "pointer",
                 }}
+                aria-label={`Navigate to ${feature.title} page`} // Accessibility improvement
               >
                 <CardContent sx={{ textAlign: "center" }}>
                   <Icon
@@ -123,6 +151,7 @@ export default function Home() {
                     size={4}
                     className="icon"
                     style={{ transition: "all 0.3s ease-in-out" }}
+                    aria-hidden="true" // skip reading icon path
                   />
                   <Typography
                     variant="h6"
@@ -138,10 +167,9 @@ export default function Home() {
           </Grid>
         ))}
       </Grid>
-
-      {/* latest updates and community interaction area */}
+      {/* Latest Updates and Community Interaction Area */}
       <Grid container spacing={4} sx={{ mb: 6 }}>
-        {/* latest updates */}
+        {/* Latest Updates */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -160,8 +188,7 @@ export default function Home() {
             </CardContent>
           </Card>
         </Grid>
-
-        {/* community interaction */}
+        {/* Community Feedback */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -169,7 +196,7 @@ export default function Home() {
                 Community Feedback
               </Typography>
               <Divider sx={{ mb: 2 }} />
-              <form>
+              <form onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
                   multiline
@@ -178,35 +205,93 @@ export default function Home() {
                   placeholder="Share your thoughts or suggestions..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: 2,
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": {
+                        borderColor: "white",
+                      },
+                    },
+                  }}
+                  aria-label="Feedback input"
                 />
                 <Button type="submit" variant="contained" color="inherit">
                   Submit Feedback
                 </Button>
+                <Snackbar
+                  open={submitted}
+                  autoHideDuration={5000}
+                  onClose={handleSnackbarClose}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                >
+                  <Alert
+                    onClose={handleSnackbarClose}
+                    severity="success"
+                    sx={{ width: "100%" }}
+                  >
+                    Feedback submitted successfully!
+                  </Alert>
+                </Snackbar>
               </form>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
-
-      {/* About */}
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          About The Tarkov Data
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Typography variant="body1" paragraph>
-          The Tarkov Data is a platform dedicated to providing Escape from
-          Tarkov players with the latest and most accurate game data. Our data
-          is derived from internal game files, community contributions, and
-          detailed game testing.
-        </Typography>
-        <Typography variant="body1">
-          We work hard to keep data up to date, usually within 24 hours of a
-          game update. If you find any errors or have any suggestions, please
-          feel free to contact us via the feedback form above.
-        </Typography>
-      </Box>
+      {/* About Section */}
+      <Paper
+        elevation={0}
+        sx={{
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          padding: 3,
+          mb: 6,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h5"
+            component="h2"
+            gutterBottom
+            sx={{
+              color: theme.palette.text.primary,
+              fontWeight: "bold",
+            }}
+          >
+            About The Tarkov Data
+          </Typography>
+          <Divider
+            sx={{ mb: 2, backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+          />
+          <Typography
+            variant="body1"
+            paragraph
+            sx={{
+              color: theme.palette.text.primary,
+              fontSize: "1.1rem",
+              lineHeight: 1.6,
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            The Tarkov Data is a platform dedicated to providing Escape from
+            Tarkov players with the latest and most accurate game data. Our data
+            is derived from internal game files, community contributions, and
+            detailed game testing.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: theme.palette.text.primary,
+              fontSize: "1.1rem",
+              lineHeight: 1.6,
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            We work hard to keep data up to date, usually within 24 hours of a
+            game update. If you find any errors or have any suggestions, please
+            feel free to contact us via the feedback form above.
+          </Typography>
+        </Box>
+      </Paper>
     </Box>
   );
 }
