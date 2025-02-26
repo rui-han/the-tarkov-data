@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import HideoutFlowchart from "../../public/images/hideout-flowchart.jpeg";
 // MUI
@@ -8,23 +8,60 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 
 export default function HideoutFlowchartModal() {
-  // states
   const [modalOpen, setModalOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
 
-  const handleModalOpen = () => setModalOpen(true);
-  const handleModalClose = () => setModalOpen(false);
+  // modal open/close handlers
+  const handleModalOpen = useCallback(() => setModalOpen(true), []);
+  const handleModalClose = useCallback(() => setModalOpen(false), []);
 
-  // handle zoom flowchart
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 200));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 50));
-  const handleZoomChange = (event: Event, newValue: number | number[]) => {
-    setZoom(newValue as number);
+  // zoom handlers
+  const handleZoomIn = useCallback(() => {
+    setZoom((prev) => Math.min(prev + 10, 300));
+  }, []);
+  const handleZoomOut = useCallback(() => {
+    setZoom((prev) => Math.max(prev - 10, 80));
+  }, []);
+  const handleZoomChange = useCallback(
+    (event: Event, newValue: number | number[]) => {
+      setZoom(newValue as number); // Update zoom level based on slider input
+    },
+    [],
+  );
+
+  // styles
+  const modalStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+  const boxStyle = {
+    position: "relative",
+    height: "90vh",
+    width: "90vw",
+    maxWidth: "1200px", // for better control on large screens
+    bgcolor: "background.paper",
+    boxShadow: 24,
+    borderRadius: 2,
+    display: "flex",
+    flexDirection: "column",
+  };
+  const imageContainerStyle = {
+    flex: 1,
+    overflow: "auto", // enable scrolling if image exceeds container size
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+  };
+  const imageWrapperStyle = {
+    position: "relative",
+    width: "auto",
+    height: "auto",
   };
 
   return (
     <>
-      {/* show flowchart button */}
+      {/* button to open the modal */}
       <Button
         variant="outlined"
         sx={{
@@ -41,29 +78,10 @@ export default function HideoutFlowchartModal() {
       >
         Show Flowchart
       </Button>
-      {/* the modal */}
-      <Modal
-        open={modalOpen}
-        onClose={handleModalClose}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Box
-          sx={{
-            position: "relative",
-            height: "100%",
-            width: "100%",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            borderRadius: 2,
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+      {/* modal displaying the flowchart */}
+      <Modal open={modalOpen} onClose={handleModalClose} sx={modalStyle}>
+        <Box sx={boxStyle}>
+          {/* close button for the modal */}
           <IconButton
             sx={{
               position: "absolute",
@@ -72,35 +90,33 @@ export default function HideoutFlowchartModal() {
               color: "white",
               backgroundColor: "rgba(0,0,0,0.5)",
               "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+              zIndex: 1,
             }}
             onClick={handleModalClose}
+            aria-label="Close modal"
           >
             <CloseIcon />
           </IconButton>
-
-          {/* zoomable image */}
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "auto",
-            }}
-          >
-            <Image
-              src={HideoutFlowchart}
-              alt=""
-              style={{
-                width: `${zoom}%`,
-                height: "auto",
-                transition: "width 0.3s ease-in-out",
-              }}
-            />
+          {/* container for the flowchart image */}
+          <Box sx={imageContainerStyle}>
+            <Box sx={imageWrapperStyle}>
+              <Image
+                src={HideoutFlowchart}
+                alt="Hideout Flowchart"
+                style={{
+                  width: `${zoom}%`, // dynamic width based on zoom level
+                  height: "auto",
+                  maxWidth: "none",
+                  transition: "width 0.3s ease-in-out", // smooth transition for zoom
+                }}
+                priority // preload image for faster rendering
+                quality={85} // balance between quality and performance
+                placeholder="blur" // blur placeholder while image loads
+                onError={() => console.error("Failed to load flowchart image")} // error handling
+              />
+            </Box>
           </Box>
-
-          {/* zoom control */}
+          {/* zoom controls */}
           <Box
             sx={{
               display: "flex",
@@ -110,18 +126,26 @@ export default function HideoutFlowchartModal() {
               backgroundColor: "rgba(0,0,0,0.5)",
             }}
           >
-            <IconButton onClick={handleZoomOut} sx={{ color: "white" }}>
+            <IconButton
+              onClick={handleZoomOut}
+              sx={{ color: "white" }}
+              aria-label="Zoom out"
+            >
               <ZoomOutIcon />
             </IconButton>
             <Slider
               value={zoom}
               onChange={handleZoomChange}
-              aria-labelledby="zoom-slider"
-              min={50}
-              max={200}
+              aria-label="Zoom level slider"
+              min={80}
+              max={300}
               sx={{ width: "50%", mx: 2, color: "white" }}
             />
-            <IconButton onClick={handleZoomIn} sx={{ color: "white" }}>
+            <IconButton
+              onClick={handleZoomIn}
+              sx={{ color: "white" }}
+              aria-label="Zoom in"
+            >
               <ZoomInIcon />
             </IconButton>
           </Box>
