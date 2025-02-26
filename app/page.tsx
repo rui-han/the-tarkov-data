@@ -259,9 +259,7 @@ export default function Home() {
           >
             About The Tarkov Data
           </Typography>
-          <Divider
-            sx={{ mb: 2, backgroundColor: "rgba(255, 255, 255, 0.5)" }}
-          />
+          <Divider sx={{ mb: 2 }} />
           <Typography
             variant="body1"
             paragraph
