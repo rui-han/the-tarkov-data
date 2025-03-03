@@ -1,11 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Breadcrumbs, Tooltip } from "@mui/material";
+import { Breadcrumbs, Tooltip, Box, Typography } from "@mui/material";
 import { FetchedData } from "@/types/hideout";
 
 export default function HideoutNav({ hideoutStations }: FetchedData) {
   const currentRoute = usePathname(); // returns "/dashboard" on /dashboard?foo=bar
+
+  // No hideout stations found after filtering
+  if (hideoutStations.length === 0) {
+    return (
+      <Box sx={{ width: "90%", marginTop: "3vh", textAlign: "center" }}>
+        <Typography variant="body1" color="text.secondary">
+          No hideouts found. Try a different search term.
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -17,6 +28,7 @@ export default function HideoutNav({ hideoutStations }: FetchedData) {
             style={{
               color: "inherit",
               textDecoration: "inherit",
+              margin: "4px",
             }}
           >
             <Tooltip title={data.name} arrow>
@@ -32,6 +44,7 @@ export default function HideoutNav({ hideoutStations }: FetchedData) {
                       ? "rgba(219, 223, 234, 0.2)"
                       : "",
                   borderRadius: 5,
+                  transition: "transform 0.8s, background-color 0.8s",
                 }}
               />
             </Tooltip>

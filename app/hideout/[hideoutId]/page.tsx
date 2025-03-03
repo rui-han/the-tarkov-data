@@ -21,6 +21,8 @@ import {
 } from "@mui/material";
 
 const styles = {
+  grid: { textAlign: "center", width: "85%" },
+  titleImg: { height: "60px", marginRight: "2vw" },
   card: { width: "100%" },
   title: {
     margin: "2vh",
@@ -32,31 +34,52 @@ const styles = {
     display: "inline-flex",
     justifyContent: "center",
     alignItems: "center",
+    margin: "0 1vw 1vh 0",
   },
   requirementIcon: {
     height: "48px",
     width: "48px",
     margin: "0.5vw",
+    objectFit: "contain" as const,
   },
   time: { margin: "3vh" },
+  levelButtons: {
+    marginRight: "1vw",
+    marginBottom: "2vh",
+  },
+  tableHeader: {
+    backgroundColor: "#2d2d2f",
+  },
+  tableContainer: {
+    border: "0.5px solid #9a8866",
+  },
+};
+
+// helper function to format price
+const formatPrice = (price: number | null) => {
+  if (price === null || price === 0) return "N/A";
+  return new Intl.NumberFormat().format(price);
 };
 
 export default function HideoutCard({ params }: HideoutParams) {
   const { data } = useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
-  const hideoutData = data?.hideoutStations?.filter(
-    (data) => data.id === params.hideoutId,
-  )[0];
 
-  const [currentLevel, setCurrentLevel] = useState(1);
+  const hideoutData = data?.hideoutStations?.find(
+    (data) => data.id === params.hideoutId,
+  );
+
+  const [currentLevel, setCurrentLevel] = useState(
+    hideoutData?.levels[0]?.level || 1, // use first default level or 1
+  );
 
   return (
-    <Grid sx={{ textAlign: "center", width: "85%" }}>
+    <Grid sx={styles.grid}>
       <Box>
         <Typography variant="h3" sx={styles.title}>
           <img
             src={`/icons/hideout-icons/${hideoutData?.normalizedName}-icon.png`}
             alt={hideoutData?.name}
-            style={{ height: "60px", marginRight: "2vw" }}
+            style={styles.titleImg}
           />
           {hideoutData?.name}
         </Typography>
@@ -69,7 +92,7 @@ export default function HideoutCard({ params }: HideoutParams) {
           size="large"
           color="inherit"
           variant={levelData.level === currentLevel ? "contained" : "outlined"}
-          sx={{ mr: "1vw", mb: "2vh" }}
+          sx={styles.levelButtons}
         >
           Level {levelData.level}
         </Button>
@@ -127,9 +150,9 @@ export default function HideoutCard({ params }: HideoutParams) {
                 </Typography>
                 {/* Items table */}
                 {levelData.itemRequirements[0] ? (
-                  <TableContainer sx={{ border: "0.5px solid #9a8866" }}>
+                  <TableContainer sx={styles.tableContainer}>
                     <Table>
-                      <TableHead sx={{ backgroundColor: "#2d2d2f" }}>
+                      <TableHead sx={styles.tableHeader}>
                         <TableRow>
                           <TableCell align="center"></TableCell>
                           <TableCell align="center">Item</TableCell>
@@ -157,14 +180,10 @@ export default function HideoutCard({ params }: HideoutParams) {
                               <TableCell align="center">{itemName}</TableCell>
                               <TableCell align="center">x {quantity}</TableCell>
                               <TableCell align="center">
-                                {low24hPrice === null || low24hPrice === 0
-                                  ? "N/A"
-                                  : low24hPrice}
+                                {formatPrice(low24hPrice)}
                               </TableCell>
                               <TableCell align="center">
-                                {avg24hPrice === null || avg24hPrice === 0
-                                  ? "N/A"
-                                  : avg24hPrice}
+                                {formatPrice(avg24hPrice)}
                               </TableCell>
                             </TableRow>
                           );
@@ -179,7 +198,9 @@ export default function HideoutCard({ params }: HideoutParams) {
                 <Typography sx={styles.time}>
                   Construction Time:{" "}
                   {levelData.constructionTime > 0 ? (
-                    <span>{levelData.constructionTime / 3600} hours</span>
+                    <span>
+                      {(levelData.constructionTime / 3600).toFixed(1)} hours
+                    </span>
                   ) : (
                     <span>Immediately</span>
                   )}
