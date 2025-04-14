@@ -69,3 +69,7 @@ interface AmmoTableRowProps {
   isFavorite: boolean;
   onFavoriteClick: (itemId: string) => void;
 }
+
+interface FavoriteAmmoCardProps {
+  ammo: Ammo;
+}

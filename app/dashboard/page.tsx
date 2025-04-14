@@ -1,38 +1,26 @@
 "use client";
 
-import { useUser } from "@auth0/nextjs-auth0/client";
-import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
-// MUI
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Grid,
-  Box,
-  Tooltip,
-} from "@mui/material";
-import GavelIcon from "@mui/icons-material/Gavel";
-import ShieldIcon from "@mui/icons-material/Shield";
-import SpeedIcon from "@mui/icons-material/Speed";
-import AdjustIcon from "@mui/icons-material/Adjust";
-
 import { useEffect } from "react";
 import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/ammo";
 import { GET_AMMO_DATA } from "@/graphql/queries";
-
-const headCells = [
-  { id: "icon", label: "Icon" },
-  { id: "name", label: "Name" },
-];
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
+// components
+import FavoriteAmmoCard from "@/components/users/dashboard/FavoriteAmmoCard";
+// MUI
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Box,
+  Skeleton,
+  Button,
+  Alert,
+  AlertTitle,
+  useTheme,
+} from "@mui/material";
 
 export default function UserDashboard() {
   const { user, error, isLoading } = useUser();
@@ -43,6 +31,7 @@ export default function UserDashboard() {
     handleFavoriteAmmo,
     handleRemoveFavoriteAmmo,
   } = useFavoriteAmmo();
+  const theme = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -50,9 +39,46 @@ export default function UserDashboard() {
     }
   }, [user]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>{error.message}</div>;
+  // loading
+  if (isLoading) {
+    return (
+      <Grid container spacing={2}>
+        {Array.from(new Array(6)).map((_, index) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={index}>
+            <Card
+              sx={{
+                maxWidth: 345,
+                m: 2,
+              }}
+            >
+              <Skeleton variant="rectangular" height={200} />
+              <CardContent>
+                <Skeleton variant="text" width="60%" />
+                <Skeleton variant="text" width="40%" />
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  }
 
+  // error
+  if (error) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          {error.message}
+        </Alert>
+        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
+
+  // filter user's favorite ammo
   const userAmmoData = data.ammo.filter((ammoData) =>
     userFavoriteAmmo.some(
       (favAmmoData) => favAmmoData.itemId === ammoData.item.id,
@@ -61,93 +87,29 @@ export default function UserDashboard() {
 
   return user ? (
     <>
-      <h2>Welcome! {user?.name}</h2>
-      <Grid container>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{ m: 4, fontWeight: 700, textAlign: "center" }}
+      >
+        Welcome, {user?.name}!
+      </Typography>
+      <Grid container spacing={2} sx={{ p: 2 }}>
         {userAmmoData.map((ammo) => (
-          <Grid item xs={6} md={4}>
-            <Card sx={{ maxWidth: 345, m: 2 }}>
-              <CardMedia
-                component="img"
-                height="100%"
-                image={ammo.item.inspectImageLink}
-                alt={ammo.item.name}
-              />
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  {ammo.item.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {ammo.caliber} - {ammo.ammoType}
-                </Typography>
-
-                <Grid container spacing={1} sx={{ mt: 2 }}>
-                  <Grid item xs={6}>
-                    <Tooltip title="Damage">
-                      <Box display="flex" alignItems="center">
-                        <GavelIcon color="error" sx={{ mr: 1 }} />
-                        <Typography variant="body2">{ammo.damage}</Typography>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Tooltip title="Penetration Power">
-                      <Box display="flex" alignItems="center">
-                        <ShieldIcon color="info" sx={{ mr: 1 }} />
-                        <Typography variant="body2">
-                          {ammo.penetrationPower}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Tooltip title="Armor Damage">
-                      <Box display="flex" alignItems="center">
-                        <ShieldIcon color="warning" sx={{ mr: 1 }} />
-                        <Typography variant="body2">
-                          {ammo.armorDamage}%
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Tooltip title="Projectile Count">
-                      <Box display="flex" alignItems="center">
-                        <SpeedIcon color="success" sx={{ mr: 1 }} />
-                        <Typography variant="body2">
-                          {ammo.projectileCount}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ mt: 2 }}>
-                  <Tooltip title="Accuracy Modifier">
-                    <Box display="flex" alignItems="center">
-                      <AdjustIcon color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="body2">
-                        Accuracy: {ammo.accuracyModifier > 0 ? "+" : ""}
-                        {ammo.accuracyModifier}%
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                  <Tooltip title="Recoil Modifier">
-                    <Box display="flex" alignItems="center">
-                      <AdjustIcon color="secondary" sx={{ mr: 1 }} />
-                      <Typography variant="body2">
-                        Recoil: {ammo.recoilModifier > 0 ? "+" : ""}
-                        {ammo.recoilModifier}%
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                </Box>
-              </CardContent>
-            </Card>
+          <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={ammo.item.id}>
+            <FavoriteAmmoCard ammo={ammo} />
           </Grid>
         ))}
       </Grid>
     </>
   ) : (
-    <h1>PLEASE LOGIN</h1>
+    <Box textAlign="center" mt={4}>
+      <Typography variant="h5" gutterBottom>
+        Please log in to view your dashboard.
+      </Typography>
+      <Button variant="contained" color="primary" href="/api/auth/login">
+        Log In
+      </Button>
+    </Box>
   );
 }
