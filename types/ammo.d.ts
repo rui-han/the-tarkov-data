@@ -72,4 +72,5 @@ interface AmmoTableRowProps {
 
 interface FavoriteAmmoCardProps {
   ammo: Ammo;
+  onRemoveWithDelay: (ammo: AmmoData) => void;
 }
