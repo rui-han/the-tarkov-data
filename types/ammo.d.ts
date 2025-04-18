@@ -67,7 +67,8 @@ interface AmmoTablePaginationProps {
 interface AmmoTableRowProps {
   ammoData: Ammo;
   isFavorite: boolean;
-  onFavoriteClick: (itemId: string) => void;
+  handleFavoriteClick: (itemId: string) => void;
+  user: UserProfile | undefined;
 }
 
 interface FavoriteAmmoCardProps {

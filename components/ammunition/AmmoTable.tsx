@@ -4,17 +4,14 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
-
 // components
 import AmmoTableFilter from "./AmmoTableFilter";
 import AmmoSearchbar from "./AmmoSearchbar";
 import AmmoTableHead from "./AmmoTableHead";
 import AmmoTablePagination from "./AmmoTablePagination";
 import AmmoTableRow from "./AmmoTableRow";
-
 // utils
 import { filterAndSortAmmo } from "@/utils/ammo-utils";
-
 // MUI
 import {
   Grid,
@@ -24,6 +21,8 @@ import {
   TableCell,
   TableContainer,
   TableRow,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 export default function AmmoTable({
@@ -33,7 +32,10 @@ export default function AmmoTable({
   setCurrentCaliber,
   setInputText,
 }: AmmoTableProps) {
+  // get user data from auth0
   const { user } = useUser();
+
+  // hook to manage favorite ammo
   const {
     userFavoriteAmmo,
     getUsersFavoriteAmmo,
@@ -47,6 +49,12 @@ export default function AmmoTable({
   // pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // snackbar states
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("success");
 
   useEffect(() => {
     if (user) {
@@ -106,20 +114,44 @@ export default function AmmoTable({
   const emptyRows = rowsPerPage - visibleRows.length;
 
   // handle favorite icon click
-  const handleFavoriteClick = (itemId: string) => {
+  const handleFavoriteClick = async (itemId: string) => {
     if (!user) {
-      alert("please LOGIN to use favorite feature!!!");
+      setSnackbarMessage("please LOGIN to use favorite feature!!!");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
       return;
     }
+
     const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
 
     if (isFavorite) {
-      // remove from favs
-      handleRemoveFavoriteAmmo(user, itemId);
+      setSnackbarMessage("Removed from favorite");
+      setSnackbarSeverity("info");
     } else {
-      // add to favs
-      handleFavoriteAmmo(user, itemId);
+      setSnackbarMessage("Added to favorite");
+      setSnackbarSeverity("success");
     }
+    setSnackbarOpen(true);
+
+    try {
+      if (isFavorite) {
+        // remove from favorite
+        await handleRemoveFavoriteAmmo(user, itemId);
+      } else {
+        // add to favorite
+        await handleFavoriteAmmo(user, itemId);
+      }
+    } catch (error) {
+      // handle error
+      setSnackbarMessage("Failed to update favorite status, please try again");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
+  // handle snackbar close
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -165,7 +197,8 @@ export default function AmmoTable({
                 isFavorite={userFavoriteAmmo.some(
                   (fav) => fav.itemId === ammoData.item.id,
                 )}
-                onFavoriteClick={handleFavoriteClick}
+                handleFavoriteClick={handleFavoriteClick}
+                user={user}
               />
             ))}
             {emptyRows > 0 && (
@@ -184,6 +217,21 @@ export default function AmmoTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+      {/* the snackbar showing add or remove favorite ammo status */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 }
