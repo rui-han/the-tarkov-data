@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 
 // MUI
-import { useTheme } from "@mui/material";
 import {
   Alert,
   Button,
@@ -16,8 +15,6 @@ import {
 export default function CommunityFeedback() {
   const [feedback, setFeedback] = useState("");
   const [submitted, setSubmitted] = useState(false);
-
-  const theme = useTheme();
 
   // handle feedback submission
   const handleSubmit = useCallback(
@@ -64,7 +61,7 @@ export default function CommunityFeedback() {
                 onChange={(e) => setFeedback(e.target.value)}
                 sx={{ marginBottom: 2 }}
               />
-              <Button type="submit" variant="contained">
+              <Button color="primary" type="submit" variant="contained">
                 Submit Feedback
               </Button>
             </form>

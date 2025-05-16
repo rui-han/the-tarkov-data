@@ -1,23 +1,12 @@
 "use client";
 
 import Nav from "@/components/navigation/Nav";
-import { CssBaseline, ThemeProvider, Box, createTheme } from "@mui/material";
+import { CssBaseline, ThemeProvider, Box } from "@mui/material";
+import { darkTheme } from "./theme";
 
 // drawer width
-const drawerWidth = 240;
-
-// dark theme with customization
-export const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-    background: {
-      default: "#2D2D2F",
-    },
-    text: {
-      primary: "#9a8866",
-    },
-  },
-});
+const DRAWER_WIDTH = 240;
+const APP_BAR_HEIGHT = 64;
 
 export default function TopLevelLayout({
   children,
@@ -33,10 +22,10 @@ export default function TopLevelLayout({
           component="main"
           sx={{
             flexGrow: 1,
-            mt: "64px",
+            mt: `${APP_BAR_HEIGHT}px`,
             mb: 4,
             height: "100%",
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           }}
         >
           {children}
