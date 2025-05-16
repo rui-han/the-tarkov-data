@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Nav from "@/components/navigation/Nav";
 import { CssBaseline, ThemeProvider, Box, createTheme } from "@mui/material";
 
@@ -25,19 +24,16 @@ export default function TopLevelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
-
   return (
     <ThemeProvider theme={darkTheme}>
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        {!isHomePage && <Nav />}
+        <Nav />
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            mt: isHomePage ? 0 : "64px",
+            mt: "64px",
             mb: 4,
             height: "100%",
             width: { sm: `calc(100% - ${drawerWidth}px)` },
