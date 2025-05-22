@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { GET_AMMO_DATA } from "@/graphql/queries";
 import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/ammo";
@@ -18,16 +17,17 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function Ammunition() {
   const { data } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
-  if (!data) return null;
-  // Caliber556x45NATO etc.
-  const [currentCaliber, setCurrentCaliber] = useState("");
-  const [inputText, setInputText] = useState("");
 
   return (
     <Box
-      sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        py: 4,
+        alignItems: "center",
+      }}
     >
-      <Accordion sx={{ width: "90%", m: 4 }}>
+      <Accordion sx={{ width: "90%", maxWidth: "1200px" }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           How Do I Read This Table?
         </AccordionSummary>
@@ -36,13 +36,7 @@ export default function Ammunition() {
         </AccordionDetails>
       </Accordion>
 
-      <AmmoTable
-        ammo={data.ammo}
-        inputText={inputText}
-        currentCaliber={currentCaliber}
-        setCurrentCaliber={setCurrentCaliber}
-        setInputText={setInputText}
-      />
+      <AmmoTable ammo={data.ammo} />
     </Box>
   );
 }

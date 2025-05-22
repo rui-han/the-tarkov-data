@@ -24,10 +24,6 @@ interface Item {
 
 export interface AmmoTableProps {
   ammo: Ammo[];
-  inputText: string;
-  currentCaliber: string;
-  setCurrentCaliber: Dispatch<SetStateAction<string>>;
-  setInputText: Dispatch<SetStateAction<string>>;
 }
 
 export interface AmmoSearchbarProps {

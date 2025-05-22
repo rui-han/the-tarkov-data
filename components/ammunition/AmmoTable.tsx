@@ -25,13 +25,7 @@ import {
   Alert,
 } from "@mui/material";
 
-export default function AmmoTable({
-  ammo,
-  inputText,
-  currentCaliber,
-  setCurrentCaliber,
-  setInputText,
-}: AmmoTableProps) {
+export default function AmmoTable({ ammo }: AmmoTableProps) {
   // get user data from auth0
   const { user } = useUser();
 
@@ -43,6 +37,10 @@ export default function AmmoTable({
     handleRemoveFavoriteAmmo,
   } = useFavoriteAmmo();
 
+  // caliber filter state
+  const [currentCaliber, setCurrentCaliber] = useState("");
+  // search input state
+  const [inputText, setInputText] = useState("");
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
   const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
@@ -60,7 +58,7 @@ export default function AmmoTable({
     if (user) {
       getUsersFavoriteAmmo(user.sub as string);
     }
-  }, [user]);
+  }, [user, getUsersFavoriteAmmo]);
 
   // handle table head sorting
   const handleRequestSort = useCallback(
@@ -68,31 +66,33 @@ export default function AmmoTable({
       const isAsc = orderBy === property && order === "asc";
       setOrder(isAsc ? "desc" : "asc");
       setOrderBy(property);
+      setPage(0);
     },
     [order, orderBy],
   );
 
   // handle ammoType filter button clicks
-  const handleFilterButtonClick = (caliber: string) => {
+  const handleFilterButtonClick = useCallback((caliber: string) => {
     // return to the first page, in case that would return an empty table
     setPage(0);
     // click and unclick
     if (currentCaliber === caliber) setCurrentCaliber("");
     else setCurrentCaliber(caliber);
-  };
+  }, []);
 
   // handle change page
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
   //  handle change rows per page
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const handleChangeRowsPerPage = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(event.target.value, 10));
+      setPage(0);
+    },
+    [],
+  );
 
   // filter and sort the ammo data to be displayed
   const filteredAndSortedAmmo = useMemo(() => {
@@ -114,48 +114,53 @@ export default function AmmoTable({
   const emptyRows = rowsPerPage - visibleRows.length;
 
   // handle favorite icon click
-  const handleFavoriteClick = async (itemId: string) => {
-    if (!user) {
-      setSnackbarMessage("please LOGIN to use favorite feature!!!");
-      setSnackbarSeverity("warning");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
-
-    if (isFavorite) {
-      setSnackbarMessage("Removed from favorite");
-      setSnackbarSeverity("info");
-    } else {
-      setSnackbarMessage("Added to favorite");
-      setSnackbarSeverity("success");
-    }
-    setSnackbarOpen(true);
-
-    try {
-      if (isFavorite) {
-        // remove from favorite
-        await handleRemoveFavoriteAmmo(user, itemId);
-      } else {
-        // add to favorite
-        await handleFavoriteAmmo(user, itemId);
+  const handleFavoriteClick = useCallback(
+    async (itemId: string) => {
+      if (!user) {
+        setSnackbarMessage("Please log in to use the favorite feature!");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return;
       }
-    } catch (error) {
-      // handle error
-      setSnackbarMessage("Failed to update favorite status, please try again");
-      setSnackbarSeverity("error");
+
+      const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
+
+      if (isFavorite) {
+        setSnackbarMessage("Removed from favorite");
+        setSnackbarSeverity("info");
+      } else {
+        setSnackbarMessage("Added to favorite");
+        setSnackbarSeverity("success");
+      }
       setSnackbarOpen(true);
-    }
-  };
+
+      try {
+        if (isFavorite) {
+          // remove from favorite
+          await handleRemoveFavoriteAmmo(user, itemId);
+        } else {
+          // add to favorite
+          await handleFavoriteAmmo(user, itemId);
+        }
+      } catch (error) {
+        // handle error
+        setSnackbarMessage(
+          "Failed to update favorite status, please try again",
+        );
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    },
+    [user, userFavoriteAmmo, handleFavoriteAmmo, handleRemoveFavoriteAmmo],
+  );
 
   // handle snackbar close
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = useCallback(() => {
     setSnackbarOpen(false);
-  };
+  }, []);
 
   return (
-    <Grid width="90%">
+    <Grid width="90%" maxWidth="1400px">
       {/* filter buttons*/}
       <AmmoTableFilter
         ammo={ammo}
