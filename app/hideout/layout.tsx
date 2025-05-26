@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { GET_HIDEOUT_DATA } from "@/graphql/queries";
 import { useSuspenseQuery } from "@apollo/client";
 import { FetchedData } from "@/types/hideout";
 import HideoutNav from "@/components/hideout/HideoutNav";
 // MUI
-import { Box, Divider, TextField, InputAdornment } from "@mui/material";
+import {
+  Box,
+  Divider,
+  TextField,
+  InputAdornment,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import HideoutFlowchartModal from "@/components/hideout/HideoutFlowchartModal";
 
@@ -17,14 +24,39 @@ export default function HideoutLayout({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data } = useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
+  const { data, error } = useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
 
-  if (!data) return null;
+  // error handling
+  if (error) {
+    console.error("Error fetching hideout data:", error);
+    return (
+      <Typography color="error">
+        Failed to load hideout data. Please try again later.
+      </Typography>
+    );
+  }
+  if (!data || !data.hideoutStations) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  // Filter hideout stations based on search query
-  const filteredHideoutStations = data.hideoutStations.filter((station) =>
-    station.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // filter hideout stations based on search query
+  const filteredHideoutStations = useMemo(() => {
+    if (!data?.hideoutStations) return [];
+    return data.hideoutStations.filter((station) =>
+      station.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [data?.hideoutStations, searchQuery]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
@@ -43,25 +75,13 @@ export default function HideoutLayout({
         onChange={handleSearchChange}
         sx={{
           width: "90%",
+          maxWidth: "800px",
           marginTop: "2vh",
-          "& .MuiOutlinedInput-root": {
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
-            color: "white",
-            "& fieldset": {
-              borderColor: "rgba(255, 255, 255, 0.2)",
-            },
-            "&:hover fieldset": {
-              borderColor: "rgba(255, 255, 255, 0.3)",
-            },
-          },
-          "& .MuiInputLabel-root": {
-            color: "rgba(255, 255, 255, 0.7)",
-          },
         }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon sx={{ color: "rgba(255, 255, 255, 0.7)" }} />
+              <SearchIcon />
             </InputAdornment>
           ),
         }}
@@ -70,7 +90,7 @@ export default function HideoutLayout({
       <HideoutNav hideoutStations={filteredHideoutStations} />
       <HideoutFlowchartModal />
       {/* the width of the Divider matches that of the hideout navbar Breadcrumbs, which is 90% */}
-      <Divider sx={{ color: "white", width: "90%" }} />
+      <Divider sx={{ width: "90%" }} />
       {children}
     </Box>
   );
