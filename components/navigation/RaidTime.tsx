@@ -34,11 +34,19 @@ function RaidTime() {
     const timerId = setInterval(() => {
       const now = new Date();
       const moscowOffset = 3 * 3600 * 1000; // Moscow time is +3 hours ahead of UTC
+      const moscowTime = new Date(now.getTime() + moscowOffset);
+      const startOfDay = new Date(moscowTime);
+
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const millisecondsSinceStartOfDay =
+        moscowTime.getTime() - startOfDay.getTime();
+
       const gameMilliseconds =
-        now.getTime() +
-        moscowOffset +
-        (now.getTime() - now.setHours(0, 0, 0, 0)) * (gameSpeed - 1);
+        moscowTime.getTime() + millisecondsSinceStartOfDay * (gameSpeed - 1);
+
       const gameTime = new Date(gameMilliseconds);
+
       const futureRaidTime = new Date(
         gameMilliseconds + twelveHoursInMilliseconds,
       );

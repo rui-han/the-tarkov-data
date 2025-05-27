@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Link from "next/link";
 // components
@@ -116,18 +116,24 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export default function Nav() {
-  const user = useUser();
+  const { user, error, isLoading } = useUser();
+
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  // open state
+  const [open, setOpen] = useState(false);
 
-  const handleMiniDrawerOpen = () => {
+  // error handling
+  if (error) return <div>Authentication error</div>;
+  if (isLoading) return <div>Loading...</div>;
+
+  // handle drawer open and close actions
+  const handleMiniDrawerOpen = useCallback(() => {
     setOpen(true);
-  };
-
-  const handleMiniDrawerClose = () => {
+  }, []);
+  const handleMiniDrawerClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -143,6 +149,9 @@ export default function Nav() {
               mr: 5,
               ...(open && { display: "none" }),
             }}
+            // for accessibility
+            aria-expanded={open}
+            aria-controls="navigation-drawer"
           >
             <MenuIcon />
           </IconButton>
@@ -170,7 +179,7 @@ export default function Nav() {
               flexGrow: 1,
             }}
           >
-            {user.user === undefined ? <LoginButton /> : <UserMenu />}
+            {!user ? <LoginButton /> : <UserMenu />}
           </Box>
         </Toolbar>
       </AppBar>

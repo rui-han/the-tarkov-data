@@ -63,16 +63,11 @@ export default function ResponsiveDrawer({
   const currentRoute = usePathname(); // returns "/dashboard" on /dashboard?foo=bar
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
-  const [prevPath, setPrevPath] = useState(currentRoute); // save the previous route
 
   // check route changes
   useEffect(() => {
-    // if route changes, set loading state to null and set prevPath to current
-    if (currentRoute !== prevPath) {
-      setLoading(null);
-      setPrevPath(currentRoute);
-    }
-  }, [currentRoute, prevPath]);
+    setLoading(null);
+  }, [currentRoute]);
 
   // set the destination route to loading, then navigate to the destination
   const handleNavigation = (to: string) => {
@@ -83,7 +78,10 @@ export default function ResponsiveDrawer({
   // determine if drawer button should be highlighted
   const isActiveRoute = (itemPath: string) => {
     if (loading === itemPath) return true;
-    return currentRoute.split("/").slice(0, 2).join("/") === itemPath; // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
+    return (
+      currentRoute.startsWith(itemPath) ||
+      (itemPath === "/" && currentRoute === "/")
+    ); // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
   };
 
   return (
@@ -138,7 +136,11 @@ export default function ResponsiveDrawer({
           <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               onClick={() =>
-                window.open("https://github.com/rui-han/the-tarkov-data")
+                window.open(
+                  "https://github.com/rui-han/the-tarkov-data",
+                  "_blank",
+                  "noopener,noreferrer",
+                )
               }
             >
               <ListItemIcon>
@@ -153,7 +155,13 @@ export default function ResponsiveDrawer({
         <List>
           <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              onClick={() => window.open("https://twitter.com/nikgeneburn")}
+              onClick={() =>
+                window.open(
+                  "https://twitter.com/nikgeneburn",
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
             >
               <ListItemIcon>
                 <Image
@@ -167,7 +175,13 @@ export default function ResponsiveDrawer({
           </ListItem>
           <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              onClick={() => window.open("https://twitter.com/bstategames")}
+              onClick={() =>
+                window.open(
+                  "https://twitter.com/bstategames",
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
             >
               <ListItemIcon>
                 <Image src={BSG} style={ICON_STYLE} alt="Battle State Games" />
