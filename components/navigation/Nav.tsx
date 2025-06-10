@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Link from "next/link";
 // components
@@ -128,12 +128,12 @@ export default function Nav() {
   if (isLoading) return <div>Loading...</div>;
 
   // handle drawer open and close actions
-  const handleMiniDrawerOpen = useCallback(() => {
+  const handleMiniDrawerOpen = () => {
     setOpen(true);
-  }, []);
-  const handleMiniDrawerClose = useCallback(() => {
+  };
+  const handleMiniDrawerClose = () => {
     setOpen(false);
-  }, []);
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
