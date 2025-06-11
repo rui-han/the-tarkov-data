@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-import { GET_ALL_ITEMS_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/client";
-import { FetchedData, Item } from "@/types/item";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useQuery } from "@apollo/client";
+import { GET_PAGINATED_ITEMS_DATA } from "@/graphql/queries";
+import { Item, PaginatedItemsData } from "@/types/item";
 import {
   Paper,
   Table,
@@ -15,80 +14,107 @@ import {
   TableBody,
   CircularProgress,
   Box,
+  Typography,
 } from "@mui/material";
 
 const ITEMS_PER_PAGE = 20;
 
 export default function Items() {
-  const { data } = useSuspenseQuery<FetchedData>(GET_ALL_ITEMS_DATA);
-  const [displayedItems, setDisplayedItems] = useState<Item[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const { data, loading, error, fetchMore } = useQuery<PaginatedItemsData>(
+    GET_PAGINATED_ITEMS_DATA,
+    {
+      variables: {
+        limit: ITEMS_PER_PAGE,
+        offset: 0,
+      },
+    },
+  );
+
   const loaderRef = useRef(null); // for the loading indicator
+  const loadMoreItems = useCallback(() => {
+    if (loading || isLoadingMore) return; // Prevent multiple fetches at the same time
 
-  // initialize and update items to display
-  useEffect(() => {
-    if (data?.items) {
-      setDisplayedItems(data.items.slice(0, ITEMS_PER_PAGE));
-    }
-  }, [data]);
+    setIsLoadingMore(true);
+    fetchMore({
+      variables: {
+        // Calculate the new offset based on the number of items already loaded
+        offset: data?.items.length || 0,
+      },
+      updateQuery: (previousResult, { fetchMoreResult }) => {
+        // If fetchMore didn't return any new items, we've reached the end
+        if (!fetchMoreResult || fetchMoreResult.items.length === 0) {
+          return previousResult; // Return the previous data, no changes
+        }
 
-  // check if scrolling to the bottom
+        // Merge the new items with the existing ones
+        return {
+          items: [...previousResult.items, ...fetchMoreResult.items],
+        };
+      },
+    }).finally(() => {
+      setIsLoadingMore(false);
+    });
+  }, [loading, isLoadingMore, data, fetchMore]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const target = entries[0]; // get the first observed entry
-        // check if the observed element is visible and conditions are met
-        if (target.isIntersecting && !loading && data?.items) {
-          loadMoreItems();
+        const target = entries[0];
+        // Check if the loader is visible and if there are items to potentially load more of
+        if (target.isIntersecting && data && data.items.length > 0) {
+          // A simple check to see if we might be at the end.
+          // If the last fetch returned less than a full page, don't try to fetch more.
+          if (data.items.length % ITEMS_PER_PAGE === 0) {
+            loadMoreItems();
+          }
         }
       },
-      {
-        threshold: 0.1, // callback is triggered when 10% of the element is visible
-      },
+      { threshold: 0.1 },
     );
-    // start observing
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
     }
 
     return () => {
-      if (loaderRef.current) {
-        // stop observing
-        observer.unobserve(loaderRef.current);
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
       }
     };
-  }, [loading, data, currentPage]);
-
-  const loadMoreItems = () => {
-    setLoading(true);
-
-    // calculate the next set of items to display
-    const startIndex = currentPage * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const newItems = data.items.slice(0, endIndex);
-
-    // check if reached the end of the list
-    if (startIndex >= data.items.length) {
-      setLoading(false);
-      return;
-    }
-
-    setTimeout(() => {
-      setDisplayedItems(newItems);
-      setCurrentPage((prev) => prev + 1);
-      setLoading(false);
-    }, 500); // adding a small delay to prevent rapid loading
-  };
+  }, [loadMoreItems, data]);
 
   const getFleaMarketPrice = (item: Item) => {
-    // check if there is a "Flea Market" entry in sellFor array
     const fleaMarketEntry = item.sellFor.find(
-      (sellfor) => sellfor.vendor.name === "Flea Market",
+      (s) => s.vendor.name === "Flea Market",
     );
-    // get the last Flea low price
-    return fleaMarketEntry ? fleaMarketEntry.priceRUB : "Not Listable";
+    return fleaMarketEntry
+      ? fleaMarketEntry.priceRUB.toLocaleString()
+      : "Not Listable";
   };
+
+  // Handle initial loading and error states
+  if (loading && !data) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+  if (error) {
+    return (
+      <Typography color="error">Error loading data: {error.message}</Typography>
+    );
+  }
 
   return (
     <TableContainer component={Paper} sx={{ width: "90%", m: "3vh" }}>
@@ -100,7 +126,7 @@ export default function Items() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {displayedItems.map((item: Item) => (
+          {data?.items.map((item: Item) => (
             <TableRow key={item.id}>
               <TableCell>{item.name} </TableCell>
               <TableCell>{getFleaMarketPrice(item)}</TableCell>
@@ -108,16 +134,12 @@ export default function Items() {
           ))}
         </TableBody>
       </Table>
-      {/* loading indicator */}
+      {/* loading indicator at the bottom */}
       <Box
         ref={loaderRef}
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          p: 2,
-        }}
+        sx={{ display: "flex", justifyContent: "center", p: 2 }}
       >
-        {loading && <CircularProgress />}
+        {isLoadingMore && <CircularProgress />}
       </Box>
     </TableContainer>
   );

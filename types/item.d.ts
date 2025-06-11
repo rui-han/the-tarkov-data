@@ -2,6 +2,10 @@ export interface FetchedData {
   items: Item[];
 }
 
+interface PaginatedItemsData {
+  items: Item[];
+}
+
 interface Item {
   id: string;
   name: string;
