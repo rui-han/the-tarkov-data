@@ -1,24 +1,19 @@
-export interface FetchedData {
-  items: Item[];
-}
-
-interface PaginatedItemsData {
+export interface PaginatedItemsData {
   items: Item[];
 }
 
 interface Item {
   id: string;
+  gridImageLink: string;
+  wikiLink: string;
   name: string;
+  normalizedName: string;
+  category: ItemCategory;
+  weight: number;
   lastLowPrice: number;
-  sellFor: SellFor[];
-  iconLink: string;
 }
 
-interface SellFor {
-  vendor: Vendor;
-  priceRUB: number;
-}
-
-interface Vendor {
+interface ItemCategory {
+  id: string;
   name: string;
 }

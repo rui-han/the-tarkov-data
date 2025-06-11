@@ -99,14 +99,16 @@ export const GET_PAGINATED_ITEMS_DATA = gql`
   query GET_PAGINATED_ITEMS_DATA($limit: Int, $offset: Int) {
     items(limit: $limit, offset: $offset) {
       id
+      gridImageLink
+      wikiLink
       name
-      lastLowPrice
-      sellFor {
-        vendor {
-          name
-        }
-        priceRUB
+      normalizedName
+      category {
+        id
+        name
       }
+      weight
+      lastLowPrice
     }
   }
 `;
