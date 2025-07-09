@@ -14,6 +14,7 @@ import {
   IconButton,
   Toolbar,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MuiDrawer from "@mui/material/Drawer";
@@ -116,16 +117,12 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export default function Nav() {
-  const { user, error, isLoading } = useUser();
+  const { user, isLoading } = useUser();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   // open state
   const [open, setOpen] = useState(false);
-
-  // error handling
-  if (error) return <div>Authentication error</div>;
-  if (isLoading) return <div>Loading...</div>;
 
   // handle drawer open and close actions
   const handleMiniDrawerOpen = () => {
@@ -176,10 +173,17 @@ export default function Nav() {
             sx={{
               display: "flex",
               justifyContent: "flex-end",
+              alignItems: "center",
               flexGrow: 1,
             }}
           >
-            {!user ? <LoginButton /> : <UserMenu />}
+            {isLoading ? (
+              <CircularProgress color="inherit" size={24} />
+            ) : !user ? (
+              <LoginButton />
+            ) : (
+              <UserMenu />
+            )}
           </Box>
         </Toolbar>
       </AppBar>
