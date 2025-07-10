@@ -26,6 +26,16 @@ import {
 // Default number of items per page
 const DEFAULT_ITEMS_PER_PAGE = 20;
 
+// header columns definition
+const columns = [
+  { id: "image", label: "Image" },
+  { id: "name", label: "Name" },
+  { id: "category", label: "Category" },
+  { id: "weight", label: "Weight (kg)" },
+  { id: "lastLowPrice", label: "Last Low Price" },
+];
+
+// Type definition for component props
 type ItemsTableProps = {
   itemsPerPage?: number;
 };
@@ -33,6 +43,7 @@ type ItemsTableProps = {
 export default function ItemsTable({
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
 }: ItemsTableProps) {
+  const [hasMore, setHasMore] = useState(true); // update based on the results of the fetchMore call
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,7 +59,7 @@ export default function ItemsTable({
   const items = useMemo(() => data?.items ?? [], [data?.items]);
 
   const loadMoreItems = useCallback(() => {
-    if (loading || isLoadingMore) return;
+    if (loading || isLoadingMore || !hasMore) return;
     if (!data) return;
 
     const offset = data.items.length;
@@ -62,6 +73,7 @@ export default function ItemsTable({
       variables: { offset },
       updateQuery: (prev, { fetchMoreResult }) => {
         if (!fetchMoreResult || fetchMoreResult.items.length === 0) {
+          setHasMore(false);
           return prev;
         }
         return {
@@ -72,7 +84,7 @@ export default function ItemsTable({
     }).finally(() => {
       setIsLoadingMore(false);
     });
-  }, [loading, isLoadingMore, data, fetchMore, itemsPerPage]);
+  }, [loading, isLoadingMore, data, fetchMore, itemsPerPage, hasMore]);
 
   // IntersectionObserver to auto-load more
   useEffect(() => {
@@ -133,11 +145,9 @@ export default function ItemsTable({
       <Table aria-label="Items Table">
         <TableHead>
           <TableRow>
-            <TableCell>Image</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>Category</TableCell>
-            <TableCell>Weight (kg)</TableCell>
-            <TableCell>Last Low Price</TableCell>
+            {columns.map((column) => (
+              <TableCell key={column.id}>{column.label}</TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -169,7 +179,7 @@ export default function ItemsTable({
         </TableBody>
       </Table>
       <Box ref={loaderRef} display="flex" justifyContent="center" p={2}>
-        {isLoadingMore && <CircularProgress size={24} />}
+        {isLoadingMore && hasMore && <CircularProgress size={24} />}
       </Box>
     </TableContainer>
   );
