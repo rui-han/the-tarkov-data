@@ -112,3 +112,21 @@ export const GET_PAGINATED_ITEMS_DATA = gql`
     }
   }
 `;
+
+export const GET_ACHIEVEMENT_DATA = gql`
+  query GET_ACHIEVEMENT_DATA {
+    achievements {
+      id
+      name
+      description
+      hidden
+      playersCompletedPercent
+      adjustedPlayersCompletedPercent
+      side
+      normalizedSide
+      rarity
+      normalizedRarity
+      imageLink
+    }
+  }
+`;
