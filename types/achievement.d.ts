@@ -15,3 +15,10 @@ interface Achievement {
   normalizedRarity: string;
   imageLink: string;
 }
+
+interface AchievementTableHeadCell {
+  id: keyof Achievement;
+  label: string;
+  isSortable: boolean;
+  align?: "left" | "right" | "center";
+}

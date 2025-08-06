@@ -3,7 +3,12 @@
 import { useState, useMemo } from "react";
 import { useSuspenseQuery } from "@apollo/client";
 import { GET_ACHIEVEMENT_DATA } from "@/graphql/queries";
-import { Achievement, AchievementData } from "@/types/achievement";
+// types
+import {
+  AchievementData,
+  Achievement,
+  AchievementTableHeadCell,
+} from "@/types/achievement";
 // MUI
 import {
   Table,
@@ -21,56 +26,88 @@ import {
 } from "@mui/material";
 
 const getRarityChipStyle = (rarity: string) => {
+  const base = {
+    border: "1px solid #555",
+  };
+
   switch (rarity.toLowerCase()) {
     case "common":
       return {
-        backgroundColor: "#444",
-        color: "#ccc",
+        ...base,
+        backgroundColor: "#2e2e2e",
+        color: "#b0b0b0",
       };
     case "rare":
       return {
-        backgroundColor: "#5e4b3c",
-        color: "#f0e6d2",
+        ...base,
+        backgroundColor: "#3e2e4f",
+        color: "#d8d0c0",
       };
     case "legendary":
       return {
-        backgroundColor: "#7a5c2e",
-        color: "#f5deb3",
+        ...base,
+        backgroundColor: "#6b5522",
+        color: "#eee8d5",
       };
     default:
       return {
-        backgroundColor: "#333",
-        color: "#aaa",
+        ...base,
+        backgroundColor: "#2b2b2b",
+        color: "#a0a0a0",
       };
   }
 };
 
 const getSideChipStyle = (side: string) => {
+  const base = {
+    border: "1px solid #555",
+  };
+
   switch (side.toLowerCase()) {
     case "all":
       return {
-        backgroundColor: "#555",
-        color: "#ddd",
+        ...base,
+        backgroundColor: "#3a3a3a",
+        color: "#cccccc",
       };
     case "pmc":
       return {
-        backgroundColor: "#3c2f2f",
-        color: "#e0cfc2",
+        ...base,
+        backgroundColor: "#2f3a4a",
+        color: "#d2d2d2",
+      };
+    case "scavs":
+      return {
+        ...base,
+        backgroundColor: "#5a4220",
+        color: "#e2dacb",
       };
     default:
       return {
-        backgroundColor: "#444",
+        ...base,
+        backgroundColor: "#333",
         color: "#bbb",
       };
   }
 };
 
-export default function Achievements() {
-  const { data } = useSuspenseQuery<AchievementData>(GET_ACHIEVEMENT_DATA);
+const headCells: readonly AchievementTableHeadCell[] = [
+  { id: "imageLink", label: "", isSortable: false },
+  { id: "name", label: "Name", isSortable: true },
+  { id: "description", label: "Description", isSortable: false },
+  { id: "hidden", label: "Hidden", isSortable: true },
+  { id: "playersCompletedPercent", label: "Completion", isSortable: true },
+  { id: "rarity", label: "Rarity", isSortable: true },
+  { id: "side", label: "Side", isSortable: true },
+];
 
+export default function Achievements() {
+  // data
+  const { data } = useSuspenseQuery<AchievementData>(GET_ACHIEVEMENT_DATA);
+  // states
   const [orderBy, setOrderBy] = useState<keyof Achievement | null>(null);
   const [order, setOrder] = useState<"asc" | "desc">("asc");
-
+  // handlers
   const handleSort = (property: keyof Achievement) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -109,59 +146,25 @@ export default function Achievements() {
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Icon</TableCell>
-            <TableCell sortDirection={orderBy === "name" ? order : false}>
-              <TableSortLabel
-                active={orderBy === "name"}
-                direction={orderBy === "name" ? order : "asc"}
-                onClick={() => handleSort("name")}
+            {headCells.map((headCell) => (
+              <TableCell
+                key={headCell.id}
+                align={headCell.align || "left"}
+                sortDirection={orderBy === headCell.id ? order : false}
               >
-                Name
-              </TableSortLabel>
-            </TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell sortDirection={orderBy === "hidden" ? order : false}>
-              <TableSortLabel
-                active={orderBy === "hidden"}
-                direction={orderBy === "hidden" ? order : "asc"}
-                onClick={() => handleSort("hidden")}
-              >
-                Hidden
-              </TableSortLabel>
-            </TableCell>
-            <TableCell
-              sortDirection={
-                orderBy === "playersCompletedPercent" ? order : false
-              }
-            >
-              <TableSortLabel
-                active={orderBy === "playersCompletedPercent"}
-                direction={
-                  orderBy === "playersCompletedPercent" ? order : "asc"
-                }
-                onClick={() => handleSort("playersCompletedPercent")}
-              >
-                Completion
-              </TableSortLabel>
-            </TableCell>
-            <TableCell sortDirection={orderBy === "rarity" ? order : false}>
-              <TableSortLabel
-                active={orderBy === "rarity"}
-                direction={orderBy === "rarity" ? order : "asc"}
-                onClick={() => handleSort("rarity")}
-              >
-                Rarity
-              </TableSortLabel>
-            </TableCell>
-            <TableCell sortDirection={orderBy === "side" ? order : false}>
-              <TableSortLabel
-                active={orderBy === "side"}
-                direction={orderBy === "side" ? order : "asc"}
-                onClick={() => handleSort("side")}
-              >
-                Side
-              </TableSortLabel>
-            </TableCell>
+                {headCell.isSortable ? (
+                  <TableSortLabel
+                    active={orderBy === headCell.id}
+                    direction={orderBy === headCell.id ? order : "asc"}
+                    onClick={() => handleSort(headCell.id)}
+                  >
+                    {headCell.label}
+                  </TableSortLabel>
+                ) : (
+                  headCell.label
+                )}
+              </TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
