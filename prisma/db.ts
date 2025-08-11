@@ -1,17 +1,25 @@
-// instantiate a single instance PrismaClient and save it on the globalThis object
-// to prevent instantiating extra PrismaClient instances
+// Create a single PrismaClient instance across hot reloads in development.
+// Prevents exhausting database connections in serverless/hot reload scenarios.
+
 import { PrismaClient } from "@prisma/client";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
+export const prisma =
+  globalThis.prisma ??
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+    errorFormat: "minimal",
+  });
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+if (process.env.NODE_ENV !== "production") {
+  globalThis.prisma = prisma;
+}
 
 export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
