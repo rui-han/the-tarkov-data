@@ -130,3 +130,28 @@ export const GET_ACHIEVEMENT_DATA = gql`
     }
   }
 `;
+
+export const GET_TASKS_DATA = gql`
+  query GET_TASKS_DATA {
+    tasks {
+      id
+      name
+      normalizedName
+      trader {
+        name
+      }
+      map {
+        name
+      }
+      experience
+      taskImageLink
+      minPlayerLevel
+      taskRequirements {
+        task {
+          name
+        }
+      }
+      kappaRequired
+    }
+  }
+`;
