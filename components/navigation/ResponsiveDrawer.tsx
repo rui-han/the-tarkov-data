@@ -38,9 +38,9 @@ const drawerItems = [
   { to: "/ammunition", text: "Ammunition", iconPath: mdiAmmunition },
   { to: "/hideout", text: "Hideout", iconPath: mdiHome },
   { to: "/items", text: "Items", iconPath: mdiPackageVariant },
-  { to: "/quests", text: "Quests", iconPath: mdiTooltipCheckOutline },
-  // TODO
+  { to: "/tasks", text: "Tasks", iconPath: mdiTooltipCheckOutline },
   { to: "/achievements", text: "Achievements", iconPath: mdiTrophy },
+  // TODO
   { to: "/maps", text: "Maps", iconPath: mdiMap },
 ];
 
