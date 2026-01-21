@@ -26,6 +26,7 @@ export const TaskTableColumns: GridColDef<Task>[] = [
           width: "100%",
           height: "100%",
           objectFit: "contain",
+          p: 3,
         }}
       />
     ),
@@ -36,8 +37,6 @@ export const TaskTableColumns: GridColDef<Task>[] = [
     field: "name",
     headerName: "Task Name",
     width: 260,
-    align: "center",
-    headerAlign: "center",
     renderCell: (params) => (
       <Box
         component="a"
