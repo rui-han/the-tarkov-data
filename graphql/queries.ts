@@ -152,6 +152,7 @@ export const GET_TASKS_DATA = gql`
         }
       }
       kappaRequired
+      wikiLink
     }
   }
 `;

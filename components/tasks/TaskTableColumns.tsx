@@ -38,7 +38,24 @@ export const TaskTableColumns: GridColDef<Task>[] = [
     width: 260,
     align: "center",
     headerAlign: "center",
-    renderCell: (params) => <Box sx={{ fontWeight: 600 }}>{params.value}</Box>,
+    renderCell: (params) => (
+      <Box
+        component="a"
+        href={params.row.wikiLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{
+          fontWeight: 600,
+          cursor: "pointer",
+          textDecoration: "none",
+          color: "inherit",
+          transition: "all 0.2s ease-in-out",
+          "&:hover": { textDecoration: "underline", opacity: 0.7 },
+        }}
+      >
+        {params.value}
+      </Box>
+    ),
   },
 
   // 3. trader

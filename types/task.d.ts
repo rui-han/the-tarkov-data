@@ -20,6 +20,7 @@ export interface Task {
   minPlayerLevel: number;
   taskRequirements: TaskRequirement[];
   kappaRequired: boolean;
+  wikiLink: string;
 }
 
 export interface TasksData {
