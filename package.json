@@ -19,6 +19,7 @@
     "@mdi/react": "^1.6.1",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.3",
+    "@mui/x-data-grid": "^5.17.26",
     "@prisma/client": "^5.15.0",
     "@types/node": "20.2.5",
     "@types/react": "18.2.8",
