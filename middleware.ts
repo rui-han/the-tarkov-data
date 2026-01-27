@@ -20,6 +20,13 @@ export function middleware(req: NextRequest) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
+  // Restrict access to /debug in production
+  if (pathname.startsWith("/debug")) {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.rewrite(new URL("/404", req.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
