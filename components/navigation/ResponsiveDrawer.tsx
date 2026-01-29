@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
+// components
+import ServerStatus from "./ServerStatus";
+import RaidTime from "./RaidTime";
+
+// MUI
 import {
   List,
   ListItem,
@@ -15,11 +20,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Icon from "@mdi/react";
-import BSG from "../../public/logos/BSG-logo.png";
-import Nikita from "../../public/images/nikita.jpeg";
-import ServerStatus from "./ServerStatus";
-// import EFT from "../../public/logos/EFT-logo.png";
-import RaidTime from "./RaidTime";
 
 // icons
 import {
@@ -33,173 +33,196 @@ import {
   mdiMap,
 } from "@mdi/js";
 
-// the sidebar drawer
+// images
+import BSG from "../../public/logos/BSG-logo.png";
+import Nikita from "../../public/images/nikita.jpeg";
+
+/**
+ * Navigation item config (data-driven)
+ */
 const drawerItems = [
-  { to: "/ammunition", text: "Ammunition", iconPath: mdiAmmunition },
-  { to: "/hideout", text: "Hideout", iconPath: mdiHome },
-  { to: "/items", text: "Items", iconPath: mdiPackageVariant },
-  { to: "/tasks", text: "Tasks", iconPath: mdiTooltipCheckOutline },
-  { to: "/achievements", text: "Achievements", iconPath: mdiTrophy },
-  // TODO
-  { to: "/maps", text: "Maps", iconPath: mdiMap },
+  { to: "/ammunition", text: "Ammunition", icon: mdiAmmunition },
+  { to: "/hideout", text: "Hideout", icon: mdiHome },
+  { to: "/items", text: "Items", icon: mdiPackageVariant },
+  { to: "/tasks", text: "Tasks", icon: mdiTooltipCheckOutline },
+  { to: "/achievements", text: "Achievements", icon: mdiTrophy },
+  { to: "/maps", text: "Maps", icon: mdiMap },
 ];
 
-// icon style
 const ICON_STYLE = {
   color: "#aeaeb0",
-  height: "30px",
-  width: "30px",
+  width: 30,
+  height: 30,
 };
 
 interface ResponsiveDrawerProps {
-  drawerWidth: number;
-  open: boolean;
+  /** Called after internal navigation (useful for closing mobile drawer) */
+  onNavigate?: () => void;
+
+  /** Called when user clicks external link */
+  onExternalLinkClick?: (link: { url: string; label: string }) => void;
+
+  /** Whether drawer is expanded (only affects bottom content visibility) */
+  expanded?: boolean;
 }
 
+/**
+ * Responsive navigation drawer content
+ */
 export default function ResponsiveDrawer({
-  drawerWidth,
-  open,
+  onNavigate,
+  onExternalLinkClick,
+  expanded = true,
 }: ResponsiveDrawerProps) {
-  const currentRoute = usePathname(); // returns "/dashboard" on /dashboard?foo=bar
+  const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null);
 
-  // check route changes
+  /**
+   * Track which route is currently navigating
+   * Used for spinner feedback
+   */
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
+
+  /**
+   * Reset loading state on route change
+   */
   useEffect(() => {
-    setLoading(null);
-  }, [currentRoute]);
+    setLoadingPath(null);
+  }, [pathname]);
 
-  // set the destination route to loading, then navigate to the destination
-  const handleNavigation = (to: string) => {
-    setLoading(to);
-    router.push(to);
+  /**
+   * Handle internal navigation
+   */
+  const handleNavigate = useCallback(
+    (to: string) => {
+      setLoadingPath(to);
+      router.push(to);
+      onNavigate?.();
+    },
+    [router, onNavigate],
+  );
+
+  /**
+   * Handle external link click
+   */
+  const handleExternalClick = (
+    e: React.MouseEvent,
+    url: string,
+    label: string,
+  ) => {
+    e.stopPropagation();
+    onExternalLinkClick?.({ url, label });
   };
 
-  // determine if drawer button should be highlighted
-  const isActiveRoute = (itemPath: string) => {
-    if (loading === itemPath) return true;
-    return (
-      currentRoute.startsWith(itemPath) ||
-      (itemPath === "/" && currentRoute === "/")
-    ); // "/hideout/5d494a315b56502f18c98a0a" to "/hideout"
-  };
+  /**
+   * Determine active route styling
+   */
+  const isActive = (to: string) =>
+    loadingPath === to || pathname.startsWith(to);
 
   return (
     <Box
       sx={{
-        width: drawerWidth,
         height: "100%",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      {/* main pages link */}
+      {/* ---------- Main navigation ---------- */}
       <Box sx={{ flexGrow: 1 }}>
         <List>
           {drawerItems.map((item) => (
-            <ListItem key={item.to} disablePadding sx={{ display: "block" }}>
+            <ListItem key={item.to} disablePadding>
               <ListItemButton
-                onClick={() => handleNavigation(item.to)}
-                sx={{
-                  backgroundColor: isActiveRoute(item.to)
-                    ? "rgba(219, 223, 234, 0.2)"
-                    : "",
-                  my: 0.5, // increase gap
-                  borderRadius: 1,
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                  },
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    "&:hover": {
-                      backgroundColor: "rgba(255,255,255,0.25)",
-                    },
-                  },
-                }}
+                onClick={() => handleNavigate(item.to)}
+                selected={isActive(item.to)}
+                sx={{ my: 0.5, borderRadius: 1 }}
               >
                 <ListItemIcon>
-                  {loading === item.to && loading !== currentRoute ? (
-                    <CircularProgress style={ICON_STYLE} />
+                  {loadingPath === item.to ? (
+                    <CircularProgress size={22} />
                   ) : (
-                    <Icon path={item.iconPath} style={ICON_STYLE} />
+                    <Icon path={item.icon} style={ICON_STYLE} />
                   )}
                 </ListItemIcon>
-                {item.text}
+                <ListItemText primary={item.text} />
               </ListItemButton>
             </ListItem>
           ))}
         </List>
 
         <Divider />
-        {/* Github link */}
+
+        {/* ---------- External links ---------- */}
         <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
+          <ListItem disablePadding>
             <ListItemButton
-              onClick={() =>
-                window.open(
+              onClick={(e) =>
+                handleExternalClick(
+                  e,
                   "https://github.com/rui-han/the-tarkov-data",
-                  "_blank",
-                  "noopener,noreferrer",
+                  "GitHub",
                 )
               }
             >
               <ListItemIcon>
                 <Icon path={mdiGithub} style={ICON_STYLE} />
               </ListItemIcon>
-              <ListItemText>Github</ListItemText>
+              <ListItemText primary="GitHub" />
             </ListItemButton>
           </ListItem>
         </List>
+
         <Divider />
-        {/* social media links */}
+
+        {/* ---------- Social ---------- */}
         <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
+          <ListItem disablePadding>
             <ListItemButton
-              onClick={() =>
-                window.open(
+              onClick={(e) =>
+                handleExternalClick(
+                  e,
                   "https://twitter.com/nikgeneburn",
-                  "_blank",
-                  "noopener,noreferrer",
+                  "Nikita Twitter",
                 )
               }
             >
               <ListItemIcon>
-                <Image
-                  src={Nikita}
-                  style={{ height: "30px", width: "30px" }}
-                  alt="Nikita Buyanov"
-                />
+                <Image src={Nikita} alt="Nikita" width={30} height={30} />
               </ListItemIcon>
-              <ListItemText>Nikita</ListItemText>
+              <ListItemText primary="Nikita" />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding sx={{ display: "block" }}>
+
+          <ListItem disablePadding>
             <ListItemButton
-              onClick={() =>
-                window.open(
+              onClick={(e) =>
+                handleExternalClick(
+                  e,
                   "https://twitter.com/bstategames",
-                  "_blank",
-                  "noopener,noreferrer",
+                  "BSG Twitter",
                 )
               }
             >
               <ListItemIcon>
-                <Image src={BSG} style={ICON_STYLE} alt="Battle State Games" />
+                <Image src={BSG} alt="BSG" width={30} height={30} />
               </ListItemIcon>
-              <ListItemText>BSG</ListItemText>
+              <ListItemText primary="BSG" />
             </ListItemButton>
           </ListItem>
         </List>
+
         <Divider />
-        {/* server status */}
+
+        {/* ---------- Server status ---------- */}
         <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
+          <ListItem disablePadding>
             <ListItemButton
-              onClick={() =>
-                window.open(
+              onClick={(e) =>
+                handleExternalClick(
+                  e,
                   "https://status.escapefromtarkov.com/",
-                  "_blank",
-                  "noopener,noreferrer",
+                  "Server Status",
                 )
               }
             >
@@ -210,24 +233,22 @@ export default function ResponsiveDrawer({
             </ListItemButton>
           </ListItem>
         </List>
-        <Divider />
       </Box>
-      {/* raid time */}
-      <Box
-        sx={{
-          mt: "auto",
-          width: "100%",
-          display: open ? "flex" : "none",
-          justifyContent: "center",
-          p: 1,
-        }}
-      >
-        <List>
-          <ListItem>
-            <RaidTime />
-          </ListItem>
-        </List>
-      </Box>
+
+      {/* ---------- Bottom content ---------- */}
+      {expanded && (
+        <Box
+          sx={{
+            mt: "auto",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            p: 1,
+          }}
+        >
+          <RaidTime />
+        </Box>
+      )}
     </Box>
   );
 }

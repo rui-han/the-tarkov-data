@@ -2,68 +2,43 @@ import { createTheme } from "@mui/material";
 import { lighten, darken } from "@mui/material/styles";
 
 const BASE_PRIMARY = "#9a8866";
+const BG_PAPER = "#2d2d2f"; // The dark grey used in Drawer
+const TEXT_PRIMARY = "#c7c5b3"; // The beige/grey text color
 
-// dark theme with customization
 export const darkTheme = createTheme({
   palette: {
     mode: "dark",
 
     // PRIMARY: warm brown
     primary: {
-      main: BASE_PRIMARY, // #9a8866
-      light: lighten(BASE_PRIMARY, 0.2), // ~#b39f7f
-      dark: darken(BASE_PRIMARY, 0.2), // ~#7b6f54
+      main: BASE_PRIMARY,
+      light: lighten(BASE_PRIMARY, 0.2),
+      dark: darken(BASE_PRIMARY, 0.2),
       contrastText: "#FFF",
     },
 
-    // SECONDARY: a muted teal to complement the brown
+    // SECONDARY: muted teal
     secondary: {
       main: "#66a69a",
-      light: lighten("#66a69a", 0.2), // ~#89bdb3
-      dark: darken("#66a69a", 0.2), // ~#528378
+      light: lighten("#66a69a", 0.2),
+      dark: darken("#66a69a", 0.2),
       contrastText: "#FFF",
     },
 
-    // Standard semantic colors
-    error: {
-      main: "#f44336",
-      light: lighten("#f44336", 0.2),
-      dark: darken("#f44336", 0.2),
-      contrastText: "#FFF",
-    },
-    warning: {
-      main: "#ffb300",
-      light: lighten("#ffb300", 0.2),
-      dark: darken("#ffb300", 0.2),
-      contrastText: "rgba(0,0,0,0.87)",
-    },
-    info: {
-      main: "#29b6f6",
-      light: lighten("#29b6f6", 0.2),
-      dark: darken("#29b6f6", 0.2),
-      contrastText: "#FFF",
-    },
-    success: {
-      main: "#66bb6a",
-      light: lighten("#66bb6a", 0.2),
-      dark: darken("#66bb6a", 0.2),
-      contrastText: "rgba(0,0,0,0.87)",
-    },
-
-    // Backgrounds
+    // BACKGROUNDS
     background: {
-      default: "#1d1d1f",
-      paper: "#2b2b2d",
+      default: "#1d1d1f", // Very dark site background
+      paper: BG_PAPER, // Matches Drawer color
     },
 
-    // Text
+    // TEXT
     text: {
-      primary: BASE_PRIMARY,
+      primary: TEXT_PRIMARY, // Main text color (Tarkov beige)
       secondary: "rgba(224, 220, 207, 0.6)",
       disabled: "rgba(224, 220, 207, 0.3)",
     },
 
-    // Divider
+    // DIVIDER
     divider: "rgba(224, 220, 207, 0.12)",
   },
 
@@ -78,11 +53,14 @@ export const darkTheme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
+          // Standard webkit font smoothing for better readability
           WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
         },
       },
     },
-    // Force contained-primary hover to use a custom shade
+
+    // BUTTON: Custom hover state for primary buttons
     MuiButton: {
       styleOverrides: {
         containedPrimary: {
@@ -92,13 +70,29 @@ export const darkTheme = createTheme({
         },
       },
     },
+
+    // APPBAR
     MuiAppBar: {
       styleOverrides: {
-        colorPrimary: {
-          backgroundColor: darken("#2b2b2d", 0.1),
+        root: {
+          // The gradient from Nav.tsx
+          background: `linear-gradient(to right, ${BG_PAPER}, #3d3d3f)`,
+          boxShadow: "none", // Optional: Cleaner look without shadow
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
         },
       },
     },
+
+    // DRAWER: Ensure drawer paper matches the theme background
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: BG_PAPER,
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        },
+      },
+    },
+
     MuiPaper: {
       styleOverrides: {
         root: {
