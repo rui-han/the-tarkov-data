@@ -96,8 +96,8 @@ export const GET_ALL_ITEMS_DATA = gql`
 `;
 
 export const GET_PAGINATED_ITEMS_DATA = gql`
-  query GET_PAGINATED_ITEMS_DATA($limit: Int, $offset: Int) {
-    items(limit: $limit, offset: $offset) {
+  query GetPaginatedItems($limit: Int!, $offset: Int!, $search: String) {
+    items(limit: $limit, offset: $offset, name: $search) {
       id
       gridImageLink
       wikiLink
