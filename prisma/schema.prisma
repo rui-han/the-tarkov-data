@@ -18,6 +18,7 @@ model User {
   image         String
   createdAt     DateTime        @default(now())
   favoriteItems FavoriteItems[]
+  feedback      Feedback[]
 }
 
 model FavoriteItems {
@@ -27,4 +28,15 @@ model FavoriteItems {
   createdAt   DateTime @default(now())
 
   @@id([userAuth0Id, itemId])
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  message     String
+  // feedback doesn't require login, so this is optional
+  userAuth0Id String?
+  user        User?    @relation(fields: [userAuth0Id], references: [auth0Id])
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback } from "react";
 
 // MUI
@@ -6,33 +8,75 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Grid,
   Snackbar,
   TextField,
   Typography,
 } from "@mui/material";
 
+const MAX_LENGTH = 2000;
+
 export default function CommunityFeedback() {
   const [feedback, setFeedback] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // snackbar state, shared between success and error cases
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success",
+  );
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const isOverLimit = feedback.length > MAX_LENGTH;
 
   // handle feedback submission
   const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+
+      const trimmed = feedback.trim();
       // don't need to submit empty feedback
-      if (feedback.trim() === "") return;
-      console.log("Feedback submitted:", feedback);
-      setFeedback("");
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 5000); // hide message after 5 seconds
+      if (trimmed === "" || isOverLimit) return;
+
+      setSubmitting(true);
+
+      try {
+        const res = await fetch("/api/feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: trimmed }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error ?? "Failed to submit feedback");
+        }
+
+        setFeedback("");
+        setSnackbarSeverity("success");
+        setSnackbarMessage("Thank you for your feedback!");
+        setSnackbarOpen(true);
+      } catch (error) {
+        setSnackbarSeverity("error");
+        setSnackbarMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to submit feedback, please try again",
+        );
+        setSnackbarOpen(true);
+      } finally {
+        setSubmitting(false);
+      }
     },
-    [feedback],
+    [feedback, isOverLimit],
   );
 
   // close snackbar
   const handleSnackbarClose = useCallback(() => {
-    setSubmitted(false);
+    setSnackbarOpen(false);
   }, []);
 
   return (
@@ -59,22 +103,43 @@ export default function CommunityFeedback() {
                 fullWidth
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
+                disabled={submitting}
+                error={isOverLimit}
+                helperText={
+                  isOverLimit
+                    ? `Feedback must be under ${MAX_LENGTH} characters (${feedback.length}/${MAX_LENGTH})`
+                    : `${feedback.length}/${MAX_LENGTH}`
+                }
                 sx={{ marginBottom: 2 }}
               />
-              <Button color="primary" type="submit" variant="contained">
-                Submit Feedback
+              <Button
+                color="primary"
+                type="submit"
+                variant="contained"
+                disabled={submitting || feedback.trim() === "" || isOverLimit}
+                startIcon={
+                  submitting ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : undefined
+                }
+              >
+                {submitting ? "Submitting..." : "Submit Feedback"}
               </Button>
             </form>
           </CardContent>
         </Card>
       </Grid>
       <Snackbar
-        open={submitted}
+        open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
       >
-        <Alert onClose={handleSnackbarClose} severity="success">
-          Thank you for your feedback!
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </Grid>
