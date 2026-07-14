@@ -17,10 +17,11 @@ import LogoutButton from "./LogoutButton";
 
 export default function UserProfile() {
   const { user, error, isLoading } = useUser();
+  const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
+
   if (isLoading) return <div>loading...</div>;
   if (error) return <div>{error.message}</div>;
 
-  const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElement(event.currentTarget);
