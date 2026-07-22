@@ -37,16 +37,19 @@ A comprehensive web application designed as a rich data lookup platform for the 
 
 The application is built using a modern, robust, and scalable technology stack:
 
-| Technology           | Description                                                                                                    |
-| :------------------- | :------------------------------------------------------------------------------------------------------------- |
-| **React**            | A powerful JavaScript library for building dynamic and responsive user interfaces.                             |
-| **TypeScript**       | A strongly typed superset of JavaScript that enhances code quality and maintainability.                        |
-| **Next.js**          | A cutting-edge React framework for server-side rendering (SSR), static site generation (SSG), and performance. |
-| **Apollo Client**    | A comprehensive state management library for managing both local and remote data with GraphQL.                 |
-| **Material-UI (v5)** | A popular and robust React UI framework for creating a consistent and accessible design system.                |
-| **Auth0**            | A flexible, drop-in solution to add authentication and authorization services.                                 |
-| **Vercel Postgres**  | A serverless SQL database designed to integrate seamlessly with Vercel and modern frontend frameworks.         |
-| **Prisma**           | A next-generation ORM for Node.js and TypeScript that simplifies database access and management.               |
+| Technology                | Description                                                                                                    |
+| :------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| **React**                  | A powerful JavaScript library for building dynamic and responsive user interfaces.                             |
+| **TypeScript**             | A strongly typed superset of JavaScript that enhances code quality and maintainability.                        |
+| **Next.js**                | A cutting-edge React framework for server-side rendering (SSR), static site generation (SSG), and performance. |
+| **Apollo Client**          | A comprehensive state management library for managing both local and remote data with GraphQL.                 |
+| **Material-UI (v5)**       | A popular and robust React UI framework for creating a consistent and accessible design system.                |
+| **Auth0**                  | A flexible, drop-in solution to add authentication and authorization services.                                 |
+| **Vercel Postgres**        | A serverless SQL database designed to integrate seamlessly with Vercel and modern frontend frameworks.         |
+| **Prisma**                 | A next-generation ORM for Node.js and TypeScript that simplifies database access and management.               |
+| **Upstash Redis**          | A serverless Redis used to power request rate limiting across API routes and middleware.                       |
+| **Vitest**                 | A fast, Vite-powered unit test runner used for testing pure functions, hooks, and components.                  |
+| **React Testing Library**  | A testing utility encouraging tests that resemble how users actually interact with components.                 |
 
 ## 3\. Core Concepts
 
@@ -98,7 +101,7 @@ Follow these instructions to set up the project for local development.
 
 - [Node.js](https://nodejs.org/) (v18.x or later recommended)
 - [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- An account with [Auth0](https://auth0.com/) and [Vercel](https://vercel.com/) (for Postgres database).
+- An account with [Auth0](https://auth0.com/), [Vercel](https://vercel.com/) (for Postgres database), and [Upstash](https://upstash.com/) (for Redis-backed rate limiting).
 
 ### 4.2 Installation
 
@@ -130,7 +133,7 @@ This project requires several environment variables for database connections and
     touch .env
     ```
 
-2.  **Populate the `.env` file.** Copy the contents of `.env.example` below and replace the placeholder values with your credentials from Auth0 and Vercel Postgres.
+2.  **Populate the `.env` file.** Copy the contents of `.env.example` below and replace the placeholder values with your credentials from Auth0, Vercel Postgres, and Upstash.
 
     ```sh
     # .env.example
@@ -154,6 +157,15 @@ This project requires several environment variables for database connections and
     POSTGRES_HOST="[your-postgres-host]"
     POSTGRES_PASSWORD="[your-postgres-password]"
     POSTGRES_DATABASE="verceldb"
+
+    # Upstash Redis Environment Variables (rate limiting)
+    # See: https://upstash.com/docs/redis/overall/getstarted
+    UPSTASH_REDIS_REST_URL="[your-upstash-redis-rest-url]"
+    UPSTASH_REDIS_REST_TOKEN="[your-upstash-redis-rest-token]"
+
+    # Optional: comma-separated list of IP prefixes to block at the middleware
+    # level, e.g. "74.7.,1.2.3."
+    BLOCKED_IP_PREFIXES=""
     ```
 
     - **Prisma Best Practices:** We follow the recommended best practice for instantiating `PrismaClient` in a Next.js environment to avoid exhausting database connections during development. [Learn more](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices).
@@ -199,9 +211,37 @@ Vercel will now automatically deploy your project on every push to the `main` br
 
 ## 6\. Testing
 
-**TODO**
+This project uses [Vitest](https://vitest.dev/) together with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) for unit and component tests.
 
-Future testing strategy will include:
+### 6.1 Running Tests
 
-- **Component Tests:** Using Jest and React Testing Library to test individual components in isolation.
-- **End-to-End (E2E) Tests:** Using a framework like Cypress or Playwright to simulate user flows and test critical paths through the application.
+```bash
+# run the full test suite once
+npm test
+
+# re-run tests automatically as files change
+npm run test:watch
+```
+
+### 6.2 Project Conventions
+
+- Test files live under `tests/`, mirroring the folder structure of the file under test (e.g. `tests/utils/ammo-utils.test.ts` tests `utils/ammo-utils.ts`).
+- Prefer testing pure functions and hooks directly — they're fast, deterministic, and don't require mocking the DOM.
+- Reach for component tests (`@testing-library/react`) when there's real user interaction or conditional rendering logic worth locking down. Assert on visible behavior (values, callbacks, text) rather than implementation details like class names or component internals.
+- `jsdom` is used as the test environment and `vite-tsconfig-paths` resolves the same `@/*` import alias used throughout the app, so tests can import from source the same way application code does.
+
+### 6.3 Current Coverage
+
+The suite is intentionally a starting point rather than full coverage. It currently covers:
+
+- `utils/ammo-utils.ts` — filtering and sorting logic used by the ammunition table
+- `utils/achievement-utils.ts` — chip color/style resolution
+- `hooks/useAchievementSort.ts` — the generic sortable-table hook
+- `components/ammunition/AmmoSearchbar.tsx` — a first example of a component interaction test
+
+Good next candidates for tests include additional edge cases in `filterAndSortAmmo`, the `useFavoriteAmmo` hook (with `fetch` mocked), and the API routes under `app/api/` (with Prisma mocked or run against a test database).
+
+## 7\. Acknowledgements
+
+- Data provided by the [Tarkov.dev API](https://tarkov.dev/api/).
+- Built with tools and services from Next.js, Vercel, Auth0, and Upstash.
