@@ -8,22 +8,37 @@ import { TasksData } from "@/types/task";
 // components
 import TaskTable from "@/components/tasks/TaskTable";
 // MUI
-import { TextField, Box } from "@mui/material";
+import { TextField, Box, Alert } from "@mui/material";
 
 export default function Tasks() {
-  const { data } = useSuspenseQuery<TasksData>(GET_TASKS_DATA);
+  const { data, error } = useSuspenseQuery<TasksData>(GET_TASKS_DATA);
   const [search, setSearch] = useState("");
 
-  // Filter tasks based on search input
+  // Filter tasks based on search input.
+  // Hooks must run unconditionally, so this stays above the `error` early
+  // return below — `data` may be undefined if the query failed, hence the
+  // guard.
   const filteredTasks = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    if (!data) return [];
 
+    const keyword = search.trim().toLowerCase();
     if (!keyword) return data.tasks;
 
     return data.tasks.filter((task) =>
       task.name.toLowerCase().includes(keyword),
     );
-  }, [data.tasks, search]);
+  }, [data, search]);
+
+  if (error) {
+    console.error("Error fetching tasks data:", error);
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          Failed to load tasks data. Please try again later.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box

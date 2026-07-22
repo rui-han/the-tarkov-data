@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   description: "All the data and information you need for EFT.",
 };
 
+// Force every route under this layout to render dynamically (per request)
+// instead of being statically generated at build time. Nearly every page
+// depends on live data from the Tarkov.dev GraphQL API (via the nav bar's
+// ServerStatus component alone), so a transient outage/503 from that API
+// during `next build` would otherwise fail the entire deployment.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {

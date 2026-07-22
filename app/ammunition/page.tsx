@@ -12,11 +12,23 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function Ammunition() {
-  const { data } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+  const { data, error } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+
+  if (error) {
+    console.error("Error fetching ammo data:", error);
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          Failed to load ammunition data. Please try again later.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box

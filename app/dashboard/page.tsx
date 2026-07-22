@@ -32,7 +32,9 @@ interface SnackbarMessage {
 
 export default function UserDashboard() {
   const { user, error, isLoading } = useUser();
-  const { data } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+  // renamed to `ammoError` to avoid clashing with Auth0's `error` above
+  const { data, error: ammoError } =
+    useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
   const { userFavoriteAmmo, getUsersFavoriteAmmo, handleRemoveFavoriteAmmo } =
     useFavoriteAmmo();
 
@@ -139,8 +141,23 @@ export default function UserDashboard() {
     );
   }
 
+  if (ammoError) {
+    console.error("Error fetching ammo data:", ammoError);
+    return (
+      <Box textAlign="center" mt={4}>
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          Failed to load ammunition data. Please try again later.
+        </Alert>
+        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
+
   // filter user's favorite ammo, excluding temporarily hidden items
-  const userAmmoData = data.ammo.filter(
+  const userAmmoData = (data?.ammo ?? []).filter(
     (ammoData) =>
       userFavoriteAmmo.some(
         (favAmmoData) => favAmmoData.itemId === ammoData.item.id,

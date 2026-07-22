@@ -19,6 +19,8 @@ import {
   LinearProgress,
   Tooltip,
   Chip,
+  Alert,
+  Box,
 } from "@mui/material";
 // utils
 import {
@@ -30,12 +32,28 @@ import {
 
 export default function Achievements() {
   // data
-  const { data } = useSuspenseQuery<AchievementData>(GET_ACHIEVEMENT_DATA);
-  // states
+  const { data, error } =
+    useSuspenseQuery<AchievementData>(GET_ACHIEVEMENT_DATA);
+
+  // states — must be called unconditionally, before any early return
   const { orderBy, order, handleSort, sortedAchievements } = useAchievementSort(
-    data.achievements,
-    { defaultOrder: "asc", defaultOrderBy: "name" },
+    data?.achievements ?? [],
+    {
+      defaultOrder: "asc",
+      defaultOrderBy: "name",
+    },
   );
+
+  if (error) {
+    console.error("Error fetching achievement data:", error);
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          Failed to load achievement data. Please try again later.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <TableContainer
