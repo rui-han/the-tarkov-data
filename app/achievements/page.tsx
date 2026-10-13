@@ -1,7 +1,6 @@
 "use client";
 
-import { useSuspenseQuery } from "@apollo/client";
-import { GET_ACHIEVEMENT_DATA } from "@/graphql/queries";
+import { useTarkovData } from "@/hooks/useTarkovData";
 import { useAchievementSort } from "@/hooks/useAchievementSort";
 // types
 import { AchievementData } from "@/types/achievement";
@@ -21,6 +20,7 @@ import {
   Chip,
   Alert,
   Box,
+  CircularProgress,
 } from "@mui/material";
 // utils
 import {
@@ -32,8 +32,7 @@ import {
 
 export default function Achievements() {
   // data
-  const { data, error } =
-    useSuspenseQuery<AchievementData>(GET_ACHIEVEMENT_DATA);
+  const { data, error, isLoading } = useTarkovData<AchievementData>("tasks");
 
   // states — must be called unconditionally, before any early return
   const { orderBy, order, handleSort, sortedAchievements } = useAchievementSort(
@@ -51,6 +50,14 @@ export default function Achievements() {
         <Alert severity="error">
           Failed to load achievement data. Please try again later.
         </Alert>
+      </Box>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 8 }}>
+        <CircularProgress />
       </Box>
     );
   }

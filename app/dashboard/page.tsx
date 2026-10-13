@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSuspenseQuery } from "@apollo/client";
+import { useAmmoData } from "@/hooks/useAmmoData";
+
 import { FetchedData } from "@/types/ammo";
-import { GET_AMMO_DATA } from "@/graphql/queries";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
 // components
@@ -33,8 +33,12 @@ interface SnackbarMessage {
 export default function UserDashboard() {
   const { user, error, isLoading } = useUser();
   // renamed to `ammoError` to avoid clashing with Auth0's `error` above
-  const { data, error: ammoError } =
-    useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+  const {
+    ammo: allAmmo,
+    error: ammoError,
+    isLoading: ammoLoading,
+  } = useAmmoData();
+
   const { userFavoriteAmmo, getUsersFavoriteAmmo, handleRemoveFavoriteAmmo } =
     useFavoriteAmmo();
 
@@ -109,7 +113,7 @@ export default function UserDashboard() {
     setCurrentSnackbar(null); // allow useEffect to process the next snackbar in queue
   };
 
-  if (isLoading) {
+  if (isLoading || ammoLoading) {
     return (
       <Grid container spacing={2}>
         {Array.from(new Array(6)).map((_, index) => (
@@ -157,7 +161,7 @@ export default function UserDashboard() {
   }
 
   // filter user's favorite ammo, excluding temporarily hidden items
-  const userAmmoData = (data?.ammo ?? []).filter(
+  const userAmmoData = allAmmo.filter(
     (ammoData) =>
       userFavoriteAmmo.some(
         (favAmmoData) => favAmmoData.itemId === ammoData.item.id,

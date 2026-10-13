@@ -9,6 +9,11 @@ const AmmoTableFilter = ({
   const changeCaliberToShortName = (caliber: string) =>
     caliber.replace("Caliber", "");
 
+  const handleButtonClick = (caliber: string) => {
+    const nextCaliber = caliber === currentCaliber ? "" : caliber;
+    onFilterButtonClick(nextCaliber);
+  };
+
   const uniqueCalibers = [
     ...new Set(
       ammo
@@ -31,17 +36,25 @@ const AmmoTableFilter = ({
     <Paper sx={{ my: 3 }} elevation={3}>
       <Box p={4}>
         <h4>Bullets (Rifles, Pistols, etc):</h4>
-        {uniqueCalibers.map((caliber) => (
-          <Button
-            sx={{ m: "4px", fontSize: "16px" }}
-            key={caliber}
-            color="inherit"
-            variant={caliber === currentCaliber ? "contained" : "outlined"}
-            onClick={() => onFilterButtonClick(caliber)}
-          >
-            {changeCaliberToShortName(caliber)}
-          </Button>
-        ))}
+        {uniqueCalibers
+          .filter(
+            (caliber) => caliber && changeCaliberToShortName(caliber)?.trim(),
+          )
+          .map((caliber) => {
+            const displayText = changeCaliberToShortName(caliber) || caliber;
+
+            return (
+              <Button
+                sx={{ m: "4px", fontSize: "16px" }}
+                key={caliber}
+                color="inherit"
+                variant={caliber === currentCaliber ? "contained" : "outlined"}
+                onClick={() => handleButtonClick(caliber)}
+              >
+                {displayText}
+              </Button>
+            );
+          })}
         <h4>Others (Buckshots, Grenades, Flashbangs):</h4>
         {otherCalibers.map((caliber) => (
           <Button

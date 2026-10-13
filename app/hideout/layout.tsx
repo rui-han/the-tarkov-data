@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { GET_HIDEOUT_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/client";
+import { useTarkovData } from "@/hooks/useTarkovData";
 import { FetchedData } from "@/types/hideout";
 import HideoutNav from "@/components/hideout/HideoutNav";
 // MUI
@@ -24,7 +23,7 @@ export default function HideoutLayout({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, error } = useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
+  const { data, error, isLoading } = useTarkovData<FetchedData>("hideout");
 
   // error handling
   if (error) {
@@ -35,7 +34,7 @@ export default function HideoutLayout({
       </Typography>
     );
   }
-  if (!data || !data.hideoutStations) {
+  if (isLoading || !data || !data.hideoutStations) {
     return (
       <Box
         sx={{

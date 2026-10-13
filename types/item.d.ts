@@ -1,19 +1,7 @@
-export interface PaginatedItemsData {
-  items: Item[];
-}
-
-interface Item {
+export interface Item {
   id: string;
-  gridImageLink: string;
+  name: string;
+  types: string[];
+  properties: string[];
   wikiLink: string;
-  name: string;
-  normalizedName: string;
-  category: ItemCategory;
-  weight: number;
-  lastLowPrice: number;
-}
-
-interface ItemCategory {
-  id: string;
-  name: string;
 }

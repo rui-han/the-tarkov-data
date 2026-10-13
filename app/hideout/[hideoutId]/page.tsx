@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { FetchedData, HideoutParams } from "@/types/hideout";
-import { GET_HIDEOUT_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/client";
+import { useTarkovData } from "@/hooks/useTarkovData";
 // MUI
 import {
   Box,
@@ -119,8 +118,7 @@ const formatConstructionTime = (seconds: number): string => {
 
 export default function HideoutCard({ params }: HideoutParams) {
   const { hideoutId } = params;
-  const { data, error: queryError } =
-    useSuspenseQuery<FetchedData>(GET_HIDEOUT_DATA);
+  const { data, error, isLoading } = useTarkovData<FetchedData>("hideout");
 
   // memoize hideoutData derivation
   const hideoutData = useMemo(() => {
@@ -148,15 +146,15 @@ export default function HideoutCard({ params }: HideoutParams) {
   }, [hideoutData?.levels, currentLevel]);
 
   // error handling
-  if (queryError) {
-    console.error("Error fetching hideout station data:", queryError);
+  if (error) {
+    console.error("Error fetching hideout station data:", error);
     return (
       <Alert severity="error" sx={{ m: 2 }}>
         Failed to load hideout details. Please try again.
       </Alert>
     );
   }
-  if (!data?.hideoutStations && !queryError) {
+  if (!data?.hideoutStations && !error) {
     // This check might be redundant if useSuspenseQuery and an ErrorBoundary are fully handling things,
     // but good as a fallback or if data structure is unexpectedly empty.
     return (

@@ -8,8 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useQuery } from "@apollo/client";
-import { GET_PAGINATED_ITEMS_DATA } from "@/graphql/queries";
+import { useTarkovData } from "@/hooks/useTarkovData";
 import { Item, PaginatedItemsData } from "@/types/item";
 import {
   Paper,
@@ -27,14 +26,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-/**
- * Default page size
- */
 const DEFAULT_ITEMS_PER_PAGE = 20;
 
-/**
- * Table column definitions
- */
 const columns = [
   { id: "image", label: "Image" },
   { id: "name", label: "Name" },
@@ -50,122 +43,49 @@ type ItemsTableProps = {
 export default function ItemsTable({
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
 }: ItemsTableProps) {
-  /**
-   * Search input state (real-time)
-   */
   const [searchTerm, setSearchTerm] = useState("");
-
-  /**
-   * Debounced search value sent to API
-   */
   const debouncedSearch = useDebouncedValue(searchTerm, 500);
 
-  /**
-   * Infinite scroll states
-   */
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // json.tarkov.dev no longer supports server-side search/pagination — it ships
+  // the full items array as a static file, so we fetch it once and do
+  // filtering + "infinite scroll" slicing entirely on the client.
+  const { data, error, isLoading } = useTarkovData<PaginatedItemsData>("items");
+  const allItems = useMemo(() => data?.items ?? [], [data?.items]);
+
+  const filteredItems = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    if (!query) return allItems;
+    return allItems.filter((item) => item.name.toLowerCase().includes(query));
+  }, [allItems, debouncedSearch]);
+
+  const [visibleCount, setVisibleCount] = useState(itemsPerPage);
+
+  // Reset the visible count whenever the search term changes
+  useEffect(() => {
+    setVisibleCount(itemsPerPage);
+  }, [debouncedSearch, itemsPerPage]);
+
+  const items = filteredItems.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredItems.length;
+
+  const loadMoreItems = useCallback(() => {
+    setVisibleCount((prev) =>
+      Math.min(prev + itemsPerPage, filteredItems.length),
+    );
+  }, [filteredItems.length, itemsPerPage]);
+
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  /**
-   * A stable key derived from search value.
-   * When search changes, the whole query lifecycle resets,
-   * preventing old pagination data from leaking into new results.
-   */
-  const queryKey = debouncedSearch.trim() || "__all__";
-
-  /**
-   * GraphQL query
-   */
-  const { data, loading, error, fetchMore } = useQuery<PaginatedItemsData>(
-    GET_PAGINATED_ITEMS_DATA,
-    {
-      variables: {
-        limit: itemsPerPage,
-        offset: 0,
-        search:
-          debouncedSearch.trim() === "" ? undefined : debouncedSearch.trim(),
-      },
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-
-  /**
-   * Reset pagination state when search condition changes
-   */
-  useEffect(() => {
-    setHasMore(true);
-    setIsLoadingMore(false);
-  }, [debouncedSearch]);
-
-  /**
-   * Extract items safely
-   */
-  const items = useMemo(() => data?.items ?? [], [data?.items]);
-
-  /**
-   * Load next page
-   */
-  const loadMoreItems = useCallback(() => {
-    if (loading || isLoadingMore || !hasMore || !data) return;
-
-    // If current item count is not a multiple of page size,
-    // we already reached the end.
-    if (data.items.length % itemsPerPage !== 0) {
-      setHasMore(false);
-      return;
-    }
-
-    setIsLoadingMore(true);
-
-    fetchMore({
-      variables: {
-        offset: data.items.length,
-        search:
-          debouncedSearch.trim() === "" ? undefined : debouncedSearch.trim(),
-      },
-      updateQuery: (prev, { fetchMoreResult }) => {
-        if (!fetchMoreResult) return prev;
-
-        return {
-          ...prev,
-          items: [...prev.items, ...fetchMoreResult.items],
-        };
-      },
-    })
-      .then((res) => {
-        if (!res.data || res.data.items.length === 0) {
-          setHasMore(false);
-        }
-      })
-      .finally(() => {
-        setIsLoadingMore(false);
-      });
-  }, [
-    loading,
-    isLoadingMore,
-    hasMore,
-    data,
-    fetchMore,
-    itemsPerPage,
-    debouncedSearch,
-  ]);
-
-  /**
-   * IntersectionObserver for infinite scrolling
-   */
+  // Infinite scroll trigger, unchanged from the old implementation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting && hasMore && !isLoadingMore) {
+        if (entry.isIntersecting && hasMore) {
           loadMoreItems();
         }
       },
-      {
-        rootMargin: "100px",
-        threshold: 0.1,
-      },
+      { rootMargin: "100px", threshold: 0.1 },
     );
 
     const el = loaderRef.current;
@@ -174,11 +94,8 @@ export default function ItemsTable({
     return () => {
       if (el) observer.unobserve(el);
     };
-  }, [loadMoreItems, hasMore, isLoadingMore]);
+  }, [loadMoreItems, hasMore]);
 
-  /**
-   * Error state
-   */
   if (error) {
     return (
       <Box m={3}>
@@ -191,10 +108,9 @@ export default function ItemsTable({
 
   return (
     <Box
-      key={queryKey}
+      key={debouncedSearch.trim() || "__all__"}
       sx={{ width: "100%", maxWidth: 1200, margin: "auto", mt: 4 }}
     >
-      {/* Search input */}
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
@@ -213,8 +129,7 @@ export default function ItemsTable({
         />
       </Box>
 
-      {/* Initial loading */}
-      {loading && !data ? (
+      {isLoading && !data ? (
         <Box
           display="flex"
           justifyContent="center"
@@ -224,7 +139,6 @@ export default function ItemsTable({
           <CircularProgress size={40} />
         </Box>
       ) : items.length === 0 ? (
-        // Empty state
         <Box m={3} textAlign="center" component={Paper} py={4}>
           <Typography>
             {debouncedSearch
@@ -276,9 +190,8 @@ export default function ItemsTable({
             </TableBody>
           </Table>
 
-          {/* Infinite scroll loader */}
           <Box ref={loaderRef} display="flex" justifyContent="center" p={2}>
-            {isLoadingMore && hasMore && <CircularProgress size={24} />}
+            {hasMore && <CircularProgress size={24} />}
             {!hasMore && items.length > 0 && (
               <Typography variant="caption" color="textSecondary">
                 End of results

@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import TopLevelLayout from "@/components/layout/TopLevelLayout";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ApolloWrapper } from "@/graphql/lib/apollo-wrapper";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 
 export const metadata: Metadata = {
@@ -25,10 +24,8 @@ export default function RootLayout({
     <html lang="en">
       <UserProvider>
         <body>
-          <ApolloWrapper>
-            <TopLevelLayout children={children} />
-            <SpeedInsights />
-          </ApolloWrapper>
+          <TopLevelLayout children={children} />
+          <SpeedInsights />
         </body>
       </UserProvider>
     </html>

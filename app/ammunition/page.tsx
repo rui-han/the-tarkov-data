@@ -1,8 +1,6 @@
 "use client";
 
-import { GET_AMMO_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/client";
-import { FetchedData } from "@/types/ammo";
+import { useAmmoData } from "@/hooks/useAmmoData";
 // components
 import HowToRead from "@/components/ammunition/HowToRead";
 import AmmoTable from "@/components/ammunition/AmmoTable";
@@ -13,19 +11,27 @@ import {
   AccordionSummary,
   AccordionDetails,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function Ammunition() {
-  const { data, error } = useSuspenseQuery<FetchedData>(GET_AMMO_DATA);
+  const { ammo, error, isLoading } = useAmmoData();
 
   if (error) {
-    console.error("Error fetching ammo data:", error);
     return (
       <Box sx={{ p: 4 }}>
         <Alert severity="error">
           Failed to load ammunition data. Please try again later.
         </Alert>
+      </Box>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 8 }}>
+        <CircularProgress />
       </Box>
     );
   }
@@ -48,7 +54,7 @@ export default function Ammunition() {
         </AccordionDetails>
       </Accordion>
 
-      <AmmoTable ammo={data.ammo} />
+      <AmmoTable ammo={ammo} />
     </Box>
   );
 }

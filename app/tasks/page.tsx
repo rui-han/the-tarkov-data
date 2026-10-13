@@ -1,17 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GET_TASKS_DATA } from "@/graphql/queries";
-import { useSuspenseQuery } from "@apollo/client";
+import { useTarkovData } from "@/hooks/useTarkovData";
+
 // types
 import { TasksData } from "@/types/task";
 // components
 import TaskTable from "@/components/tasks/TaskTable";
 // MUI
-import { TextField, Box, Alert } from "@mui/material";
+import { TextField, Box, Alert, CircularProgress } from "@mui/material";
 
 export default function Tasks() {
-  const { data, error } = useSuspenseQuery<TasksData>(GET_TASKS_DATA);
+  const { data, error, isLoading } = useTarkovData<TasksData>("tasks");
   const [search, setSearch] = useState("");
 
   // Filter tasks based on search input.
@@ -36,6 +36,14 @@ export default function Tasks() {
         <Alert severity="error">
           Failed to load tasks data. Please try again later.
         </Alert>
+      </Box>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
       </Box>
     );
   }
