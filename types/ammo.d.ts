@@ -1,10 +1,11 @@
-import { Dispatch, SetStateAction } from "react";
+import type { ChangeEvent, Dispatch, MouseEvent, SetStateAction } from "react";
+import type { UserProfile } from "@auth0/nextjs-auth0/client";
 
 export interface FetchedData {
   ammo: Ammo[];
 }
 
-interface Ammo {
+export interface Ammo {
   caliber: string;
   ammoType: string;
   projectileCount: number;
@@ -16,7 +17,7 @@ interface Ammo {
   recoilModifier: number;
 }
 
-interface Item {
+export interface Item {
   id: string;
   name: string;
   inspectImageLink: string;
@@ -30,44 +31,43 @@ export interface AmmoSearchbarProps {
   setInputText: Dispatch<SetStateAction<string>>;
 }
 
-type Order = "asc" | "desc";
+export type Order = "asc" | "desc";
 
-interface AmmoTableHeadProps {
-  onRequestSort: (
-    event: React.MouseEvent<unknown>,
-    property: keyof Ammo,
-  ) => void;
+export interface AmmoTableHeadProps {
+  onRequestSort: (event: MouseEvent<unknown>, property: keyof Ammo) => void;
   order: Order;
   orderBy: string;
 }
 
-interface HeadCell {
+export interface HeadCell {
   id: keyof Ammo;
   label: string;
 }
 
-interface AmmoTableFilterProps {
+export interface AmmoTableFilterProps {
   ammo: Ammo[];
   currentCaliber: string;
+  /** receives the caliber to select, or "" to clear the filter */
   onFilterButtonClick: (caliber: string) => void;
 }
 
-interface AmmoTablePaginationProps {
+export interface AmmoTablePaginationProps {
   totalRows: number;
   rowsPerPage: number;
   page: number;
   onPageChange: (event: unknown, newPage: number) => void;
-  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
-interface AmmoTableRowProps {
+export interface AmmoTableRowProps {
   ammoData: Ammo;
   isFavorite: boolean;
-  handleFavoriteClick: (itemId: string) => void;
+  /** resolves to true when the favorite status was actually updated */
+  handleFavoriteClick: (itemId: string) => Promise<boolean>;
   user: UserProfile | undefined;
 }
 
-interface FavoriteAmmoCardProps {
+export interface FavoriteAmmoCardProps {
   ammo: Ammo;
-  onRemoveWithDelay: (ammo: AmmoData) => void;
+  onRemoveWithDelay: (ammo: Ammo) => void;
 }

@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { UserProfile } from "@auth0/nextjs-auth0/client";
 
 export interface FavoriteAmmo {
   itemId: string;
@@ -8,90 +7,69 @@ export interface FavoriteAmmo {
 export function useFavoriteAmmo() {
   const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<FavoriteAmmo[]>([]);
 
-  // get user's all favorite ammo data, in array of objects.
-  // Never throws: on failure it logs and returns null, leaving the current
-  // state untouched, so callers inside useEffect don't create unhandled
-  // promise rejections.
-  const getUsersFavoriteAmmo = useCallback(
-    async (auth0Id: string): Promise<FavoriteAmmo[] | null> => {
-      try {
-        const res = await fetch(
-          `/api/users/ammo/get-favorite-ammo?auth0Id=${encodeURIComponent(
-            auth0Id,
-          )}`,
-          // always hit the server: right after add/remove we refetch, and a
-          // cached response would show the stale list
-          { cache: "no-store" },
-        );
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch favorite ammo (${res.status})`);
-        }
-
-        const data: unknown = await res.json();
-        // 401 / 429 bodies look like { error: "..." } — never store those
-        if (!Array.isArray(data)) {
-          throw new Error("Unexpected favorite ammo response shape");
-        }
-
-        const favoriteAmmos = data as FavoriteAmmo[];
-        setUserFavoriteAmmo(favoriteAmmos);
-        return favoriteAmmos;
-      } catch (error) {
-        console.error("Error fetching users favorite ammo: ", error);
-        return null;
-      }
-    },
-    [],
-  );
-
-  // handle favorite ammo
-  const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {
-    const res = await fetch("/api/users/ammo/add-favorite-ammo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        auth0Id: user.sub,
-        itemId: itemId,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to add favorite ammo");
-    }
-
-    return await getUsersFavoriteAmmo(user.sub as string);
-  };
-
-  // handle remove favorite ammo
-  const handleRemoveFavoriteAmmo = async (
-    user: UserProfile,
-    itemId: string,
-  ) => {
+  // Load the logged-in user's favorites (the server identifies the user from
+  // the session). Never throws: on failure it logs and returns null, leaving
+  // the current state untouched, so callers inside useEffect don't create
+  // unhandled promise rejections.
+  const getUsersFavoriteAmmo = useCallback(async (): Promise<
+    FavoriteAmmo[] | null
+  > => {
     try {
-      const res = await fetch("/api/users/ammo/remove-favorite-ammo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          auth0Id: user.sub,
-          itemId: itemId,
-        }),
+      const res = await fetch("/api/users/ammo/get-favorite-ammo", {
+        cache: "no-store",
       });
 
       if (!res.ok) {
-        throw new Error("Failed to remove favorite ammo");
+        throw new Error(`Failed to fetch favorite ammo (${res.status})`);
       }
 
-      return await getUsersFavoriteAmmo(user.sub as string);
+      const data: unknown = await res.json();
+      // 401 / 429 bodies look like { error: "..." } — never store those
+      if (!Array.isArray(data)) {
+        throw new Error("Unexpected favorite ammo response shape");
+      }
+
+      const favoriteAmmos = data as FavoriteAmmo[];
+      setUserFavoriteAmmo(favoriteAmmos);
+      return favoriteAmmos;
     } catch (error) {
-      console.error("Error removing users favorite ammo: ", error);
-      throw error;
+      console.error("Error fetching users favorite ammo: ", error);
+      return null;
     }
-  };
+  }, []);
+
+  // Add a favorite. Throws on failure; on success the local list is updated
+  // directly, so a follow-up refetch can't leave state out of sync.
+  const handleFavoriteAmmo = useCallback(async (itemId: string) => {
+    const res = await fetch("/api/users/ammo/add-favorite-ammo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to add favorite ammo (${res.status})`);
+    }
+
+    setUserFavoriteAmmo((prev) =>
+      prev.some((fav) => fav.itemId === itemId) ? prev : [...prev, { itemId }],
+    );
+  }, []);
+
+  // Remove a favorite. Throws on failure.
+  const handleRemoveFavoriteAmmo = useCallback(async (itemId: string) => {
+    const res = await fetch("/api/users/ammo/remove-favorite-ammo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to remove favorite ammo (${res.status})`);
+    }
+
+    setUserFavoriteAmmo((prev) => prev.filter((fav) => fav.itemId !== itemId));
+  }, []);
 
   return {
     userFavoriteAmmo,

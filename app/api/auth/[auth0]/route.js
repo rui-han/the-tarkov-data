@@ -13,24 +13,20 @@ const afterCallback = async (req, session) => {
 
   const { user } = session;
 
-  // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { auth0Id: user.sub },
-  });
+  // name / email / image are required columns, but some social logins don't
+  // return them. Fall back to placeholders so the login doesn't fail.
+  const email = user.email ?? `${user.sub}@users.noreply.invalid`;
+  const name = user.name ?? user.nickname ?? email;
+  const image = user.picture ?? "";
 
-  if (!existingUser) {
-    // Create user only once
-    await prisma.user.create({
-      data: {
-        auth0Id: user.sub,
-        name: user.name,
-        email: user.email,
-        image: user.picture,
-        createdAt: new Date(),
-        favoriteItems: {},
-      },
-    });
-  }
+  // upsert is atomic, unlike findUnique + create, which races when two
+  // callbacks for a new user run at the same time. An existing user is left
+  // untouched.
+  await prisma.user.upsert({
+    where: { auth0Id: user.sub },
+    update: {},
+    create: { auth0Id: user.sub, name, email, image },
+  });
 
   return session;
 };

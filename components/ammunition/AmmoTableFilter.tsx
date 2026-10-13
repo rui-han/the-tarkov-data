@@ -1,17 +1,18 @@
 import { Button, Box, Paper } from "@mui/material";
 import { AmmoTableFilterProps } from "@/types/ammo";
 
+const changeCaliberToShortName = (caliber: string) =>
+  caliber.replace("Caliber", "");
+
 const AmmoTableFilter = ({
   ammo,
   currentCaliber,
   onFilterButtonClick,
 }: AmmoTableFilterProps) => {
-  const changeCaliberToShortName = (caliber: string) =>
-    caliber.replace("Caliber", "");
-
+  // clicking the selected caliber again clears the filter; the same rule
+  // applies to every group of buttons
   const handleButtonClick = (caliber: string) => {
-    const nextCaliber = caliber === currentCaliber ? "" : caliber;
-    onFilterButtonClick(nextCaliber);
+    onFilterButtonClick(caliber === currentCaliber ? "" : caliber);
   };
 
   const uniqueCalibers = [
@@ -32,41 +33,28 @@ const AmmoTableFilter = ({
     ),
   ];
 
+  const renderButton = (caliber: string) => (
+    <Button
+      sx={{ m: "4px", fontSize: "16px" }}
+      key={caliber}
+      color="inherit"
+      variant={caliber === currentCaliber ? "contained" : "outlined"}
+      onClick={() => handleButtonClick(caliber)}
+    >
+      {changeCaliberToShortName(caliber) || caliber}
+    </Button>
+  );
+
+  const hasLabel = (caliber: string) =>
+    Boolean(caliber && changeCaliberToShortName(caliber)?.trim());
+
   return (
     <Paper sx={{ my: 3 }} elevation={3}>
       <Box p={4}>
         <h4>Bullets (Rifles, Pistols, etc):</h4>
-        {uniqueCalibers
-          .filter(
-            (caliber) => caliber && changeCaliberToShortName(caliber)?.trim(),
-          )
-          .map((caliber) => {
-            const displayText = changeCaliberToShortName(caliber) || caliber;
-
-            return (
-              <Button
-                sx={{ m: "4px", fontSize: "16px" }}
-                key={caliber}
-                color="inherit"
-                variant={caliber === currentCaliber ? "contained" : "outlined"}
-                onClick={() => handleButtonClick(caliber)}
-              >
-                {displayText}
-              </Button>
-            );
-          })}
+        {uniqueCalibers.filter(hasLabel).map(renderButton)}
         <h4>Others (Buckshots, Grenades, Flashbangs):</h4>
-        {otherCalibers.map((caliber) => (
-          <Button
-            sx={{ m: "4px", fontSize: "16px" }}
-            key={caliber}
-            color="inherit"
-            variant={caliber === currentCaliber ? "contained" : "outlined"}
-            onClick={() => onFilterButtonClick(caliber)}
-          >
-            {changeCaliberToShortName(caliber)}
-          </Button>
-        ))}
+        {otherCalibers.filter(hasLabel).map(renderButton)}
       </Box>
     </Paper>
   );

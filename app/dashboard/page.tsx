@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAmmoData } from "@/hooks/useAmmoData";
-
-import { FetchedData } from "@/types/ammo";
+import { Ammo } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
 // components
@@ -39,21 +38,27 @@ export default function UserDashboard() {
     isLoading: ammoLoading,
   } = useAmmoData();
 
-  const { userFavoriteAmmo, getUsersFavoriteAmmo, handleRemoveFavoriteAmmo } =
-    useFavoriteAmmo();
+  const {
+    userFavoriteAmmo,
+    getUsersFavoriteAmmo,
+    handleFavoriteAmmo,
+    handleRemoveFavoriteAmmo,
+  } = useFavoriteAmmo();
 
-  // states for Snackbar queue and temporarily hidden items
+  // "removed — undo?" snackbar queue, one shown at a time
   const [snackbarQueue, setSnackbarQueue] = useState<SnackbarMessage[]>([]);
   const [currentSnackbar, setCurrentSnackbar] =
     useState<SnackbarMessage | null>(null);
+  // cards hidden while their remove request is in flight
   const [itemsTemporarilyHidden, setItemsTemporarilyHidden] = useState<
     Set<string>
   >(new Set());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // fetch user's favorite ammo when user is available
   useEffect(() => {
     if (user) {
-      getUsersFavoriteAmmo(user.sub as string);
+      getUsersFavoriteAmmo();
     }
   }, [user, getUsersFavoriteAmmo]);
 
@@ -65,52 +70,50 @@ export default function UserDashboard() {
     }
   }, [snackbarQueue, currentSnackbar]);
 
-  // remove favorite ammo: add to temporary hidden list and snackbar queue
-  const handleRemoveWithDelay = (ammo: any) => {
-    const itemId = ammo.item.id;
-    const itemName = ammo.item.name;
+  // Remove a favorite right away (so it still happens if the user navigates
+  // away), then offer an undo. The card is hidden while the request is in
+  // flight; on failure it simply reappears and an error is shown.
+  const handleRemoveWithUndo = async (ammo: Ammo) => {
+    const { id, name } = ammo.item;
 
-    setItemsTemporarilyHidden((prev) => new Set(prev).add(itemId));
-    setSnackbarQueue((prev) => [
-      ...prev,
-      { id: itemId, name: itemName, key: new Date().getTime() },
-    ]);
-  };
-
-  // undo removal for the current snackbar item
-  const handleUndoRemoval = () => {
-    if (currentSnackbar) {
+    setItemsTemporarilyHidden((prev) => new Set(prev).add(id));
+    try {
+      await handleRemoveFavoriteAmmo(id);
+      setSnackbarQueue((prev) => [...prev, { id, name, key: Date.now() }]);
+    } catch (err) {
+      console.error("Failed to remove favorite ammo:", err);
+      setErrorMessage(`Failed to remove "${name}", please try again`);
+    } finally {
       setItemsTemporarilyHidden((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(currentSnackbar.id);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
       });
-      // the item is visually restored. The actual removal from backend was never called.
     }
-    setCurrentSnackbar(null); // close current snackbar, allow useEffect to process next
   };
 
-  // confirm removal after snackbar is closed (or times out)
-  // this is called by Snackbar's onClose prop
-  const handleConfirmAndCloseSnackbar = (
+  // undo = add the favorite back (the add endpoint is idempotent)
+  const handleUndoRemoval = async () => {
+    const target = currentSnackbar;
+    setCurrentSnackbar(null); // close, allow the effect to show the next one
+    if (!target) return;
+
+    try {
+      await handleFavoriteAmmo(target.id);
+    } catch (err) {
+      console.error("Failed to restore favorite ammo:", err);
+      setErrorMessage(`Failed to restore "${target.name}", please try again`);
+    }
+  };
+
+  const handleCloseSnackbar = (
     event?: React.SyntheticEvent | Event,
     reason?: string,
   ) => {
     if (reason === "clickaway") {
       return;
     }
-
-    if (currentSnackbar) {
-      // this is the actual confirmation of removal
-      if (user) {
-        handleRemoveFavoriteAmmo(user, currentSnackbar.id);
-        // After successful removal, `userFavoriteAmmo` should update,
-        // which will naturally filter out the item from `userAmmoData`.
-        // `itemsTemporarilyHidden` doesn't need to be changed here for this item,
-        // as it will no longer be in the source list `userFavoriteAmmo`.
-      }
-    }
-    setCurrentSnackbar(null); // allow useEffect to process the next snackbar in queue
+    setCurrentSnackbar(null);
   };
 
   if (isLoading || ammoLoading) {
@@ -183,28 +186,29 @@ export default function UserDashboard() {
           <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={ammo.item.id}>
             <FavoriteAmmoCard
               ammo={ammo}
-              onRemoveWithDelay={() => handleRemoveWithDelay(ammo)} // pass the specific ammo object
+              onRemoveWithDelay={() => handleRemoveWithUndo(ammo)}
             />
           </Grid>
         ))}
       </Grid>
 
+      {/* "removed from favorites" with an undo action */}
       <Snackbar
         key={currentSnackbar ? currentSnackbar.key : undefined} // important for re-rendering
         open={!!currentSnackbar}
         autoHideDuration={6000}
-        onClose={handleConfirmAndCloseSnackbar} // this confirms removal on timeout or close
+        onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
-          onClose={handleConfirmAndCloseSnackbar} // clicking 'X' on Alert also confirms
+          onClose={handleCloseSnackbar}
           severity="warning"
           variant="filled"
           action={
             <Button
               color="inherit"
               size="small"
-              onClick={handleUndoRemoval} // explicit undo action
+              onClick={handleUndoRemoval}
               startIcon={<FavoriteBorderIcon />}
             >
               UNDO REMOVAL
@@ -214,6 +218,22 @@ export default function UserDashboard() {
           {currentSnackbar
             ? `${currentSnackbar.name} removed from favorites`
             : ""}
+        </Alert>
+      </Snackbar>
+
+      {/* request failures */}
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={5000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErrorMessage(null)}
+          severity="error"
+          variant="filled"
+        >
+          {errorMessage}
         </Alert>
       </Snackbar>
     </>

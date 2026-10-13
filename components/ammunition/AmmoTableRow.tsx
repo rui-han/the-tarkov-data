@@ -14,22 +14,31 @@ export default function AmmoTableRow({
 }: AmmoTableRowProps) {
   // local state tracking of favorite status
   const [localFavorite, setLocalFavorite] = useState(isFavorite);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     setLocalFavorite(isFavorite);
   }, [isFavorite]);
 
-  // optimistic update of the favorite status
-  const localFavoriteClick = () => {
-    if (user) {
-      // update the local state
-      setLocalFavorite(!localFavorite);
-      // call the parent function to update the favorite status in the database
-      handleFavoriteClick(ammoData.item.id);
-    } else {
-      // do not update the local state if the user is not logged in
-      // instead, call the parent function and show PLEASE LOGIN snackbar
-      handleFavoriteClick(ammoData.item.id);
+  // optimistic update of the favorite status, rolled back if the request fails
+  const localFavoriteClick = async () => {
+    if (pending) return;
+
+    if (!user) {
+      // not logged in: don't touch local state, the parent shows the
+      // "please log in" snackbar
+      await handleFavoriteClick(ammoData.item.id);
+      return;
+    }
+
+    const previous = localFavorite;
+    setLocalFavorite(!previous);
+    setPending(true);
+    try {
+      const ok = await handleFavoriteClick(ammoData.item.id);
+      if (!ok) setLocalFavorite(previous); // roll back
+    } finally {
+      setPending(false);
     }
   };
 
@@ -37,7 +46,11 @@ export default function AmmoTableRow({
     <TableRow hover>
       {/* the favorite icon */}
       <TableCell>
-        <IconButton color="inherit" onClick={() => localFavoriteClick()}>
+        <IconButton
+          color="inherit"
+          disabled={pending}
+          onClick={localFavoriteClick}
+        >
           {localFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
       </TableCell>

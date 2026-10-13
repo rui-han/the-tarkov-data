@@ -18,20 +18,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // 3. Validate input
-  const { itemId } = await req.json();
+  // 3. Validate input (a malformed body is a 400, not a 500)
+  const body = await req.json().catch(() => null);
+  const itemId = typeof body?.itemId === "string" ? body.itemId.trim() : "";
   if (!itemId) {
     return NextResponse.json({ error: "itemId is required" }, { status: 400 });
   }
 
-  // 4. Delete safely
-  await prisma.favoriteItems.delete({
-    where: {
-      userAuth0Id_itemId: {
-        userAuth0Id: auth0Id,
-        itemId,
-      },
-    },
+  // 4. Idempotent delete: removing something that is already gone is fine
+  // (`delete` would throw P2025 and return a 500)
+  await prisma.favoriteItems.deleteMany({
+    where: { userAuth0Id: auth0Id, itemId },
   });
 
   return NextResponse.json({ success: true }, { status: 200 });

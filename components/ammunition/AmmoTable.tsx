@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 // components
 import AmmoTableFilter from "./AmmoTableFilter";
 import AmmoSearchbar from "./AmmoSearchbar";
@@ -39,8 +40,9 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
 
   // caliber filter state
   const [currentCaliber, setCurrentCaliber] = useState("");
-  // search input state
+  // search input state (raw) and its debounced value (used for filtering)
   const [inputText, setInputText] = useState("");
+  const debouncedInputText = useDebouncedValue(inputText, 300);
   // sorting states
   const [order, setOrder] = useState<Order>("desc");
   const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
@@ -56,9 +58,15 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
 
   useEffect(() => {
     if (user) {
-      getUsersFavoriteAmmo(user.sub as string);
+      getUsersFavoriteAmmo();
     }
   }, [user, getUsersFavoriteAmmo]);
+
+  // go back to the first page whenever the search text changes, otherwise a
+  // narrower result set could leave us on a page that no longer exists
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedInputText]);
 
   // handle table head sorting
   const handleRequestSort = useCallback(
@@ -71,13 +79,12 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
     [order, orderBy],
   );
 
-  // handle ammoType filter button clicks
+  // The filter component decides the next value (it toggles off when the
+  // selected caliber is clicked again), so the parent only stores it. This
+  // also avoids reading a stale `currentCaliber` from the closure.
   const handleFilterButtonClick = useCallback((caliber: string) => {
-    // return to the first page, in case that would return an empty table
     setPage(0);
-    // click and unclick
-    if (currentCaliber === caliber) setCurrentCaliber("");
-    else setCurrentCaliber(caliber);
+    setCurrentCaliber(caliber);
   }, []);
 
   // handle change page
@@ -96,8 +103,14 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
 
   // filter and sort the ammo data to be displayed
   const filteredAndSortedAmmo = useMemo(() => {
-    return filterAndSortAmmo(ammo, currentCaliber, inputText, order, orderBy);
-  }, [ammo, currentCaliber, inputText, order, orderBy]);
+    return filterAndSortAmmo(
+      ammo,
+      currentCaliber,
+      debouncedInputText,
+      order,
+      orderBy,
+    );
+  }, [ammo, currentCaliber, debouncedInputText, order, orderBy]);
 
   // data to be displayed in the current table page
   const visibleRows = useMemo(() => {
@@ -113,42 +126,39 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows = rowsPerPage - visibleRows.length;
 
-  // handle favorite icon click
+  // handle favorite icon click. Resolves to true if the favorite status was
+  // actually updated, so the row can roll back its optimistic UI on failure.
   const handleFavoriteClick = useCallback(
-    async (itemId: string) => {
+    async (itemId: string): Promise<boolean> => {
       if (!user) {
         setSnackbarMessage("Please log in to use the favorite feature!");
         setSnackbarSeverity("warning");
         setSnackbarOpen(true);
-        return;
+        return false;
       }
 
       const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
 
-      if (isFavorite) {
-        setSnackbarMessage("Removed from favorite");
-        setSnackbarSeverity("info");
-      } else {
-        setSnackbarMessage("Added to favorite");
-        setSnackbarSeverity("success");
-      }
-      setSnackbarOpen(true);
-
       try {
         if (isFavorite) {
-          // remove from favorite
-          await handleRemoveFavoriteAmmo(user, itemId);
+          await handleRemoveFavoriteAmmo(itemId);
         } else {
-          // add to favorite
-          await handleFavoriteAmmo(user, itemId);
+          await handleFavoriteAmmo(itemId);
         }
+        setSnackbarMessage(
+          isFavorite ? "Removed from favorite" : "Added to favorite",
+        );
+        setSnackbarSeverity(isFavorite ? "info" : "success");
+        setSnackbarOpen(true);
+        return true;
       } catch (error) {
-        // handle error
+        console.error("Failed to update favorite status:", error);
         setSnackbarMessage(
           "Failed to update favorite status, please try again",
         );
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+        return false;
       }
     },
     [user, userFavoriteAmmo, handleFavoriteAmmo, handleRemoveFavoriteAmmo],

@@ -8,7 +8,7 @@ import { createRateLimiter } from "@/ratelimit";
 // Falls back to in-memory limiting without Upstash env vars, and fails open
 // if Redis is unreachable.
 const globalRatelimit = createRateLimiter({
-  max: 60, // 60 requests / minute / IP
+  max: 120, // 120 requests / minute / IP (shared NATs and navigation add up)
   window: "60 s",
   prefix: "middleware-ratelimit",
 });
@@ -36,6 +36,15 @@ function withSecurityHeaders(response: NextResponse) {
   return response;
 }
 
+// <Link> prefetches fire in bursts as links scroll into view; they are not
+// user-initiated traffic, so they shouldn't eat into the budget.
+function isPrefetch(req: NextRequest) {
+  return (
+    req.headers.has("next-router-prefetch") ||
+    req.headers.get("purpose") === "prefetch"
+  );
+}
+
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
@@ -58,11 +67,13 @@ export async function middleware(req: NextRequest) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // App-wide rate limit. The limiter itself fails open on Redis errors, so a
-  // broken Upstash can't take the whole site down.
-  const { success } = await globalRatelimit.limit(ip);
-  if (!success) {
-    return new NextResponse("Too Many Requests", { status: 429 });
+  // App-wide rate limit (prefetches are not counted). The limiter itself
+  // fails open on Redis errors, so a broken Upstash can't take the site down.
+  if (!isPrefetch(req)) {
+    const { success } = await globalRatelimit.limit(ip);
+    if (!success) {
+      return new NextResponse("Too Many Requests", { status: 429 });
+    }
   }
 
   // Restrict access to /debug in production

@@ -16,6 +16,29 @@
 
 import { useState, useMemo } from "react";
 
+/**
+ * Ascending comparison of two cell values. Returns 0 for equal values (so the
+ * stable sort keeps their original order), puts null/undefined first, compares
+ * strings case-insensitively, and numbers/booleans numerically.
+ */
+function compareValues(a: unknown, b: unknown): number {
+  if (a === b) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+
+  if (typeof a === "string" && typeof b === "string") {
+    return a.localeCompare(b, undefined, { sensitivity: "base" });
+  }
+
+  const isNumeric = (v: unknown) =>
+    typeof v === "number" || typeof v === "boolean";
+  if (isNumeric(a) && isNumeric(b)) {
+    return Number(a) - Number(b);
+  }
+
+  return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+}
+
 export function useAchievementSort<T>(
   data: T[],
   options: { defaultOrder?: "asc" | "desc"; defaultOrderBy?: keyof T } = {},
@@ -46,24 +69,14 @@ export function useAchievementSort<T>(
 
   /**
    * Returns a sorted version of the data.
-   * Sorting is case-insensitive for strings.
    * Sorting is stable because we spread into a new array before sorting.
    */
   const sortedAchievements = useMemo(() => {
     if (!orderBy) return data;
 
     return [...data].sort((a, b) => {
-      const valA =
-        typeof a[orderBy] === "string"
-          ? (a[orderBy] as string).toLowerCase()
-          : a[orderBy];
-      const valB =
-        typeof b[orderBy] === "string"
-          ? (b[orderBy] as string).toLowerCase()
-          : b[orderBy];
-
-      // Compare values based on current order
-      return order === "asc" ? (valA > valB ? 1 : -1) : valA < valB ? 1 : -1;
+      const result = compareValues(a[orderBy], b[orderBy]);
+      return order === "asc" ? result : -result;
     });
   }, [data, orderBy, order]);
 

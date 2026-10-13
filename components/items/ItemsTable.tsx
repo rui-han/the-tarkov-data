@@ -36,6 +36,10 @@ const columns = [
   { id: "lastLowPrice", label: "Last Low Price" },
 ];
 
+const priceFormatter = new Intl.NumberFormat("en-US");
+const formatPrice = (price: number | null | undefined): string =>
+  price == null || price === 0 ? "N/A" : `${priceFormatter.format(price)} ₽`;
+
 type ItemsTableProps = {
   itemsPerPage?: number;
 };
@@ -76,7 +80,7 @@ export default function ItemsTable({
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  // Infinite scroll trigger, unchanged from the old implementation
+  // Infinite scroll trigger
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -107,10 +111,10 @@ export default function ItemsTable({
   }
 
   return (
-    <Box
-      key={debouncedSearch.trim() || "__all__"}
-      sx={{ width: "100%", maxWidth: 1200, margin: "auto", mt: 4 }}
-    >
+    // NOTE: no `key` on this wrapper — it contains the search field, and
+    // remounting it every time the debounced value changes made the input
+    // lose focus. visibleCount is already reset by the effect above.
+    <Box sx={{ width: "100%", maxWidth: 1200, margin: "auto", mt: 4 }}>
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
@@ -184,7 +188,7 @@ export default function ItemsTable({
                   <TableCell>
                     {item.weight != null ? item.weight.toFixed(2) : "0.00"}
                   </TableCell>
-                  <TableCell>{item.lastLowPrice}</TableCell>
+                  <TableCell>{formatPrice(item.lastLowPrice)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
