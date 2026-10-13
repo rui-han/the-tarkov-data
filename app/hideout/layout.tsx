@@ -25,6 +25,22 @@ export default function HideoutLayout({
 
   const { data, error, isLoading } = useTarkovData<FetchedData>("hideout");
 
+  // filter hideout stations based on search query.
+  // Hooks must run unconditionally on every render, so this stays above the
+  // early returns below — `data` may be undefined while loading or on error,
+  // hence the guard.
+  const filteredHideoutStations = useMemo(() => {
+    if (!data?.hideoutStations) return [];
+    const keyword = searchQuery.toLowerCase();
+    return data.hideoutStations.filter((station) =>
+      station.name.toLowerCase().includes(keyword),
+    );
+  }, [data?.hideoutStations, searchQuery]);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
   // error handling
   if (error) {
     console.error("Error fetching hideout data:", error);
@@ -48,18 +64,6 @@ export default function HideoutLayout({
       </Box>
     );
   }
-
-  // filter hideout stations based on search query
-  const filteredHideoutStations = useMemo(() => {
-    if (!data?.hideoutStations) return [];
-    return data.hideoutStations.filter((station) =>
-      station.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [data?.hideoutStations, searchQuery]);
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
 
   return (
     <Box

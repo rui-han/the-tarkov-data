@@ -8,15 +8,42 @@ export interface FavoriteAmmo {
 export function useFavoriteAmmo() {
   const [userFavoriteAmmo, setUserFavoriteAmmo] = useState<FavoriteAmmo[]>([]);
 
-  // get user's all favorite ammo data, in array of objects
-  const getUsersFavoriteAmmo = useCallback(async (auth0Id: string) => {
-    const res = await fetch(
-      `/api/users/ammo/get-favorite-ammo?auth0Id=${auth0Id}`,
-    );
-    const favoriteAmmos = await res.json();
-    setUserFavoriteAmmo(favoriteAmmos);
-    return favoriteAmmos;
-  }, []);
+  // get user's all favorite ammo data, in array of objects.
+  // Never throws: on failure it logs and returns null, leaving the current
+  // state untouched, so callers inside useEffect don't create unhandled
+  // promise rejections.
+  const getUsersFavoriteAmmo = useCallback(
+    async (auth0Id: string): Promise<FavoriteAmmo[] | null> => {
+      try {
+        const res = await fetch(
+          `/api/users/ammo/get-favorite-ammo?auth0Id=${encodeURIComponent(
+            auth0Id,
+          )}`,
+          // always hit the server: right after add/remove we refetch, and a
+          // cached response would show the stale list
+          { cache: "no-store" },
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch favorite ammo (${res.status})`);
+        }
+
+        const data: unknown = await res.json();
+        // 401 / 429 bodies look like { error: "..." } — never store those
+        if (!Array.isArray(data)) {
+          throw new Error("Unexpected favorite ammo response shape");
+        }
+
+        const favoriteAmmos = data as FavoriteAmmo[];
+        setUserFavoriteAmmo(favoriteAmmos);
+        return favoriteAmmos;
+      } catch (error) {
+        console.error("Error fetching users favorite ammo: ", error);
+        return null;
+      }
+    },
+    [],
+  );
 
   // handle favorite ammo
   const handleFavoriteAmmo = async (user: UserProfile, itemId: string) => {

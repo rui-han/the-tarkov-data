@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { createRateLimiter } from "@/ratelimit";
 
 // Edge-compatible, app-wide rate limiter for generic abuse protection.
 // This is intentionally coarse (applies to almost every request); sensitive
 // mutating endpoints (e.g. /api/feedback, /api/users/ammo/*) additionally
 // enforce their own tighter, route-specific limits close to the DB write.
-const redis = Redis.fromEnv();
-const globalRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(60, "60 s"), // 60 requests / minute / IP
-  analytics: true,
+// Falls back to in-memory limiting without Upstash env vars, and fails open
+// if Redis is unreachable.
+const globalRatelimit = createRateLimiter({
+  max: 60, // 60 requests / minute / IP
+  window: "60 s",
   prefix: "middleware-ratelimit",
 });
 
@@ -59,16 +58,11 @@ export async function middleware(req: NextRequest) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // App-wide rate limit. Fail open if the limiter itself is unreachable
-  // (e.g. Upstash outage or local DNS issue) — a broken rate limiter
-  // shouldn't take the whole site down.
-  try {
-    const { success } = await globalRatelimit.limit(ip);
-    if (!success) {
-      return new NextResponse("Too Many Requests", { status: 429 });
-    }
-  } catch (error) {
-    console.error("Middleware rate limiter unavailable:", error);
+  // App-wide rate limit. The limiter itself fails open on Redis errors, so a
+  // broken Upstash can't take the whole site down.
+  const { success } = await globalRatelimit.limit(ip);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   // Restrict access to /debug in production

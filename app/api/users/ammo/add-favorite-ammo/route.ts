@@ -1,9 +1,9 @@
 import { getSession } from "@auth0/nextjs-auth0";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { ratelimit } from "@/ratelimit";
 
-export async function POST(req: NextRequest) {
+export async function GET() {
   // 1. Authentication
   const session = await getSession();
   if (!session) {
@@ -12,32 +12,24 @@ export async function POST(req: NextRequest) {
 
   const auth0Id = session.user.sub;
 
-  // 2. Rate limit per user
-  const { success } = await ratelimit.limit(`fav-add:${auth0Id}`);
+  // 2. Rate limit
+  const { success } = await ratelimit.limit(`fav-read:${auth0Id}`);
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // 3. Validate input
-  const { itemId } = await req.json();
-  if (!itemId) {
-    return NextResponse.json({ error: "itemId is required" }, { status: 400 });
-  }
-
-  // 4. Idempotent write (prevents duplicate rows)
-  await prisma.favoriteItems.upsert({
-    where: {
-      userAuth0Id_itemId: {
-        userAuth0Id: auth0Id,
-        itemId,
-      },
-    },
-    update: {},
-    create: {
-      userAuth0Id: auth0Id,
-      itemId,
-    },
+  // 3. Query DB
+  const favorites = await prisma.favoriteItems.findMany({
+    where: { userAuth0Id: auth0Id },
+    select: { itemId: true },
   });
 
-  return NextResponse.json({ success: true }, { status: 201 });
+  // 4. Per-user data that the client refetches right after every
+  // add/remove, so it must never be served from a browser/CDN cache.
+  return NextResponse.json(favorites, {
+    status: 200,
+    headers: {
+      "Cache-Control": "private, no-store",
+    },
+  });
 }
