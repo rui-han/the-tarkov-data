@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useTarkovData } from "@/hooks/useTarkovData";
-import { FetchedData } from "@/types/hideout";
+import { useHideoutStations } from "@/hooks/useHideoutData";
 import HideoutNav from "@/components/hideout/HideoutNav";
+import HideoutFlowchartModal from "@/components/hideout/HideoutFlowchartModal";
 // MUI
 import {
   Box,
@@ -14,7 +14,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import HideoutFlowchartModal from "@/components/hideout/HideoutFlowchartModal";
 
 export default function HideoutLayout({
   children,
@@ -23,34 +22,30 @@ export default function HideoutLayout({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, error, isLoading } = useTarkovData<FetchedData>("hideout");
+  const { hideoutStations, error, isLoading, shapeError } =
+    useHideoutStations();
 
-  // filter hideout stations based on search query.
   // Hooks must run unconditionally on every render, so this stays above the
-  // early returns below — `data` may be undefined while loading or on error,
-  // hence the guard.
+  // early returns below.
   const filteredHideoutStations = useMemo(() => {
-    if (!data?.hideoutStations) return [];
-    const keyword = searchQuery.toLowerCase();
-    return data.hideoutStations.filter((station) =>
+    const keyword = searchQuery.trim().toLowerCase();
+    if (!keyword) return hideoutStations;
+    return hideoutStations.filter((station) =>
       station.name.toLowerCase().includes(keyword),
     );
-  }, [data?.hideoutStations, searchQuery]);
+  }, [hideoutStations, searchQuery]);
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  // error handling
   if (error) {
     console.error("Error fetching hideout data:", error);
     return (
-      <Typography color="error">
+      <Typography color="error" sx={{ p: 4 }}>
         Failed to load hideout data. Please try again later.
       </Typography>
     );
   }
-  if (isLoading || !data || !data.hideoutStations) {
+
+  // the spinner is only for real loading
+  if (isLoading) {
     return (
       <Box
         sx={{
@@ -65,6 +60,16 @@ export default function HideoutLayout({
     );
   }
 
+  // loaded, but the payload doesn't look like what we expect
+  if (shapeError) {
+    return (
+      <Typography color="error" sx={{ p: 4 }}>
+        Hideout data was loaded but its format is unexpected. Check the browser
+        console for details.
+      </Typography>
+    );
+  }
+
   return (
     <Box
       sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
@@ -75,7 +80,7 @@ export default function HideoutLayout({
         variant="outlined"
         fullWidth
         value={searchQuery}
-        onChange={handleSearchChange}
+        onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
           width: "90%",
           maxWidth: "800px",
@@ -92,7 +97,7 @@ export default function HideoutLayout({
 
       <HideoutNav hideoutStations={filteredHideoutStations} />
       <HideoutFlowchartModal />
-      {/* the width of the Divider matches that of the hideout navbar Breadcrumbs, which is 90% */}
+      {/* the width of the Divider matches that of the hideout nav, which is 90% */}
       <Divider sx={{ width: "90%" }} />
       {children}
     </Box>
