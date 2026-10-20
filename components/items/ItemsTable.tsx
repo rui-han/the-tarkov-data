@@ -18,7 +18,7 @@ import {
   sortItems,
 } from "@/lib/items";
 import { formatPrice } from "@/lib/hideout";
-import type { GameMode } from "@/lib/tarkovApi";
+import { useGameMode } from "@/contexts/GameModeContext";
 import type { Item, ItemSortKey, SortOrder } from "@/types/item";
 import {
   Box,
@@ -36,8 +36,6 @@ import {
   TableRow,
   TableSortLabel,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -199,12 +197,13 @@ export default function ItemsTable({
   const [category, setCategory] = useState("");
   const [sortKey, setSortKey] = useState<ItemSortKey>("name");
   const [order, setOrder] = useState<SortOrder>("asc");
-  const [gameMode, setGameMode] = useState<GameMode>("regular");
+  // the mode is picked in the nav bar
+  const { gameMode } = useGameMode();
 
   // json.tarkov.dev ships the full items file (no server-side search or
   // pagination), so filtering, sorting and "infinite scroll" slicing all
   // happen on the client.
-  const { items: allItems, error, isLoading } = useItems(gameMode);
+  const { items: allItems, error, isLoading } = useItems();
   // used only for the trader names; never blocks the page
   const { tradersById } = useTraderMap();
 
@@ -310,19 +309,6 @@ export default function ItemsTable({
             </MenuItem>
           ))}
         </TextField>
-
-        <ToggleButtonGroup
-          exclusive
-          color="primary"
-          value={gameMode}
-          onChange={(_, value: GameMode | null) => {
-            if (value) setGameMode(value);
-          }}
-          aria-label="Game mode"
-        >
-          <ToggleButton value="regular">PvP</ToggleButton>
-          <ToggleButton value="pve">PvE</ToggleButton>
-        </ToggleButtonGroup>
       </Box>
 
       {isLoading ? (

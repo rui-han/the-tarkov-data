@@ -2,33 +2,13 @@
 
 import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
-import {
-  parseItems,
-  parseStations,
-  parseTraders,
-  parseTranslations,
-  type Translations,
-} from "@/lib/hideout";
-
-// Language of the translation dictionaries (hideout_en, traders_en,
-// items_en). These files are key -> text maps, NOT translated copies of the
-// data, so the structure is always loaded from the untranslated endpoint.
-const LANG = "en";
-
-/**
- * Loads `<endpoint>_<LANG>`. Never blocks or fails the caller: until it
- * arrives (or if it fails) the dictionary is empty and names fall back to
- * prettified normalizedName values.
- */
-function useTranslations(endpoint: string): Translations {
-  const { data } = useTarkovData<unknown>(endpoint, { lang: LANG });
-  return useMemo(() => parseTranslations(data), [data]);
-}
+import { useTranslations } from "@/hooks/useTranslations";
+import { parseItems, parseStations, parseTraders } from "@/lib/hideout";
 
 /** Hideout stations, normalized and sorted in in-game order. */
 export function useHideoutStations() {
   const { data, error, isLoading } = useTarkovData<unknown>("hideout");
-  const translations = useTranslations("hideout");
+  const { translations } = useTranslations("hideout");
 
   const hideoutStations = useMemo(
     () => parseStations(data, translations),
@@ -55,7 +35,7 @@ export function useHideoutStations() {
 
 export function useTraderMap() {
   const { data, error, isLoading } = useTarkovData<unknown>("traders");
-  const translations = useTranslations("traders");
+  const { translations } = useTranslations("traders");
   const tradersById = useMemo(
     () => parseTraders(data, translations),
     [data, translations],
@@ -69,7 +49,7 @@ export function useTraderMap() {
  */
 export function useItemMap(itemIds: ReadonlySet<string>) {
   const { data, error, isLoading } = useTarkovData<unknown>("items");
-  const translations = useTranslations("items");
+  const { translations } = useTranslations("items");
   const itemsById = useMemo(
     () => parseItems(data, itemIds, translations),
     [data, itemIds, translations],

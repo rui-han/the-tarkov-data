@@ -2,6 +2,7 @@
 
 import Nav from "@/components/navigation/Nav";
 import { CssBaseline, ThemeProvider, Box } from "@mui/material";
+import { GameModeProvider } from "@/contexts/GameModeContext";
 import { darkTheme } from "./theme";
 
 // drawer width
@@ -15,22 +16,24 @@ export default function TopLevelLayout({
 }) {
   return (
     <ThemeProvider theme={darkTheme}>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        <Nav />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            mt: `${APP_BAR_HEIGHT}px`,
-            mb: 4,
-            height: "100%",
-            width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-          }}
-        >
-          {children}
+      <GameModeProvider>
+        <Box sx={{ display: "flex" }}>
+          <CssBaseline />
+          <Nav />
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              mt: `${APP_BAR_HEIGHT}px`,
+              mb: 4,
+              height: "100%",
+              width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
+            }}
+          >
+            {children}
+          </Box>
         </Box>
-      </Box>
+      </GameModeProvider>
     </ThemeProvider>
   );
 }

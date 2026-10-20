@@ -7,7 +7,7 @@ import { useTraderMap } from "@/hooks/useHideoutData";
 import FallbackImage from "@/components/hideout/FallbackImage";
 import TaskDetails from "./TaskDetails";
 import { ANY_MAP, filterTasks, sortTasks } from "@/lib/tasks";
-import type { GameMode } from "@/lib/tarkovApi";
+import { useGameMode } from "@/contexts/GameModeContext";
 import type { SortOrder } from "@/types/item";
 import type { Trader } from "@/types/hideout";
 import type {
@@ -37,8 +37,6 @@ import {
   TableRow,
   TableSortLabel,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -259,11 +257,11 @@ export default function TaskTable() {
   const [lightkeeperOnly, setLightkeeperOnly] = useState(false);
   const [sortKey, setSortKey] = useState<TaskSortKey>("minPlayerLevel");
   const [order, setOrder] = useState<SortOrder>("asc");
-  const [gameMode, setGameMode] = useState<GameMode>("regular");
+  const { gameMode } = useGameMode();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
 
-  const { tasks, error, isLoading, shapeError } = useTasks(gameMode);
+  const { tasks, error, isLoading, shapeError } = useTasks();
   // names only; these never block the page
   const { tradersById } = useTraderMap();
   const { mapsById } = useMapMap();
@@ -417,19 +415,6 @@ export default function TaskTable() {
             </MenuItem>
           ))}
         </TextField>
-
-        <ToggleButtonGroup
-          exclusive
-          color="primary"
-          value={gameMode}
-          onChange={(_, value: GameMode | null) => {
-            if (value) setGameMode(value);
-          }}
-          aria-label="Game mode"
-        >
-          <ToggleButton value="regular">PvP</ToggleButton>
-          <ToggleButton value="pve">PvE</ToggleButton>
-        </ToggleButtonGroup>
       </Box>
 
       <Box sx={{ display: "flex", gap: 1, mb: 2 }}>

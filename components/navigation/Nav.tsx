@@ -9,6 +9,7 @@ import ResponsiveDrawer from "./ResponsiveDrawer";
 import LoginButton from "../users/LoginButton";
 import UserMenu from "../users/UserMenu";
 import ExternalLinkConfirmDialog from "./ExternalLinkConfirmDialog";
+import GameModeSwitch from "./GameModeSwitch";
 
 // MUI
 import {
@@ -184,6 +185,11 @@ export default function Nav() {
               THE TARKOV DATA
             </Link>
           </Typography>
+
+          {/* Game mode (PvP / PvE / Season), applies to the whole site */}
+          <Box sx={{ ml: { xs: 0, sm: 3 } }}>
+            <GameModeSwitch />
+          </Box>
 
           {/* Right side user actions */}
           <Box sx={{ ml: "auto" }}>

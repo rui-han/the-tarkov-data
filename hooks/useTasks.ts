@@ -4,13 +4,13 @@ import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
 import { parseMaps, parseTasks } from "@/lib/tasks";
-import type { GameMode } from "@/lib/tarkovApi";
 
-/** All tasks, normalized, with translated names when the dictionary loads. */
-export function useTasks(gameMode: GameMode = "regular") {
-  const { data, error, isLoading } = useTarkovData<unknown>("tasks", {
-    gameMode,
-  });
+/**
+ * All tasks for the game mode picked in the nav bar, normalized, with
+ * translated names when the dictionary loads.
+ */
+export function useTasks() {
+  const { data, error, isLoading } = useTarkovData<unknown>("tasks");
   const dictionary = useTranslations("tasks");
 
   const tasks = useMemo(

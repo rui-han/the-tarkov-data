@@ -1,4 +1,24 @@
-export type GameMode = "regular" | "pve" | "pvp-season";
+export const GAME_MODES = ["regular", "pve", "pvp-season"] as const;
+export type GameMode = (typeof GAME_MODES)[number];
+
+export const DEFAULT_GAME_MODE: GameMode = "regular";
+
+/** `short` fits the nav bar, `full` is for sentences */
+export const GAME_MODE_LABELS: Record<
+  GameMode,
+  { short: string; full: string }
+> = {
+  regular: { short: "PvP", full: "PvP" },
+  pve: { short: "PvE", full: "PvE" },
+  "pvp-season": { short: "Season", full: "PvP Season" },
+};
+
+export function isGameMode(value: unknown): value is GameMode {
+  return (
+    typeof value === "string" &&
+    (GAME_MODES as readonly string[]).includes(value)
+  );
+}
 
 const JSON_TARKOV_BASE = "https://json.tarkov.dev";
 
@@ -32,7 +52,7 @@ export function toArray<T>(value: unknown): T[] {
  */
 export async function fetchTarkovJson<T>(
   endpoint: string,
-  { gameMode = "regular", lang }: FetchTarkovJsonOptions = {},
+  { gameMode = DEFAULT_GAME_MODE, lang }: FetchTarkovJsonOptions = {},
 ): Promise<T> {
   const path =
     endpoint === "status"
