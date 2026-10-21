@@ -13,10 +13,12 @@ import { fetchTarkovJson, type GameMode } from "@/lib/tarkovApi";
  * - Pass `gameMode` explicitly for data that doesn't depend on the mode
  *   (e.g. the `*_en` translation dictionaries use "regular").
  * - `status` is not per-mode.
+ * - `refreshInterval` (ms) polls the endpoint; SWR pauses it while the tab
+ *   is hidden.
  */
 export function useTarkovData<T>(
   endpoint: string,
-  opts?: { gameMode?: GameMode; lang?: string },
+  opts?: { gameMode?: GameMode; lang?: string; refreshInterval?: number },
 ) {
   const { gameMode: currentMode, isReady } = useGameMode();
 
@@ -27,13 +29,17 @@ export function useTarkovData<T>(
   const mustWaitForMode = !isModeIndependent && opts?.gameMode == null;
   const enabled = !mustWaitForMode || isReady;
   const lang = opts?.lang;
+  const refreshInterval = opts?.refreshInterval;
 
   const { data, error, isLoading } = useSWR<T>(
     enabled ? [endpoint, gameMode, lang ?? null] : null,
     () => fetchTarkovJson<T>(endpoint, { gameMode, lang }),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 60_000, // identical requests within 60s hit the cache, similar to Apollo cache
+      // identical requests within the window hit the cache; polled data needs
+      // a window shorter than its interval or the poll would be deduped away
+      dedupingInterval: refreshInterval ? 10_000 : 60_000,
+      refreshInterval,
     },
   );
 

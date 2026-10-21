@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 // components
-import ServerStatus from "./ServerStatus";
+import ServerStatus, { ServerStatusBadge } from "./ServerStatus";
 import RaidTime from "./RaidTime";
 
 // MUI
@@ -227,7 +227,9 @@ export default function ResponsiveDrawer({
               }
             >
               <ListItemIcon>
-                <Icon path={mdiServer} style={ICON_STYLE} />
+                <ServerStatusBadge>
+                  <Icon path={mdiServer} style={ICON_STYLE} />
+                </ServerStatusBadge>
               </ListItemIcon>
               <ServerStatus />
             </ListItemButton>
