@@ -11,6 +11,7 @@ import {
   parseTraders,
   parseTranslations,
   translate,
+  pickDefaultStation,
 } from "@/lib/hideout";
 import type { HideoutItem, ItemRequirement } from "@/types/hideout";
 
@@ -267,5 +268,28 @@ describe("formatDuration", () => {
     expect(formatDuration(1800)).toBe("30m");
     expect(formatDuration(14400)).toBe("4h");
     expect(formatDuration(5400)).toBe("1h 30m");
+  });
+});
+
+describe("pickDefaultStation", () => {
+  const empty = {
+    ...gym,
+    id: "empty",
+    normalizedName: "empty",
+    areaType: 0,
+    levels: [],
+  };
+  const full = { ...gym, id: "full", normalizedName: "full", areaType: 1 };
+
+  it("skips stations without levels", () => {
+    const stations = parseStations([full, empty]);
+    // empty sorts first by areaType, but has nothing to show
+    expect(stations[0].id).toBe("empty");
+    expect(pickDefaultStation(stations)?.id).toBe("full");
+  });
+
+  it("falls back to the first station, and to undefined for none", () => {
+    expect(pickDefaultStation(parseStations([empty]))?.id).toBe("empty");
+    expect(pickDefaultStation([])).toBeUndefined();
   });
 });

@@ -324,3 +324,14 @@ export function formatDuration(seconds: number): string {
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
 }
+
+/**
+ * Station opened when /hideout is visited without an id: the first one in
+ * in-game order that actually has levels. Change this if you'd rather start
+ * on a specific station.
+ */
+export function pickDefaultStation(
+  stations: HideoutStation[],
+): HideoutStation | undefined {
+  return stations.find((s) => s.levels.length > 0) ?? stations[0];
+}

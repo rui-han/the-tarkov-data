@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { useHideoutStations } from "@/hooks/useHideoutData";
 import HideoutNav from "@/components/hideout/HideoutNav";
-import HideoutFlowchartModal from "@/components/hideout/HideoutFlowchartModal";
 // MUI
 import {
   Box,
@@ -96,9 +95,8 @@ export default function HideoutLayout({
       />
 
       <HideoutNav hideoutStations={filteredHideoutStations} />
-      <HideoutFlowchartModal />
       {/* the width of the Divider matches that of the hideout nav, which is 90% */}
-      <Divider sx={{ width: "90%" }} />
+      <Divider sx={{ width: "90%", mt: 2 }} />
       {children}
     </Box>
   );
