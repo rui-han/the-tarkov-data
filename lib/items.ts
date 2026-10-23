@@ -207,3 +207,42 @@ export function formatChange(percent: number | null): string {
   if (percent == null) return "—";
   return `${percent > 0 ? "+" : ""}${percent.toFixed(1)}%`;
 }
+
+/* ------------------------------------------------------------------ */
+/* watchlist                                                          */
+/* ------------------------------------------------------------------ */
+
+export interface WatchlistSummary {
+  count: number;
+  /** flea price went up / down over the last 48h */
+  rising: number;
+  falling: number;
+  /** flea price of one of each item, items without a price excluded */
+  totalFleaValue: number;
+  /** items with no flea price (e.g. not sellable on the flea market) */
+  unpriced: number;
+}
+
+export function summarizeWatchlist(items: Item[]): WatchlistSummary {
+  const summary: WatchlistSummary = {
+    count: items.length,
+    rising: 0,
+    falling: 0,
+    totalFleaValue: 0,
+    unpriced: 0,
+  };
+
+  for (const item of items) {
+    if (item.lastLowPrice == null) {
+      // a price change is meaningless without a current price
+      summary.unpriced++;
+      continue;
+    }
+    summary.totalFleaValue += item.lastLowPrice;
+    const change = item.changeLast48hPercent;
+    if (change != null && change > 0) summary.rising++;
+    else if (change != null && change < 0) summary.falling++;
+  }
+
+  return summary;
+}

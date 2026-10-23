@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
+import { favoriteErrorMessage, useFavorites } from "@/hooks/useFavorites";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 // components
 import AmmoTableFilter from "./AmmoTableFilter";
@@ -30,13 +30,13 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
   // get user data from auth0
   const { user } = useUser();
 
-  // hook to manage favorite ammo
+  // hook to manage favorites (shared with the items page and dashboard)
   const {
-    userFavoriteAmmo,
-    getUsersFavoriteAmmo,
-    handleFavoriteAmmo,
-    handleRemoveFavoriteAmmo,
-  } = useFavoriteAmmo();
+    favorites: userFavoriteAmmo, // all favorites; lookups are by itemId
+    loadFavorites: getUsersFavoriteAmmo,
+    addFavorite: handleFavoriteAmmo,
+    removeFavorite: handleRemoveFavoriteAmmo,
+  } = useFavorites();
 
   // caliber filter state
   const [currentCaliber, setCurrentCaliber] = useState("");
@@ -153,9 +153,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
         return true;
       } catch (error) {
         console.error("Failed to update favorite status:", error);
-        setSnackbarMessage(
-          "Failed to update favorite status, please try again",
-        );
+        setSnackbarMessage(favoriteErrorMessage(error));
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
         return false;

@@ -7,183 +7,33 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useUser } from "@auth0/nextjs-auth0/client";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { favoriteErrorMessage, useFavorites } from "@/hooks/useFavorites";
+import { useGameMode } from "@/contexts/GameModeContext";
+import { useItemSort } from "@/hooks/useItemSort";
 import { useItems } from "@/hooks/useItems";
 import { useTraderMap } from "@/hooks/useHideoutData";
-import FallbackImage from "@/components/hideout/FallbackImage";
+import ItemRow from "./ItemRow";
+import ItemsTableHead from "./ItemsTableHead";
+import { filterItems, listCategories, sortItems } from "@/lib/items";
 import {
-  filterItems,
-  formatChange,
-  listCategories,
-  sortItems,
-} from "@/lib/items";
-import { formatPrice } from "@/lib/hideout";
-import { useGameMode } from "@/contexts/GameModeContext";
-import type { Item, ItemSortKey, SortOrder } from "@/types/item";
-import {
+  Alert,
   Box,
-  Chip,
   CircularProgress,
   InputAdornment,
-  Link as MuiLink,
   MenuItem,
   Paper,
+  Snackbar,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 const DEFAULT_ITEMS_PER_PAGE = 20;
-
-interface Column {
-  id: string;
-  label: string;
-  sortKey?: ItemSortKey;
-  align?: "left" | "right";
-}
-
-const columns: Column[] = [
-  { id: "image", label: "" },
-  { id: "name", label: "Name", sortKey: "name" },
-  { id: "category", label: "Category", sortKey: "category" },
-  { id: "weight", label: "Weight", sortKey: "weight", align: "right" },
-  {
-    id: "lastLowPrice",
-    label: "Flea price",
-    sortKey: "lastLowPrice",
-    align: "right",
-  },
-  {
-    id: "changeLast48hPercent",
-    label: "48h change",
-    sortKey: "changeLast48hPercent",
-    align: "right",
-  },
-  {
-    id: "bestSellPrice",
-    label: "Best trader sell",
-    sortKey: "bestSellPrice",
-    align: "right",
-  },
-];
-
-// text columns start ascending, numeric columns start with the biggest value
-const TEXT_KEYS = new Set<ItemSortKey>(["name", "category"]);
-
-const ItemRow = React.memo(function ItemRow({
-  item,
-  traderName,
-}: {
-  item: Item;
-  traderName?: string;
-}) {
-  const change = item.changeLast48hPercent;
-
-  return (
-    <TableRow hover>
-      <TableCell sx={{ width: 80, p: 1 }}>
-        <FallbackImage
-          sources={[item.iconLink, item.gridImageLink]}
-          alt={item.name}
-          size={56}
-        />
-      </TableCell>
-
-      <TableCell>
-        {item.wikiLink ? (
-          <MuiLink
-            href={item.wikiLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            color="inherit"
-            underline="hover"
-            sx={{ fontWeight: 600 }}
-          >
-            {item.name}
-          </MuiLink>
-        ) : (
-          <Typography component="span" sx={{ fontWeight: 600 }}>
-            {item.name}
-          </Typography>
-        )}
-        {item.shortName && item.shortName !== item.name && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block" }}
-          >
-            {item.shortName}
-          </Typography>
-        )}
-      </TableCell>
-
-      <TableCell>
-        <Chip label={item.category} size="small" variant="outlined" />
-      </TableCell>
-
-      <TableCell align="right">
-        {item.weight != null ? `${item.weight.toFixed(2)} kg` : "—"}
-      </TableCell>
-
-      <TableCell align="right">
-        {item.lastLowPrice != null ? (
-          <Tooltip
-            title={
-              item.avg24hPrice != null
-                ? `24h average: ${formatPrice(item.avg24hPrice)}`
-                : ""
-            }
-          >
-            <span>{formatPrice(item.lastLowPrice)}</span>
-          </Tooltip>
-        ) : item.noFlea ? (
-          <Chip label="No flea" size="small" variant="outlined" />
-        ) : (
-          "N/A"
-        )}
-      </TableCell>
-
-      <TableCell
-        align="right"
-        sx={{
-          color:
-            change == null || change === 0
-              ? "text.secondary"
-              : change > 0
-              ? "success.main"
-              : "error.main",
-        }}
-      >
-        {item.lastLowPrice != null ? formatChange(change) : "—"}
-      </TableCell>
-
-      <TableCell align="right">
-        {item.bestSell ? (
-          <>
-            {formatPrice(item.bestSell.price)}
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block" }}
-            >
-              {traderName ?? "…"}
-            </Typography>
-          </>
-        ) : (
-          "—"
-        )}
-      </TableCell>
-    </TableRow>
-  );
-});
 
 type ItemsTableProps = {
   itemsPerPage?: number;
@@ -192,11 +42,11 @@ type ItemsTableProps = {
 export default function ItemsTable({
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
 }: ItemsTableProps) {
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebouncedValue(searchTerm, 300);
   const [category, setCategory] = useState("");
-  const [sortKey, setSortKey] = useState<ItemSortKey>("name");
-  const [order, setOrder] = useState<SortOrder>("asc");
+  const { sortKey, order, handleSort } = useItemSort("name", "asc");
   // the mode is picked in the nav bar
   const { gameMode } = useGameMode();
 
@@ -206,6 +56,63 @@ export default function ItemsTable({
   const { items: allItems, error, isLoading } = useItems();
   // used only for the trader names; never blocks the page
   const { tradersById } = useTraderMap();
+
+  /* ---------------------------- favorites ---------------------------- */
+
+  const { favoriteIds, loadFavorites, toggleFavorite } = useFavorites();
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "info" | "warning" | "error";
+  }>({ open: false, message: "", severity: "success" });
+
+  useEffect(() => {
+    if (user) loadFavorites();
+  }, [user, loadFavorites]);
+
+  const handleToggleFavorite = useCallback(
+    async (itemId: string) => {
+      if (!user) {
+        setSnackbar({
+          open: true,
+          message: "Please log in to use the favorite feature!",
+          severity: "warning",
+        });
+        return;
+      }
+
+      setPendingIds((prev) => new Set(prev).add(itemId));
+      try {
+        const nowFavorite = await toggleFavorite(itemId);
+        setSnackbar({
+          open: true,
+          message: nowFavorite
+            ? "Added to favorites"
+            : "Removed from favorites",
+          severity: nowFavorite ? "success" : "info",
+        });
+      } catch (err) {
+        console.error("Failed to update favorite status:", err);
+        setSnackbar({
+          open: true,
+          message: favoriteErrorMessage(err),
+          severity: "error",
+        });
+      } finally {
+        setPendingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(itemId);
+          return next;
+        });
+      }
+    },
+    [user, toggleFavorite],
+  );
+
+  /* --------------------------- filter & sort -------------------------- */
 
   const categories = useMemo(() => listCategories(allItems), [allItems]);
 
@@ -253,15 +160,6 @@ export default function ItemsTable({
       if (el) observer.unobserve(el);
     };
   }, [loadMoreItems, hasMore]);
-
-  const handleSort = (key: ItemSortKey) => {
-    if (key === sortKey) {
-      setOrder((o) => (o === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setOrder(TEXT_KEYS.has(key) ? "asc" : "desc");
-    }
-  };
 
   if (error) {
     return (
@@ -340,33 +238,11 @@ export default function ItemsTable({
 
           <TableContainer component={Paper}>
             <Table aria-label="Items Table">
-              <TableHead>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      align={column.align}
-                      sortDirection={
-                        column.sortKey && sortKey === column.sortKey
-                          ? order
-                          : false
-                      }
-                    >
-                      {column.sortKey ? (
-                        <TableSortLabel
-                          active={sortKey === column.sortKey}
-                          direction={sortKey === column.sortKey ? order : "asc"}
-                          onClick={() => handleSort(column.sortKey!)}
-                        >
-                          {column.label}
-                        </TableSortLabel>
-                      ) : (
-                        column.label
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
+              <ItemsTableHead
+                sortKey={sortKey}
+                order={order}
+                onSort={handleSort}
+              />
 
               <TableBody>
                 {visibleItems.map((item) => (
@@ -378,6 +254,9 @@ export default function ItemsTable({
                         ? tradersById.get(item.bestSell.traderId)?.name
                         : undefined
                     }
+                    isFavorite={favoriteIds.has(item.id)}
+                    favoritePending={pendingIds.has(item.id)}
+                    onToggleFavorite={handleToggleFavorite}
                   />
                 ))}
               </TableBody>
@@ -399,10 +278,26 @@ export default function ItemsTable({
             sx={{ display: "block", mt: 1 }}
           >
             Flea price is the last lowest offer (hover for the 24h average); 48h
-            change is the flea price change over the last 48 hours.
+            change is the flea price change over the last 48 hours. Favorites
+            show up in your dashboard watchlist.
           </Typography>
         </>
       )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

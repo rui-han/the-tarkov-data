@@ -1,24 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAmmoData } from "@/hooks/useAmmoData";
-import { Ammo } from "@/types/ammo";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useFavoriteAmmo } from "@/hooks/useFavoriteAmmo";
+import { useAmmoData } from "@/hooks/useAmmoData";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useItems } from "@/hooks/useItems";
+import { useTraderMap } from "@/hooks/useHideoutData";
+import { useGameMode } from "@/contexts/GameModeContext";
+import { GAME_MODE_LABELS } from "@/lib/tarkovApi";
 // components
 import FavoriteAmmoCard from "@/components/users/dashboard/FavoriteAmmoCard";
+import Watchlist from "@/components/users/dashboard/Watchlist";
 // MUI
 import {
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Box,
-  Skeleton,
-  Button,
   Alert,
   AlertTitle,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Paper,
+  Skeleton,
   Snackbar,
+  Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
 // icons
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -29,38 +37,62 @@ interface SnackbarMessage {
   key: number; // for re-rendering
 }
 
-export default function UserDashboard() {
-  const { user, error, isLoading } = useUser();
-  // renamed to `ammoError` to avoid clashing with Auth0's `error` above
+type TabId = "watchlist" | "ammo";
+
+function CardSkeletons() {
+  return (
+    <Grid container spacing={2}>
+      {Array.from(new Array(6)).map((_, index) => (
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={index}>
+          <Card sx={{ maxWidth: 345, m: 2 }}>
+            <Skeleton variant="rectangular" height={200} />
+            <CardContent>
+              <Skeleton variant="text" width="60%" />
+              <Skeleton variant="text" width="40%" />
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+/**
+ * Everything that needs data. Rendered only for a logged-in user, so visitors
+ * who are not logged in don't download the (large) items files.
+ */
+function DashboardContent() {
+  const { gameMode } = useGameMode();
   const {
     ammo: allAmmo,
     error: ammoError,
     isLoading: ammoLoading,
   } = useAmmoData();
-
+  const { items, error: itemsError, isLoading: itemsLoading } = useItems();
+  // only for trader names, never blocks the page
+  const { tradersById } = useTraderMap();
   const {
-    userFavoriteAmmo,
-    getUsersFavoriteAmmo,
-    handleFavoriteAmmo,
-    handleRemoveFavoriteAmmo,
-  } = useFavoriteAmmo();
+    favoriteIds,
+    isLoaded,
+    loadFailed,
+    loadFavorites,
+    addFavorite,
+    removeFavorite,
+  } = useFavorites();
+
+  const [tab, setTab] = useState<TabId>("watchlist");
 
   // "removed — undo?" snackbar queue, one shown at a time
   const [snackbarQueue, setSnackbarQueue] = useState<SnackbarMessage[]>([]);
   const [currentSnackbar, setCurrentSnackbar] =
     useState<SnackbarMessage | null>(null);
-  // cards hidden while their remove request is in flight
-  const [itemsTemporarilyHidden, setItemsTemporarilyHidden] = useState<
-    Set<string>
-  >(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // guards against a double click queuing two removals of the same item
+  const removing = useRef(new Set<string>());
 
-  // fetch user's favorite ammo when user is available
   useEffect(() => {
-    if (user) {
-      getUsersFavoriteAmmo();
-    }
-  }, [user, getUsersFavoriteAmmo]);
+    loadFavorites();
+  }, [loadFavorites]);
 
   // process the next Snackbar message from the queue
   useEffect(() => {
@@ -70,127 +102,162 @@ export default function UserDashboard() {
     }
   }, [snackbarQueue, currentSnackbar]);
 
-  // Remove a favorite right away (so it still happens if the user navigates
-  // away), then offer an undo. The card is hidden while the request is in
-  // flight; on failure it simply reappears and an error is shown.
-  const handleRemoveWithUndo = async (ammo: Ammo) => {
-    const { id, name } = ammo.item;
+  // Removal is optimistic: the row/card disappears at once and the hook
+  // restores it if the request fails. The request is sent right away (so it
+  // still happens if the user navigates away); undo adds the favorite back.
+  const handleRemove = useCallback(
+    async (itemId: string, name: string) => {
+      if (removing.current.has(itemId)) return;
+      removing.current.add(itemId);
+      try {
+        await removeFavorite(itemId);
+        setSnackbarQueue((prev) => [
+          ...prev,
+          { id: itemId, name, key: Date.now() },
+        ]);
+      } catch (err) {
+        console.error("Failed to remove favorite:", err);
+        setErrorMessage(`Failed to remove "${name}", please try again`);
+      } finally {
+        removing.current.delete(itemId);
+      }
+    },
+    [removeFavorite],
+  );
 
-    setItemsTemporarilyHidden((prev) => new Set(prev).add(id));
-    try {
-      await handleRemoveFavoriteAmmo(id);
-      setSnackbarQueue((prev) => [...prev, { id, name, key: Date.now() }]);
-    } catch (err) {
-      console.error("Failed to remove favorite ammo:", err);
-      setErrorMessage(`Failed to remove "${name}", please try again`);
-    } finally {
-      setItemsTemporarilyHidden((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
-  // undo = add the favorite back (the add endpoint is idempotent)
   const handleUndoRemoval = async () => {
     const target = currentSnackbar;
     setCurrentSnackbar(null); // close, allow the effect to show the next one
     if (!target) return;
 
     try {
-      await handleFavoriteAmmo(target.id);
+      await addFavorite(target.id);
     } catch (err) {
-      console.error("Failed to restore favorite ammo:", err);
+      console.error("Failed to restore favorite:", err);
       setErrorMessage(`Failed to restore "${target.name}", please try again`);
     }
   };
 
   const handleCloseSnackbar = (
-    event?: React.SyntheticEvent | Event,
+    _event?: React.SyntheticEvent | Event,
     reason?: string,
   ) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setCurrentSnackbar(null);
   };
 
-  if (isLoading || ammoLoading) {
-    return (
-      <Grid container spacing={2}>
-        {Array.from(new Array(6)).map((_, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={index}>
-            <Card sx={{ maxWidth: 345, m: 2 }}>
-              <Skeleton variant="rectangular" height={200} />
-              <CardContent>
-                <Skeleton variant="text" width="60%" />
-                <Skeleton variant="text" width="40%" />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box textAlign="center" mt={4}>
-        <Alert severity="error">
-          <AlertTitle>Error</AlertTitle>
-          {error.message}
-        </Alert>
-        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>
-          Try Again
-        </Button>
-      </Box>
-    );
-  }
-
-  if (ammoError) {
-    console.error("Error fetching ammo data:", ammoError);
-    return (
-      <Box textAlign="center" mt={4}>
-        <Alert severity="error">
-          <AlertTitle>Error</AlertTitle>
-          Failed to load ammunition data. Please try again later.
-        </Alert>
-        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>
-          Try Again
-        </Button>
-      </Box>
-    );
-  }
-
-  // filter user's favorite ammo, excluding temporarily hidden items
-  const userAmmoData = allAmmo.filter(
-    (ammoData) =>
-      userFavoriteAmmo.some(
-        (favAmmoData) => favAmmoData.itemId === ammoData.item.id,
-      ) && !itemsTemporarilyHidden.has(ammoData.item.id),
+  const favoriteAmmo = useMemo(
+    () => allAmmo.filter((a) => favoriteIds.has(a.item.id)),
+    [allAmmo, favoriteIds],
   );
 
-  return user ? (
-    <>
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{ m: 4, fontWeight: 700, textAlign: "center" }}
-      >
-        Welcome, {user?.name}!
-      </Typography>
+  if (loadFailed && !isLoaded) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          Failed to load your favorites. Please try again.
+        </Alert>
+        <Button onClick={() => loadFavorites()} sx={{ mt: 2 }}>
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
 
-      <Grid container spacing={2} sx={{ p: 2 }}>
-        {userAmmoData.map((ammo) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={ammo.item.id}>
-            <FavoriteAmmoCard
-              ammo={ammo}
-              onRemoveWithDelay={() => handleRemoveWithUndo(ammo)}
-            />
+  if (!isLoaded) return <CardSkeletons />;
+
+  return (
+    <Box sx={{ maxWidth: 1400, mx: "auto", px: 2, pb: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1,
+          borderBottom: 1,
+          borderColor: "divider",
+          mb: 3,
+        }}
+      >
+        <Tabs
+          value={tab}
+          onChange={(_, value: TabId) => setTab(value)}
+          aria-label="Dashboard sections"
+        >
+          <Tab value="watchlist" label={`Watchlist (${favoriteIds.size})`} />
+          <Tab
+            value="ammo"
+            label={ammoLoading ? "Ammo" : `Ammo (${favoriteAmmo.length})`}
+          />
+        </Tabs>
+        <Typography variant="caption" color="text.secondary">
+          Showing {GAME_MODE_LABELS[gameMode].full} data
+        </Typography>
+      </Box>
+
+      {tab === "watchlist" && (
+        <Watchlist
+          favoriteIds={favoriteIds}
+          items={items}
+          itemsLoading={itemsLoading}
+          itemsError={itemsError}
+          tradersById={tradersById}
+          onRemove={handleRemove}
+        />
+      )}
+
+      {tab === "ammo" &&
+        (ammoError ? (
+          <Alert severity="error">
+            Failed to load ammunition data. Please try again later.
+          </Alert>
+        ) : ammoLoading ? (
+          <CardSkeletons />
+        ) : favoriteAmmo.length === 0 ? (
+          <Box
+            component={Paper}
+            variant="outlined"
+            sx={{ p: 4, textAlign: "center" }}
+          >
+            <Typography variant="h6" gutterBottom>
+              No favorite ammo yet
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              Favorite ammo from the ammunition table to compare its stats here.
+            </Typography>
+            <Button
+              component={Link}
+              href="/ammunition"
+              variant="outlined"
+              color="inherit"
+            >
+              Browse ammunition
+            </Button>
+          </Box>
+        ) : (
+          <Grid container spacing={2}>
+            {favoriteAmmo.map((ammo) => (
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                xl={2.4}
+                key={ammo.item.id}
+              >
+                <FavoriteAmmoCard
+                  ammo={ammo}
+                  onRemoveWithDelay={() =>
+                    handleRemove(ammo.item.id, ammo.item.name)
+                  }
+                />
+              </Grid>
+            ))}
           </Grid>
         ))}
-      </Grid>
 
       {/* "removed from favorites" with an undo action */}
       <Snackbar
@@ -236,15 +303,52 @@ export default function UserDashboard() {
           {errorMessage}
         </Alert>
       </Snackbar>
-    </>
-  ) : (
-    <Box textAlign="center" mt={4}>
-      <Typography variant="h5" gutterBottom>
-        Please log in to view your dashboard.
-      </Typography>
-      <Button variant="contained" color="warning" href="/api/auth/login">
-        Log In
-      </Button>
     </Box>
+  );
+}
+
+export default function UserDashboard() {
+  const { user, error, isLoading } = useUser();
+
+  if (isLoading) return <CardSkeletons />;
+
+  if (error) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          {error.message}
+        </Alert>
+        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <Typography variant="h5" gutterBottom>
+          Please log in to view your dashboard.
+        </Typography>
+        <Button variant="contained" color="warning" href="/api/auth/login">
+          Log In
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{ m: 4, fontWeight: 700, textAlign: "center" }}
+      >
+        Welcome, {user.name}!
+      </Typography>
+      <DashboardContent />
+    </>
   );
 }

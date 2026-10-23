@@ -6,6 +6,7 @@ import {
   listCategories,
   parseItemList,
   sortItems,
+  summarizeWatchlist,
   typeLabel,
 } from "@/lib/items";
 
@@ -217,5 +218,46 @@ describe("formatChange", () => {
     expect(formatChange(4)).toBe("+4.0%");
     expect(formatChange(0)).toBe("0.0%");
     expect(formatChange(null)).toBe("—");
+  });
+});
+
+describe("summarizeWatchlist", () => {
+  it("counts movers and sums flea prices", () => {
+    const items = parseItemList({
+      items: [
+        raw("up", { lastLowPrice: 100, changeLast48hPercent: 5 }),
+        raw("down", { lastLowPrice: 300, changeLast48hPercent: -2 }),
+        raw("flat", { lastLowPrice: 50, changeLast48hPercent: 0 }),
+        raw("none"),
+      ],
+    });
+    expect(summarizeWatchlist(items)).toEqual({
+      count: 4,
+      rising: 1,
+      falling: 1,
+      totalFleaValue: 450,
+      unpriced: 1,
+    });
+  });
+
+  it("ignores the price change of items without a flea price", () => {
+    const items = parseItemList({
+      items: [raw("a", { changeLast48hPercent: 50 })],
+    });
+    expect(summarizeWatchlist(items)).toMatchObject({
+      rising: 0,
+      falling: 0,
+      unpriced: 1,
+    });
+  });
+
+  it("handles an empty list", () => {
+    expect(summarizeWatchlist([])).toEqual({
+      count: 0,
+      rising: 0,
+      falling: 0,
+      totalFleaValue: 0,
+      unpriced: 0,
+    });
   });
 });
