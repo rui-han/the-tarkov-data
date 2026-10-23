@@ -1,247 +1,281 @@
 # The Tarkov Data Project
 
-A comprehensive web application designed as a rich data lookup platform for the game "Escape from Tarkov". This project provides players with extensive details about in-game items, quest requirements, hideout modules, and more, leveraging modern web technologies to deliver a fast, intuitive, and seamless user experience.
+A data lookup web app for the game _Escape from Tarkov_: ammunition stats, items and flea prices, tasks, hideout upgrade requirements and costs, server status, and a personal dashboard with a price watchlist. Everything is read from the static JSON files served by [json.tarkov.dev](https://json.tarkov.dev), and every page follows a global game mode switch (PvP / PvE / PvP Season).
 
 ## Deployed Version
 
-🚀 **Access the live application:** [https://the-tarkov-data.vercel.app](https://the-tarkov-data.vercel.app)
+🚀 **Live application:** [https://the-tarkov-data.vercel.app](https://the-tarkov-data.vercel.app)
 
 ---
 
 ## Table of Contents
 
-- [Features](https://www.google.com/search?q=%231-features)
-- [Tech Stack](https://www.google.com/search?q=%232-tech-stack)
-- [Core Concepts](https://www.google.com/search?q=%233-core-concepts)
-  - [Data Fetching with GraphQL](https://www.google.com/search?q=%2331-data-fetching-with-graphql)
-  - [Performance Optimization with `useMemo`](https://www.google.com/search?q=%2332-performance-optimization-with-usememo)
-- [Getting Started](https://www.google.com/search?q=%234-getting-started)
-  - [Prerequisites](https://www.google.com/search?q=%2341-prerequisites)
-  - [Installation](https://www.google.com/search?q=%2342-installation)
-  - [Environment Configuration](https://www.google.com/search?q=%2343-environment-configuration)
-  - [Run the Development Server](https://www.google.com/search?q=%2344-run-the-development-server)
-- [Deployment](https://www.google.com/search?q=%235-deployment)
-- [Testing](https://www.google.com/search?q=%236-testing)
-- [Acknowledgements](https://www.google.com/search?q=%237-acknowledgements)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Data Source](#data-source)
+  - [Endpoints in use](#endpoints-in-use)
+  - [Data shape and translations](#data-shape-and-translations)
+  - [Game modes](#game-modes)
+- [Architecture](#architecture)
+  - [Project structure](#project-structure)
+  - [Data flow](#data-flow)
+  - [Favorites and the watchlist](#favorites-and-the-watchlist)
+  - [Rate limiting and security](#rate-limiting-and-security)
+- [Getting Started](#getting-started)
+- [Deployment](#deployment)
+- [Testing](#testing)
+- [Known Issues and Roadmap](#known-issues-and-roadmap)
+- [Acknowledgements](#acknowledgements)
 
 ---
 
-## 1\. Features
+## Features
 
-- **Ammunition Stats:** Detailed tables for all ammo types, with advanced sorting and filtering by caliber.
-- **Quest Tracking:** Comprehensive information on quests, objectives, and rewards.
-- **Hideout Requirements:** A clear breakdown of items and levels needed for hideout upgrades.
-- **User Authentication:** Secure login system powered by Auth0 to manage user-specific data in the future.
+- **Game mode switch.** PvP, PvE and PvP Season, picked in the top bar (with a confirmation dialog) and remembered in the browser. All data pages follow it.
+- **Ammunition.** Sortable, filterable table by caliber with search and pagination. Favorite any round.
+- **Items.** Every item with flea price, 48h price change, weight, category and the best trader buy-back price. Multi-word search (name, short name), category filter, sorting on every numeric column, infinite scroll, favorites.
+- **Tasks.** Table with search and trader / map / Kappa / Lightkeeper filters, sorting and pagination. Each row expands to show objectives, requirements (prerequisite tasks, trader levels) and rewards. Reward item names are loaded on demand.
+- **Hideout.** Station navigation, level switcher, prerequisites (stations, traders, skills) that link to each other, an item table with Found-in-Raid markers, unit prices and an estimated total cost per level. `/hideout` opens a default station.
+- **Dashboard** (login required):
+  - **Watchlist:** every favorited item with flea price, 48h change and trader sell price, plus a summary (items rising / falling, combined flea price). Search, sort and undoable removal.
+  - **Ammo:** favorite ammunition as comparison cards.
+- **Server status.** The sidebar shows the overall EFT server status, with per-service details on hover, refreshed every minute. When the sidebar is collapsed, the status shows as a badge on the server icon.
+- **Raid clock** in the sidebar, and a **feedback form** on the home page.
+- **User accounts** through Auth0.
 
-## 2\. Tech Stack
+## Tech Stack
 
-The application is built using a modern, robust, and scalable technology stack:
+| Technology                           | Role                                                                   |
+| :----------------------------------- | :--------------------------------------------------------------------- |
+| **Next.js 14** (App Router)          | Framework, routing, API routes, middleware                             |
+| **React 18 + TypeScript**            | UI and type safety                                                     |
+| **SWR**                              | Data fetching and caching for the JSON endpoints                       |
+| **Material-UI v5**                   | Component library and dark theme                                       |
+| **Auth0** (`@auth0/nextjs-auth0` v3) | Authentication                                                         |
+| **Prisma + Vercel Postgres**         | Users, favorites and feedback                                          |
+| **Upstash Redis** (optional)         | Distributed rate limiting; falls back to in-memory limiting without it |
+| **Vitest + React Testing Library**   | Unit and component tests                                               |
 
-| Technology                | Description                                                                                                    |
-| :------------------------- | :------------------------------------------------------------------------------------------------------------- |
-| **React**                  | A powerful JavaScript library for building dynamic and responsive user interfaces.                             |
-| **TypeScript**             | A strongly typed superset of JavaScript that enhances code quality and maintainability.                        |
-| **Next.js**                | A cutting-edge React framework for server-side rendering (SSR), static site generation (SSG), and performance. |
-| **Apollo Client**          | A comprehensive state management library for managing both local and remote data with GraphQL.                 |
-| **Material-UI (v5)**       | A popular and robust React UI framework for creating a consistent and accessible design system.                |
-| **Auth0**                  | A flexible, drop-in solution to add authentication and authorization services.                                 |
-| **Vercel Postgres**        | A serverless SQL database designed to integrate seamlessly with Vercel and modern frontend frameworks.         |
-| **Prisma**                 | A next-generation ORM for Node.js and TypeScript that simplifies database access and management.               |
-| **Upstash Redis**          | A serverless Redis used to power request rate limiting across API routes and middleware.                       |
-| **Vitest**                 | A fast, Vite-powered unit test runner used for testing pure functions, hooks, and components.                  |
-| **React Testing Library**  | A testing utility encouraging tests that resemble how users actually interact with components.                 |
+## Data Source
 
-## 3\. Core Concepts
+All game data comes from the static JSON files at [json.tarkov.dev](https://json.tarkov.dev). The endpoint catalog (available endpoints, game modes and languages) is published at [json.tarkov.dev/endpoints](https://json.tarkov.dev/endpoints); check it first when something is missing.
 
-### 3.1 Data Fetching with GraphQL
+URL pattern:
 
-This project sources all its "Escape from Tarkov" data from the excellent [Tarkov.dev API](https://tarkov.dev/api/), which exposes a GraphQL endpoint.
-
-We use an experimental Apollo Client library specifically designed for the Next.js 13 App Router: `[@apollo/experimental-nextjs-app-support](https://www.npmjs.com/package/@apollo/experimental-nextjs-app-support)`.
-
-Data fetching is managed with suspense-driven queries via the `useSuspenseQuery` hook. This ensures that components only attempt to render after their required data is available, simplifying loading state management and preventing data-related race conditions.
-
-- Explore the API using the [Tarkov.dev GraphQL Playground](https://api.tarkov.dev/).
-- Learn more about GraphQL at the [GraphQL Foundation](https://graphql.org/learn/).
-
-### 3.2 Performance Optimization with `useMemo`
-
-To ensure a smooth user experience, especially on data-heavy pages like the `AmmoTable` component, we leverage React's `useMemo` hook to prevent expensive recalculations on every render.
-
-```tsx
-const visibleRows = useMemo(() => {
-  const filteredAndSortedAmmo = filterAndSortAmmo(
-    ammo,
-    currentCaliber,
-    inputText,
-    order,
-    orderBy,
-  );
-
-  return filteredAndSortedAmmo.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage,
-  );
-}, [ammo, currentCaliber, inputText, order, orderBy, page, rowsPerPage]);
+```
+https://json.tarkov.dev/{gameMode}/{endpoint}          # structure
+https://json.tarkov.dev/{gameMode}/{endpoint}_{lang}   # translation dictionary
+https://json.tarkov.dev/status                         # not per game mode
 ```
 
-**Why is this important?**
+The previous GraphQL API is no longer used.
 
-The `visibleRows` constant holds the data displayed in the table. Its calculation involves potentially expensive filtering and sorting operations. By wrapping this logic in `useMemo`, we cache the result. The calculation only re-runs if a value in its dependency array `[ammo, currentCaliber, ...]` changes.
+### Endpoints in use
 
-**The Benefit:**
+| Endpoint                                                      | Used by                                                                  |
+| :------------------------------------------------------------ | :----------------------------------------------------------------------- |
+| `items`                                                       | Ammunition, Items, Dashboard watchlist, hideout costs, task reward names |
+| `tasks`                                                       | Tasks                                                                    |
+| `hideout`                                                     | Hideout                                                                  |
+| `traders`                                                     | Trader names and icons across pages                                      |
+| `maps`                                                        | Task map names and filter                                                |
+| `status`                                                      | Sidebar server status                                                    |
+| `items_en`, `tasks_en`, `hideout_en`, `traders_en`, `maps_en` | English text for the endpoints above (see below)                         |
 
-Without `useMemo`, these operations would execute on every single component render, even those triggered by unrelated state changes. This memoization ensures that if a parent component re-renders or local state changes, we use the cached `visibleRows` value, saving computation and preventing UI lag.
+### Data shape and translations
 
-## 4\. Getting Started
+The files are **not** shaped like the old GraphQL responses:
 
-Follow these instructions to set up the project for local development.
+- The payload is wrapped in `{ "data": ... }`, and collections are **objects keyed by id**, not arrays (`{ "<id>": { ... } }`).
+- **Relations are plain ids**, not nested objects. A task has `trader: "<traderId>"` and `map: "<mapId>"`; a hideout requirement has `item: "<itemId>"`. Names, icons and prices are joined on the client from the other endpoints.
+- **Text fields are translation keys**, e.g. `"5447ac644bdc2d6c208b4567 Name"` or `"hideout_area_23_name"`. The `*_en` file is a flat dictionary (`key → English text`), **not** a translated copy of the data, so structure always comes from the plain endpoint and text from the dictionary.
 
-### 4.1 Prerequisites
+This is handled in one place per domain (`lib/hideout.ts`, `lib/items.ts`, `lib/tasks.ts`, `lib/serverStatus.ts`):
 
-- [Node.js](https://nodejs.org/) (v18.x or later recommended)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- An account with [Auth0](https://auth0.com/), [Vercel](https://vercel.com/) (for Postgres database), and [Upstash](https://upstash.com/) (for Redis-backed rate limiting).
+- Parsers are defensive: unknown shapes produce empty results instead of crashes, and each hook logs a console warning when a payload parses to nothing.
+- Name resolution order: dictionary entry, then the raw value if it is already readable, then a prettified `normalizedName` (`air-filtering-unit` → `Air Filtering Unit`). Pages therefore stay readable even if a dictionary fails to load, and a dictionary never blocks rendering.
+- Dictionaries are always read from `regular`, since the keys are shared across game modes.
 
-### 4.2 Installation
+### Game modes
 
-1.  **Clone the repository:**
+The three modes are `regular` (shown as PvP), `pve` and `pvp-season`. The selected mode lives in `GameModeContext` and is stored in `localStorage`. `useTarkovData` reads it, includes it in the SWR cache key (switching back is instant) and waits until the saved mode has been read, so a PvE user never downloads the PvP files first. Endpoints that don't depend on the mode (`status`, the dictionaries) pin their mode explicitly.
 
-    ```bash
-    git clone https://github.com/rui-han/the-tarkov-data.git
-    ```
+Not every endpoint is guaranteed to exist for every mode (for example, Season data can be missing or empty when no season is active); pages show their normal error state in that case.
 
-2.  **Navigate to the project directory:**
+## Architecture
 
-    ```bash
-    cd the-tarkov-data
-    ```
+### Project structure
 
-3.  **Install project dependencies:**
+```
+app/
+  layout.tsx, page.tsx            # root layout, home page
+  ammunition/  items/  tasks/     # data pages
+  hideout/                        # layout (station nav), index redirect, [hideoutId]
+  achievements/                   # see Known Issues
+  dashboard/                      # watchlist + ammo tabs
+  api/
+    auth/[auth0]/                 # Auth0 handlers (creates the user on first login)
+    feedback/                     # anonymous or logged-in feedback
+    users/ammo/                   # favorites: get / add / remove (works for any item)
+components/
+  ammunition/ hideout/ home/ items/ layout/ navigation/ skeleton/ tasks/ users/
+contexts/GameModeContext.tsx      # selected game mode + persistence
+hooks/                            # useTarkovData, useTranslations, useItems, useTasks,
+                                  # useHideoutData, useAmmoData, useFavorites,
+                                  # useServerStatus, useItemSort, useDebouncedValue, ...
+lib/                              # tarkovApi (fetch), hideout, items, tasks, serverStatus
+                                  # (pure parsing / join / filter / sort functions)
+prisma/                           # schema.prisma, migrations, client singleton
+types/                            # shared TypeScript types
+tests/                            # mirrors the source layout
+middleware.ts                     # security headers, IP blocklist, global rate limit
+ratelimit.ts                      # route-level limiter with in-memory fallback
+```
 
-    ```bash
-    npm install
-    ```
+### Data flow
 
-### 4.3 Environment Configuration
+```
+json.tarkov.dev ──fetchTarkovJson──▶ useTarkovData (SWR, keyed by endpoint + mode + lang)
+                                          │
+                     hooks (useItems, useTasks, useHideoutStations, ...)
+                                          │  parse + join + resolve names
+                                          ▼
+                              lib/* pure functions ──▶ components
+```
 
-This project requires several environment variables for database connections and authentication services.
+- Components never see raw payloads, only normalized objects.
+- Parsing and filtering are pure functions in `lib/`, which is where most of the tests are.
+- Heavy derived data is memoized. Hideout pages keep only the few dozen items they reference out of the full items file; task reward names are fetched only when a task with item rewards is expanded.
+- The items file is large. All pages share it through the SWR cache, so it is downloaded once per game mode.
 
-1.  **Create a `.env` file in the root of the project:**
+### Favorites and the watchlist
 
-    ```bash
-    touch .env
-    ```
+- Favorites are stored in the `FavoriteItems` table by `itemId`, so **any item** can be favorited (ammo is just items of type `ammo`). The API routes still live under `/api/users/ammo/*` for historical reasons.
+- `useFavorites` is optimistic: the heart changes immediately and is rolled back if the request fails. The server caps a user at 200 favorites (HTTP 409 beyond that) and validates the id format.
+- Only ids are stored. Names and prices are joined from the current game mode's data, so a favorite that doesn't exist in the selected mode appears as "Item details unavailable" and can be removed manually.
+- The dashboard only loads item data for logged-in users.
 
-2.  **Populate the `.env` file.** Copy the contents of `.env.example` below and replace the placeholder values with your credentials from Auth0, Vercel Postgres, and Upstash.
+### Rate limiting and security
 
-    ```sh
-    # .env.example
+- `middleware.ts` applies security headers, an optional IP prefix blocklist (`BLOCKED_IP_PREFIXES`), and a coarse global limit (120 requests per minute per IP, prefetch requests excluded). `/debug` is hidden in production.
+- Mutating API routes and the Auth0 callback have their own tighter limits (`ratelimit.ts`).
+- **Redis is optional.** Without Upstash credentials the limiter falls back to an in-memory one, which is fine for local development but ineffective on serverless (each instance counts separately). If Redis is configured but unreachable, the limiters fail open and log an error, so an outage doesn't take down login or favorites. Configure Upstash for any real deployment.
 
-    # Auth0 Environment Variables
-    # See: https://auth0.com/docs/quickstart/webapp/nextjs
-    # Generate a secret with: openssl rand -hex 32
-    AUTH0_SECRET='YOUR_AUTH0_SECRET'
-    AUTH0_BASE_URL='http://localhost:3000'
-    AUTH0_ISSUER_BASE_URL='https://[your-domain].auth0.com'
-    AUTH0_CLIENT_ID='[your-auth0-client-id]'
-    AUTH0_CLIENT_SECRET='[your-auth0-client-secret]'
+## Getting Started
 
-    # Vercel Postgres & Prisma Environment Variables
-    # See: https://vercel.com/docs/storage/vercel-postgres/quickstart
-    POSTGRES_URL="[your-vercel-postgres-url]"
-    POSTGRES_PRISMA_URL="[your-postgres-prisma-url]"
-    POSTGRES_URL_NO_SSL="[your-no-ssl-url]"
-    POSTGRES_URL_NON_POOLING="[your-non-pooling-url]"
-    POSTGRES_USER="default"
-    POSTGRES_HOST="[your-postgres-host]"
-    POSTGRES_PASSWORD="[your-postgres-password]"
-    POSTGRES_DATABASE="verceldb"
+### Prerequisites
 
-    # Upstash Redis Environment Variables (rate limiting)
-    # See: https://upstash.com/docs/redis/overall/getstarted
-    UPSTASH_REDIS_REST_URL="[your-upstash-redis-rest-url]"
-    UPSTASH_REDIS_REST_TOKEN="[your-upstash-redis-rest-token]"
+- [Node.js](https://nodejs.org/) 18.17 or later
+- npm or yarn
+- An [Auth0](https://auth0.com/) application
+- A Postgres database (the project uses [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres))
+- Optional: an [Upstash](https://upstash.com/) Redis database for rate limiting
 
-    # Optional: comma-separated list of IP prefixes to block at the middleware
-    # level, e.g. "74.7.,1.2.3."
-    BLOCKED_IP_PREFIXES=""
-    ```
-
-    - **Prisma Best Practices:** We follow the recommended best practice for instantiating `PrismaClient` in a Next.js environment to avoid exhausting database connections during development. [Learn more](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices).
-
-> **Note on Auth0 Login/Logout Links:**
-> The Next.js linter may suggest replacing `<a href="/api/auth/login">` with the `<Link>` component. This should be ignored. The `Link` component is for client-side navigation between pages, whereas these are links to API routes that handle the authentication flow. Using a standard `<a>` tag is correct here.
-
-### 4.4 Run the Development Server
-
-1.  **Start the local server:**
-
-    ```bash
-    npm run dev
-    ```
-
-2.  Open your browser and navigate to [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000).
-
-## 5\. Deployment
-
-This project is optimized for deployment on [Vercel](https://vercel.com/).
-
-1.  **Push your repository to GitHub/GitLab/Bitbucket.**
-
-2.  **Import the project into Vercel.** Vercel will automatically detect that it is a Next.js application.
-
-3.  **Configure Environment Variables.** In your Vercel project settings, add all the same environment variables from your local `.env` file. Ensure `AUTH0_BASE_URL` is updated to your production URL.
-
-4.  **Add Build Command Override.** To ensure Prisma generates its client and pushes schema changes on build, update the build command in your Vercel project settings:
-
-    ```bash
-    prisma generate && prisma db push && next build
-    ```
-
-    Alternatively, add this script to your `package.json` and Vercel will use it automatically:
-
-    ```json
-    "scripts": {
-      "vercel-build": "prisma generate && prisma db push && next build"
-    }
-    ```
-
-Vercel will now automatically deploy your project on every push to the `main` branch.
-
-## 6\. Testing
-
-This project uses [Vitest](https://vitest.dev/) together with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) for unit and component tests.
-
-### 6.1 Running Tests
+### Installation
 
 ```bash
-# run the full test suite once
-npm test
+git clone https://github.com/rui-han/the-tarkov-data.git
+cd the-tarkov-data
+npm install
+```
 
-# re-run tests automatically as files change
+### Environment configuration
+
+Create a `.env` file in the project root:
+
+```sh
+# Auth0 (https://auth0.com/docs/quickstart/webapp/nextjs)
+# Generate a secret with: openssl rand -hex 32
+AUTH0_SECRET='YOUR_AUTH0_SECRET'
+AUTH0_BASE_URL='http://localhost:3000'
+AUTH0_ISSUER_BASE_URL='https://[your-domain].auth0.com'
+AUTH0_CLIENT_ID='[your-auth0-client-id]'
+AUTH0_CLIENT_SECRET='[your-auth0-client-secret]'
+
+# Vercel Postgres / Prisma
+POSTGRES_URL="[your-vercel-postgres-url]"
+POSTGRES_PRISMA_URL="[your-postgres-prisma-url]"
+POSTGRES_URL_NO_SSL="[your-no-ssl-url]"
+POSTGRES_URL_NON_POOLING="[your-non-pooling-url]"
+POSTGRES_USER="default"
+POSTGRES_HOST="[your-postgres-host]"
+POSTGRES_PASSWORD="[your-postgres-password]"
+POSTGRES_DATABASE="verceldb"
+
+# Optional: Upstash Redis for rate limiting.
+# Leave both unset (or delete them) to use the in-memory fallback.
+# Don't keep values that point at a deleted database.
+UPSTASH_REDIS_REST_URL="[your-upstash-redis-rest-url]"
+UPSTASH_REDIS_REST_TOKEN="[your-upstash-redis-rest-token]"
+
+# Optional: comma-separated IP prefixes to block in middleware, e.g. "74.7.,1.2.3."
+BLOCKED_IP_PREFIXES=""
+```
+
+> **Auth0 login/logout links:** the Next.js linter may suggest replacing `<a href="/api/auth/login">` with `<Link>`. Ignore it: `Link` is for client-side page navigation, and these links point to API routes, so a plain anchor is correct.
+
+> **Prisma:** `PrismaClient` is instantiated as a singleton (`prisma/db.ts`) to avoid exhausting connections during hot reloads. [Learn more](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices).
+
+### Run the development server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Deployment
+
+The project is built for [Vercel](https://vercel.com/).
+
+1. Import the repository into Vercel.
+2. Add all the environment variables above. Set `AUTH0_BASE_URL` to the production URL.
+3. The build uses the `vercel-build` script from `package.json`:
+
+   ```json
+   "vercel-build": "prisma generate && prisma db push && next build"
+   ```
+
+   Note that `prisma db push` syncs the schema without using the migration history. If you rely on the files in `prisma/migrations`, `prisma migrate deploy` is the safer choice for production.
+
+Every push to `main` deploys automatically. All routes render dynamically (`force-dynamic` in the root layout) and game data is fetched in the browser, so a json.tarkov.dev outage doesn't fail the build.
+
+## Testing
+
+[Vitest](https://vitest.dev/) with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+```bash
+npm test          # run once
 npm run test:watch
 ```
 
-### 6.2 Project Conventions
+### Conventions
 
-- Test files live under `tests/`, mirroring the folder structure of the file under test (e.g. `tests/utils/ammo-utils.test.ts` tests `utils/ammo-utils.ts`).
-- Prefer testing pure functions and hooks directly — they're fast, deterministic, and don't require mocking the DOM.
-- Reach for component tests (`@testing-library/react`) when there's real user interaction or conditional rendering logic worth locking down. Assert on visible behavior (values, callbacks, text) rather than implementation details like class names or component internals.
-- `jsdom` is used as the test environment and `vite-tsconfig-paths` resolves the same `@/*` import alias used throughout the app, so tests can import from source the same way application code does.
+- Tests live under `tests/`, mirroring the source layout (`tests/lib/items.test.ts` tests `lib/items.ts`).
+- Prefer testing pure functions and hooks directly. Use component tests where there is real interaction or conditional rendering. Assert on visible behavior, not implementation details.
+- `jsdom` is the test environment. The `@/*` import alias is configured manually in `vitest.config.ts` (it mirrors `tsconfig.json`).
 
-### 6.3 Current Coverage
+### Current coverage
 
-The suite is intentionally a starting point rather than full coverage. It currently covers:
+- `lib/hideout.ts`, `lib/items.ts`, `lib/tasks.ts`, `lib/serverStatus.ts`: parsing the real payload shapes, translation fallback, filtering, sorting, cost and summary calculations.
+- `utils/ammo-utils.ts`, `utils/achievement-utils.ts`, `hooks/useAchievementSort.ts`.
+- `hooks/useFavorites.ts`: optimistic updates, rollback, error bodies, the favorites cap.
+- `contexts/GameModeContext.tsx` and `components/navigation/GameModeSwitch.tsx`: persistence and the confirmation flow.
+- `components/ammunition/AmmoSearchbar.tsx`.
 
-- `utils/ammo-utils.ts` — filtering and sorting logic used by the ammunition table
-- `utils/achievement-utils.ts` — chip color/style resolution
-- `hooks/useAchievementSort.ts` — the generic sortable-table hook
-- `components/ammunition/AmmoSearchbar.tsx` — a first example of a component interaction test
+Good next candidates: `fetchTarkovJson` (with `fetch` mocked), `useTarkovData`, and the API routes under `app/api/` (with Prisma mocked).
 
-Good next candidates for tests include additional edge cases in `filterAndSortAmmo`, the `useFavoriteAmmo` hook (with `fetch` mocked), and the API routes under `app/api/` (with Prisma mocked or run against a test database).
+## Known Issues and Roadmap
 
-## 7\. Acknowledgements
+- **Achievements page** still reads the old `tasks` endpoint and a field that no longer exists; it needs to move to its own endpoint (plus translations) like the other pages.
+- **`/maps`** is linked in the sidebar but has no page yet.
+- **Account linking:** `User.email` is unique, so the same email logging in through two different Auth0 identities fails on user creation.
+- **Dependencies** are behind: Next 14, Auth0 SDK v3, MUI 5, TypeScript 5.1. Upgrade after the data migration has settled, one step at a time.
+- **Server status codes:** `status` is mapped as 0 = OK, 1 = Updating, 2 = Issues, 3 = Down (only `0` has been confirmed against live data); anything else is shown as unknown.
+- **Ideas:** task and hideout progress tracking with a "available now" task list, a hideout shopping list, ammo comparison, and a player profile (level, faction) in Settings.
 
-- Data provided by the [Tarkov.dev API](https://tarkov.dev/api/).
-- Built with tools and services from Next.js, Vercel, Auth0, and Upstash.
+## Acknowledgements
+
+- Game data from [tarkov.dev](https://tarkov.dev) (static JSON at [json.tarkov.dev](https://json.tarkov.dev)).
+- Built with Next.js, Vercel, Auth0, Prisma and Upstash.
+- _Escape from Tarkov_ is a trademark of Battlestate Games. This project is unofficial and not affiliated with them.
