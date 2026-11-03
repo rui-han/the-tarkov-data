@@ -31,6 +31,7 @@ import {
   mdiPackageVariant,
   mdiTrophy,
   mdiMap,
+  mdiHammerWrench,
 } from "@mdi/js";
 
 // images
@@ -43,6 +44,7 @@ import Nikita from "../../public/images/nikita.jpeg";
 const drawerItems = [
   { to: "/ammunition", text: "Ammunition", icon: mdiAmmunition },
   { to: "/hideout", text: "Hideout", icon: mdiHome },
+  { to: "/crafts", text: "Crafts", icon: mdiHammerWrench },
   { to: "/items", text: "Items", icon: mdiPackageVariant },
   { to: "/tasks", text: "Tasks", icon: mdiTooltipCheckOutline },
   { to: "/achievements", text: "Achievements", icon: mdiTrophy },
