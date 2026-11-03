@@ -1,16 +1,9 @@
 import { handleAuth, handleCallback } from "@auth0/nextjs-auth0";
 import prisma from "@/prisma/db";
-import { ratelimit } from "@/ratelimit";
 
-const afterCallback = async (req, session) => {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-
-  // Rate limit Auth callback to prevent abuse
-  const { success } = await ratelimit.limit(`auth-callback:${ip}`);
-  if (!success) {
-    throw new Error("Too many login attempts");
-  }
-
+// No rate limiting here: this runs only after Auth0 has authenticated the
+// user, so it can't be hit by arbitrary traffic.
+const afterCallback = async (_req, session) => {
   const { user } = session;
 
   // name / email / image are required columns, but some social logins don't

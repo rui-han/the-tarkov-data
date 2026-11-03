@@ -1,19 +1,18 @@
 import { getSession } from "@auth0/nextjs-auth0";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/db";
-import { ratelimit } from "@/ratelimit";
 
 const MAX_MESSAGE_LENGTH = 2000;
 
-export async function POST(req: NextRequest) {
-  // 1. Rate limit by IP (feedback doesn't require login, so we can't key by user)
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const { success } = await ratelimit.limit(`feedback:${ip}`);
-  if (!success) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
+// This endpoint is anonymous and writes to the database. Instead of a per-IP
+// limiter (which needs Redis), cap how many submissions the whole site accepts
+// per minute. The count uses the Feedback.createdAt index. A flood can briefly
+// block honest submissions, but it can't fill the table.
+const MAX_FEEDBACK_PER_MINUTE = 20;
+const WINDOW_MS = 60_000;
 
-  // 2. Validate input
+export async function POST(req: NextRequest) {
+  // 1. Validate input
   const body = await req.json().catch(() => null);
   const message = typeof body?.message === "string" ? body.message.trim() : "";
 
@@ -28,6 +27,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: `Feedback must be under ${MAX_MESSAGE_LENGTH} characters` },
       { status: 400 },
+    );
+  }
+
+  // 2. Site-wide cap
+  const recent = await prisma.feedback.count({
+    where: { createdAt: { gte: new Date(Date.now() - WINDOW_MS) } },
+  });
+  if (recent >= MAX_FEEDBACK_PER_MINUTE) {
+    return NextResponse.json(
+      { error: "Too many submissions right now, please try again in a minute" },
+      { status: 429, headers: { "Retry-After": "60" } },
     );
   }
 
