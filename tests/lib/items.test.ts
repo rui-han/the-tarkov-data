@@ -5,6 +5,7 @@ import {
   formatChange,
   listCategories,
   parseItemList,
+  pickMovers,
   sortItems,
   summarizeWatchlist,
   typeLabel,
@@ -259,5 +260,62 @@ describe("summarizeWatchlist", () => {
       totalFleaValue: 0,
       unpriced: 0,
     });
+  });
+});
+
+describe("offerCount", () => {
+  it("reads lastOfferCount, null when missing", () => {
+    const [withCount] = parseItemList({
+      items: { [ID]: { ...ammoBox, lastOfferCount: 30 } },
+    });
+    expect(withCount.offerCount).toBe(30);
+    expect(parseItemList({ items: [raw("x")] })[0].offerCount).toBeNull();
+  });
+});
+
+describe("pickMovers", () => {
+  const mk = (
+    id: string,
+    change: number,
+    overrides: Record<string, unknown> = {},
+  ) =>
+    raw(id, {
+      lastLowPrice: 5000,
+      changeLast48hPercent: change,
+      lastOfferCount: 20,
+      ...overrides,
+    });
+
+  const items = parseItemList({
+    items: [
+      mk("up1", 30),
+      mk("up2", 10),
+      mk("up3", 50),
+      mk("down1", -40),
+      mk("down2", -5),
+      mk("flat", 0),
+      mk("cheap", 900, { lastLowPrice: 100 }),
+      mk("thin", 800, { lastOfferCount: 2 }),
+      mk("unknownOffers", 20, { lastOfferCount: undefined }),
+    ],
+  });
+  const ids = (list: { id: string }[]) => list.map((i) => i.id);
+
+  it("picks the biggest risers and fallers", () => {
+    const { rising, falling } = pickMovers(items);
+    expect(ids(rising)).toEqual(["up3", "up1", "unknownOffers", "up2"]);
+    expect(ids(falling)).toEqual(["down1", "down2"]);
+  });
+
+  it("ignores cheap, thinly traded and unchanged items", () => {
+    const all = [...pickMovers(items).rising, ...pickMovers(items).falling];
+    expect(ids(all)).not.toContain("cheap");
+    expect(ids(all)).not.toContain("thin");
+    expect(ids(all)).not.toContain("flat");
+  });
+
+  it("limits the list and handles an empty input", () => {
+    expect(pickMovers(items, 2).rising).toHaveLength(2);
+    expect(pickMovers([])).toEqual({ rising: [], falling: [] });
   });
 });

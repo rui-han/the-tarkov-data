@@ -1,62 +1,50 @@
-import { Paper, Box, Typography, Divider } from "@mui/material";
+import { Divider, Link as MuiLink, Paper, Typography } from "@mui/material";
+import { panelSx } from "./styles";
 
-interface AbountProps {
-  theme: any;
-}
-
-export default function About({ theme }: AbountProps) {
+export default function About() {
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        padding: 3,
-        mb: 6,
-      }}
-    >
-      <Box>
-        <Typography
-          variant="h5"
-          component="h2"
-          gutterBottom
-          sx={{
-            color: theme.palette.text.primary,
-            fontWeight: "bold",
-          }}
+    <Paper elevation={0} sx={{ ...panelSx, p: 3, mb: 2 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ fontWeight: "bold" }}
+      >
+        About The Tarkov Data
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
+
+      <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+        The Tarkov Data is an unofficial, community-made lookup tool for Escape
+        from Tarkov players. All game data comes from the open{" "}
+        <MuiLink
+          href="https://tarkov.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
         >
-          About The Tarkov Data
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Typography
-          variant="body1"
-          paragraph
-          sx={{
-            color: theme.palette.text.primary,
-            fontSize: "1.1rem",
-            lineHeight: 1.6,
-            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
-          }}
+          tarkov.dev
+        </MuiLink>{" "}
+        project, so it is as fresh as their published files. Flea market prices
+        are snapshots and can lag behind the game.
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+        Found an error or have a suggestion? Please use the feedback form above,
+        or open an issue on{" "}
+        <MuiLink
+          href="https://github.com/rui-han/the-tarkov-data"
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
         >
-          The Tarkov Data is a platform dedicated to providing Escape from
-          Tarkov players with the latest and most accurate game data. Our data
-          is derived from internal game files, community contributions, and
-          detailed game testing.
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: theme.palette.text.primary,
-            fontSize: "1.1rem",
-            lineHeight: 1.6,
-            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          We work hard to keep data up to date, usually within 24 hours of a
-          game update. If you find any errors or have any suggestions, please
-          feel free to contact us via the feedback form above.
-        </Typography>
-      </Box>
+          GitHub
+        </MuiLink>
+        .
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        Escape from Tarkov is a trademark of Battlestate Games. This project is
+        not affiliated with them.
+      </Typography>
     </Paper>
   );
 }

@@ -114,6 +114,7 @@ export function parseItemList(
         /-/g,
         " ",
       )}`.toLowerCase(),
+      offerCount: numOrNull(raw.lastOfferCount),
     });
   }
 
@@ -245,4 +246,42 @@ export function summarizeWatchlist(items: Item[]): WatchlistSummary {
   }
 
   return summary;
+}
+
+/* ------------------------------------------------------------------ */
+/* market movers                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Cheap or thinly traded items swing by huge percentages; ignore them. */
+export const MOVERS_MIN_PRICE = 2000;
+export const MOVERS_MIN_OFFERS = 10;
+
+export interface Movers {
+  rising: Item[];
+  falling: Item[];
+}
+
+/** The biggest 48h flea price risers and fallers. */
+export function pickMovers(items: Item[], count = 5): Movers {
+  const eligible = items.filter(
+    (item) =>
+      item.lastLowPrice != null &&
+      item.lastLowPrice >= MOVERS_MIN_PRICE &&
+      item.changeLast48hPercent != null &&
+      item.changeLast48hPercent !== 0 &&
+      // when the offer count is unknown, don't exclude the item for it
+      (item.offerCount == null || item.offerCount >= MOVERS_MIN_OFFERS),
+  );
+  const change = (item: Item) => item.changeLast48hPercent ?? 0;
+
+  return {
+    rising: eligible
+      .filter((item) => change(item) > 0)
+      .sort((a, b) => change(b) - change(a))
+      .slice(0, count),
+    falling: eligible
+      .filter((item) => change(item) < 0)
+      .sort((a, b) => change(a) - change(b))
+      .slice(0, count),
+  };
 }

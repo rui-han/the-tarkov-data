@@ -23,6 +23,8 @@ export interface Item {
   /** cannot be sold on the flea market */
   noFlea: boolean;
   lastLowPrice: number | null;
+  /** number of flea offers; null when unknown */
+  offerCount: number | null;
   avg24hPrice: number | null;
   changeLast48hPercent: number | null;
   /** highest trader buy-back price */

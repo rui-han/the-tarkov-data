@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { favoriteErrorMessage, useFavorites } from "@/hooks/useFavorites";
@@ -43,7 +44,11 @@ export default function ItemsTable({
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
 }: ItemsTableProps) {
   const { user } = useUser();
-  const [searchTerm, setSearchTerm] = useState("");
+  // the home page search box links here as /items?q=...
+  const searchParams = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(
+    () => searchParams?.get("q") ?? "",
+  );
   const debouncedSearch = useDebouncedValue(searchTerm, 300);
   const [category, setCategory] = useState("");
   const { sortKey, order, handleSort } = useItemSort("name", "asc");

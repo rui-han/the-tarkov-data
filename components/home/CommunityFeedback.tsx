@@ -82,7 +82,12 @@ export default function CommunityFeedback() {
   return (
     <Grid container spacing={2} sx={{ padding: 2 }}>
       <Grid item xs={12}>
-        <Typography variant="h4" gutterBottom>
+        <Typography
+          variant="h5"
+          component="h2"
+          gutterBottom
+          sx={{ fontWeight: "bold" }}
+        >
           Community Feedback
         </Typography>
       </Grid>
