@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Box,
   Chip,
@@ -37,15 +38,25 @@ export default function ItemRequirementsTable({
   }
 
   const { total, missing } = levelCost(requirements, itemsById);
+  const firCount = requirements.filter((r) => r.foundInRaid).length;
 
   return (
     <>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: "block", mb: 1 }}
+      >
+        {requirements.length} item type{requirements.length > 1 ? "s" : ""}
+        {firCount > 0 ? `, ${firCount} must be found in raid` : ""}
+      </Typography>
+
       <TableContainer
         component={Paper}
         variant="outlined"
-        sx={{ borderColor: "primary.main" }}
+        sx={{ borderColor: "primary.main", overflowX: "auto" }}
       >
-        <Table size="small">
+        <Table size="small" sx={{ minWidth: 520 }}>
           <TableHead>
             <TableRow>
               <TableCell>Item</TableCell>
@@ -73,9 +84,23 @@ export default function ItemRequirementsTable({
                       />
                       {itemsLoading ? (
                         <Skeleton width={140} />
+                      ) : item ? (
+                        // opens the items page with this item searched
+                        <Link
+                          href={`/items?q=${encodeURIComponent(item.name)}`}
+                          style={{ color: "inherit", textDecoration: "none" }}
+                        >
+                          <Typography
+                            variant="body2"
+                            title={req.itemId}
+                            sx={{ "&:hover": { textDecoration: "underline" } }}
+                          >
+                            {item.name}
+                          </Typography>
+                        </Link>
                       ) : (
                         <Typography variant="body2" title={req.itemId}>
-                          {item?.name ?? "Unknown item"}
+                          Unknown item
                         </Typography>
                       )}
                       {req.foundInRaid && (

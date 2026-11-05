@@ -72,3 +72,27 @@ export interface HideoutParams {
   };
   searchParams: {};
 }
+
+/** One row of the "all levels" overview of a station */
+export interface LevelSummary {
+  level: number;
+  /** seconds */
+  constructionTime: number;
+  itemCount: number;
+  /** requirements that must be found in raid */
+  firCount: number;
+  cost: number;
+  /** items without a price, not included in `cost` */
+  missing: number;
+  /** cost / time of this level and every lower one */
+  cumulativeCost: number;
+  cumulativeMissing: number;
+  cumulativeTime: number;
+}
+
+/** A station level that needs another station at a given level */
+export interface StationDependent {
+  stationId: string;
+  stationName: string;
+  level: number;
+}

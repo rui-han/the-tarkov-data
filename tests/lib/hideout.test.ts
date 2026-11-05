@@ -12,6 +12,9 @@ import {
   parseTranslations,
   translate,
   pickDefaultStation,
+  formatCost,
+  summarizeLevels,
+  dependentsOf,
 } from "@/lib/hideout";
 import type { HideoutItem, ItemRequirement } from "@/types/hideout";
 
@@ -291,5 +294,93 @@ describe("pickDefaultStation", () => {
   it("falls back to the first station, and to undefined for none", () => {
     expect(pickDefaultStation(parseStations([empty]))?.id).toBe("empty");
     expect(pickDefaultStation([])).toBeUndefined();
+  });
+});
+
+describe("formatCost", () => {
+  it("marks a lower bound when some items have no price", () => {
+    expect(formatCost(1500, 0)).toBe("1,500 ₽");
+    expect(formatCost(1500, 2)).toBe("≥ 1,500 ₽");
+    expect(formatCost(0, 1)).toBe("N/A");
+  });
+});
+
+describe("summarizeLevels", () => {
+  const level = (n: number, time: number, requirements: unknown[]) => ({
+    ...gym.levels[0],
+    id: `s-${n}`,
+    level: n,
+    constructionTime: time,
+    itemRequirements: requirements,
+  });
+  const [station] = parseStations({
+    s: {
+      ...gym,
+      id: "s",
+      levels: [
+        level(1, 100, [
+          { id: "a", item: "p", count: 2, attributes: { foundInRaid: true } },
+        ]),
+        level(2, 200, [{ id: "b", item: "q", count: 1, attributes: {} }]),
+      ],
+    },
+  });
+  const prices = new Map<string, HideoutItem>([
+    ["p", { id: "p", name: "P", lowPrice: 100, avgPrice: null }],
+    ["q", { id: "q", name: "Q", lowPrice: null, avgPrice: null }],
+  ]);
+
+  it("totals each level and keeps running sums", () => {
+    const [one, two] = summarizeLevels(station, prices);
+    expect(one).toMatchObject({
+      level: 1,
+      constructionTime: 100,
+      itemCount: 1,
+      firCount: 1,
+      cost: 200,
+      missing: 0,
+      cumulativeCost: 200,
+      cumulativeTime: 100,
+    });
+    // q has no price: not counted, but flagged
+    expect(two).toMatchObject({
+      level: 2,
+      cost: 0,
+      missing: 1,
+      cumulativeCost: 200,
+      cumulativeMissing: 1,
+      cumulativeTime: 300,
+    });
+  });
+});
+
+describe("dependentsOf", () => {
+  const stations = parseStations({
+    a: {
+      ...gym,
+      id: "a",
+      normalizedName: "a",
+      areaType: 1,
+      levels: [
+        {
+          ...gym.levels[0],
+          id: "a-1",
+          level: 1,
+          stationLevelRequirements: [{ id: "r", station: "b", level: 2 }],
+        },
+      ],
+    },
+    b: { ...gym, id: "b", normalizedName: "b", areaType: 2 },
+  });
+
+  it("finds the levels that need a given station level", () => {
+    expect(dependentsOf(stations, "b", 2)).toEqual([
+      { stationId: "a", stationName: "A", level: 1 },
+    ]);
+  });
+
+  it("returns nothing when no level asks for it", () => {
+    expect(dependentsOf(stations, "b", 1)).toEqual([]);
+    expect(dependentsOf(stations, "zzz", 2)).toEqual([]);
   });
 });

@@ -248,3 +248,14 @@ export function formatProfit(value: number | null): string {
 }
 
 export type { SortOrder };
+
+/** Crafts of a station that become available at exactly `level`. */
+export function craftsAtLevel(
+  crafts: Craft[],
+  stationId: string,
+  level: number,
+): Craft[] {
+  return crafts.filter(
+    (c) => c.stationId === stationId && c.stationLevel === level,
+  );
+}

@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { HideoutParams } from "@/types/hideout";
+import { Suspense, useCallback, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { HideoutParams } from "@/types/hideout";
+import { useCrafts } from "@/hooks/useCrafts";
 import {
   useHideoutStations,
   useItemMap,
@@ -9,14 +11,18 @@ import {
 } from "@/hooks/useHideoutData";
 import {
   collectItemIds,
+  dependentsOf,
+  formatCost,
   formatDuration,
-  formatPrice,
-  levelCost,
+  summarizeLevels,
 } from "@/lib/hideout";
+import { craftsAtLevel } from "@/lib/crafts";
 // components
 import FallbackImage from "@/components/hideout/FallbackImage";
-import PrerequisiteList from "@/components/hideout/PrerequisiteList";
 import ItemRequirementsTable from "@/components/hideout/ItemRequirementsTable";
+import LevelOverview from "@/components/hideout/LevelOverview";
+import LevelRelations from "@/components/hideout/LevelRelations";
+import PrerequisiteList from "@/components/hideout/PrerequisiteList";
 // MUI
 import {
   Alert,
@@ -30,11 +36,16 @@ import {
   Typography,
 } from "@mui/material";
 
-export default function HideoutCard({ params }: HideoutParams) {
+function HideoutStationView({ params }: HideoutParams) {
   const { hideoutId } = params;
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { hideoutStations, error, isLoading } = useHideoutStations();
   const { tradersById, isLoading: tradersLoading } = useTraderMap();
+  // crafts only add a "N crafts unlocked" line, so they never block the page
+  const { crafts } = useCrafts();
 
   // look up only the items the hideout actually needs
   const allItemIds = useMemo(
@@ -53,21 +64,40 @@ export default function HideoutCard({ params }: HideoutParams) {
   );
   const station = stationsById.get(hideoutId);
 
-  // The selection remembers which station it belongs to, so opening another
-  // station falls back to its first level without an effect.
-  const [selection, setSelection] = useState<{
-    stationId: string;
-    level: number;
-  } | null>(null);
-  const currentLevel =
-    selection?.stationId === hideoutId
-      ? selection.level
-      : station?.levels[0]?.level;
-  const levelData = station?.levels.find((l) => l.level === currentLevel);
+  // The level lives in the URL (?level=3), so it can be shared and survives a
+  // refresh. Missing or unknown values fall back to the first level.
+  const requestedLevel = Number(searchParams?.get("level"));
+  const levelData =
+    station?.levels.find((l) => l.level === requestedLevel) ??
+    station?.levels[0];
+  const currentLevel = levelData?.level;
 
-  const cost = useMemo(
-    () => (levelData ? levelCost(levelData.itemRequirements, itemsById) : null),
-    [levelData, itemsById],
+  const selectLevel = useCallback(
+    (level: number) => {
+      router.replace(`${pathname}?level=${level}`, { scroll: false });
+    },
+    [router, pathname],
+  );
+
+  const summaries = useMemo(
+    () => (station ? summarizeLevels(station, itemsById) : []),
+    [station, itemsById],
+  );
+  const summary = summaries.find((s) => s.level === currentLevel);
+
+  const dependents = useMemo(
+    () =>
+      station && currentLevel != null
+        ? dependentsOf(hideoutStations, station.id, currentLevel)
+        : [],
+    [hideoutStations, station, currentLevel],
+  );
+  const craftCount = useMemo(
+    () =>
+      station && currentLevel != null && crafts.length > 0
+        ? craftsAtLevel(crafts, station.id, currentLevel).length
+        : null,
+    [crafts, station, currentLevel],
   );
 
   if (error) {
@@ -105,6 +135,9 @@ export default function HideoutCard({ params }: HideoutParams) {
   }
 
   const hasItems = (levelData?.itemRequirements.length ?? 0) > 0;
+  const showCosts = hasItems && !itemsError;
+  const isUpgrade =
+    levelData != null && levelData.level !== station.levels[0]?.level;
 
   return (
     <Box sx={{ width: "90%", mx: "auto", pb: 4, textAlign: "center" }}>
@@ -128,7 +161,11 @@ export default function HideoutCard({ params }: HideoutParams) {
           alt={station.name}
           size={60}
         />
-        <Typography variant="h3" sx={{ fontSize: { xs: "2rem", md: "3rem" } }}>
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{ fontSize: { xs: "2rem", md: "3rem" } }}
+        >
           {station.name}
         </Typography>
       </Box>
@@ -140,9 +177,7 @@ export default function HideoutCard({ params }: HideoutParams) {
           color="primary"
           value={currentLevel}
           onChange={(_, value: number | null) => {
-            if (value != null) {
-              setSelection({ stationId: hideoutId, level: value });
-            }
+            if (value != null) selectLevel(value);
           }}
           aria-label="Hideout level"
           sx={{ mb: 3, flexWrap: "wrap", justifyContent: "center" }}
@@ -178,20 +213,34 @@ export default function HideoutCard({ params }: HideoutParams) {
                 ⏱️ Construction time:{" "}
                 <strong>{formatDuration(levelData.constructionTime)}</strong>
               </Typography>
-              {hasItems && !itemsError && (
+              {showCosts && (
                 <Typography variant="subtitle1">
                   💰 Estimated cost:{" "}
                   <strong>
-                    {itemsLoading || !cost ? (
+                    {itemsLoading || !summary ? (
                       <Skeleton
                         component="span"
                         width={80}
                         sx={{ display: "inline-block" }}
                       />
                     ) : (
-                      formatPrice(cost.total)
+                      formatCost(summary.cost, summary.missing)
                     )}
                   </strong>
+                </Typography>
+              )}
+              {isUpgrade && summary && (
+                <Typography variant="subtitle1" color="text.secondary">
+                  📈 From level 1:{" "}
+                  <strong>
+                    {itemsLoading || itemsError
+                      ? "…"
+                      : formatCost(
+                          summary.cumulativeCost,
+                          summary.cumulativeMissing,
+                        )}
+                  </strong>{" "}
+                  · {formatDuration(summary.cumulativeTime)}
                 </Typography>
               )}
             </Box>
@@ -220,6 +269,12 @@ export default function HideoutCard({ params }: HideoutParams) {
                 itemsLoading={itemsLoading}
               />
             </Box>
+
+            <LevelRelations
+              stationId={station.id}
+              dependents={dependents}
+              craftCount={craftCount}
+            />
           </CardContent>
         </Card>
       ) : (
@@ -227,6 +282,28 @@ export default function HideoutCard({ params }: HideoutParams) {
           This station has no level information.
         </Typography>
       )}
+
+      <LevelOverview
+        summaries={summaries}
+        currentLevel={currentLevel}
+        itemsLoading={itemsLoading}
+        onSelect={selectLevel}
+      />
     </Box>
+  );
+}
+
+// useSearchParams needs a Suspense boundary
+export default function HideoutCard(props: HideoutParams) {
+  return (
+    <Suspense
+      fallback={
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <HideoutStationView {...props} />
+    </Suspense>
   );
 }

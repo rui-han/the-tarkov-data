@@ -78,7 +78,7 @@ export default function PrerequisiteList({
           <Box
             key={req.id}
             component={Link}
-            href={`/hideout/${station.id}`}
+            href={`/hideout/${station.id}?level=${req.level}`}
             sx={linkChipSx}
           >
             {content}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, Tooltip, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { FetchedData } from "@/types/hideout";
 import FallbackImage from "./FallbackImage";
 
@@ -33,35 +33,47 @@ export default function HideoutNav({ hideoutStations }: FetchedData) {
       }}
     >
       {hideoutStations.map((station) => (
-        <Tooltip key={station.id} title={station.name} arrow>
-          <Box
-            component={Link}
-            href={`/hideout/${station.id}`}
-            aria-current={activeId === station.id ? "page" : undefined}
-            sx={{
-              display: "inline-flex",
-              p: 0.5,
-              borderRadius: "5px",
-              color: "inherit",
-              bgcolor:
-                activeId === station.id
-                  ? "rgba(219, 223, 234, 0.2)"
-                  : "transparent",
-              transition: "background-color 0.3s",
-              "&:hover": { bgcolor: "rgba(219, 223, 234, 0.12)" },
-            }}
+        <Box
+          key={station.id}
+          component={Link}
+          href={`/hideout/${station.id}`}
+          title={station.name}
+          aria-current={activeId === station.id ? "page" : undefined}
+          sx={{
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: 88,
+            p: 0.75,
+            borderRadius: "5px",
+            color: "inherit",
+            textDecoration: "none",
+            bgcolor:
+              activeId === station.id
+                ? "rgba(219, 223, 234, 0.2)"
+                : "transparent",
+            transition: "background-color 0.3s",
+            "&:hover": { bgcolor: "rgba(219, 223, 234, 0.12)" },
+          }}
+        >
+          <FallbackImage
+            sources={[
+              `/icons/hideout-icons/${station.normalizedName}-icon.png`,
+              station.imageLink,
+            ]}
+            alt=""
+            size={56}
+            radius={5}
+          />
+          {/* touch screens have no hover, so the name is always visible */}
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{ maxWidth: "100%", mt: 0.5, lineHeight: 1.2, fontSize: 11 }}
           >
-            <FallbackImage
-              sources={[
-                `/icons/hideout-icons/${station.normalizedName}-icon.png`,
-                station.imageLink,
-              ]}
-              alt={station.name}
-              size={64}
-              radius={5}
-            />
-          </Box>
-        </Tooltip>
+            {station.name}
+          </Typography>
+        </Box>
       ))}
     </Box>
   );

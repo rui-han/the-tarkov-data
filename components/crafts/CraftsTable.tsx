@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCrafts } from "@/hooks/useCrafts";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useHideoutStations } from "@/hooks/useHideoutData";
@@ -279,7 +280,11 @@ export default function CraftsTable() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebouncedValue(searchTerm, 300);
-  const [stationId, setStationId] = useState("");
+  // the hideout page links here as /crafts?station=<stationId>
+  const searchParams = useSearchParams();
+  const [stationId, setStationId] = useState(
+    () => searchParams?.get("station") ?? "",
+  );
   const [profitableOnly, setProfitableOnly] = useState(false);
   const [hideTaskLocked, setHideTaskLocked] = useState(false);
   const [sortKey, setSortKey] = useState<CraftSortKey>("profitPerHour");

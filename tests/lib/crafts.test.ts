@@ -4,6 +4,7 @@ import { parseItemList } from "@/lib/items";
 import {
   buildRows,
   computeEconomics,
+  craftsAtLevel,
   filterCrafts,
   formatProfit,
   parseCrafts,
@@ -393,5 +394,18 @@ describe("formatProfit", () => {
     expect(formatProfit(0)).toBe("0 ₽");
     expect(formatProfit(-0.4)).toBe("0 ₽");
     expect(formatProfit(null)).toBe("—");
+  });
+});
+
+describe("craftsAtLevel", () => {
+  const list = [
+    craft({ id: "a", stationId: STATION_A, stationLevel: 2 }),
+    craft({ id: "b", stationId: STATION_A, stationLevel: 3 }),
+    craft({ id: "c", stationId: STATION_B, stationLevel: 2 }),
+  ];
+
+  it("keeps crafts of that station and level only", () => {
+    expect(craftsAtLevel(list, STATION_A, 2).map((c) => c.id)).toEqual(["a"]);
+    expect(craftsAtLevel(list, STATION_B, 3)).toEqual([]);
   });
 });

@@ -4,6 +4,8 @@ import type {
   HideoutLevel,
   HideoutStation,
   ItemRequirement,
+  LevelSummary,
+  StationDependent,
   Trader,
 } from "@/types/hideout";
 
@@ -334,4 +336,75 @@ export function pickDefaultStation(
   stations: HideoutStation[],
 ): HideoutStation | undefined {
   return stations.find((s) => s.levels.length > 0) ?? stations[0];
+}
+
+/**
+ * "1,500 ₽", or "≥ 1,500 ₽" when some items have no price and so aren't in
+ * the total, or "N/A" when nothing could be priced.
+ */
+export function formatCost(total: number, missing: number): string {
+  if (missing > 0) {
+    return total > 0 ? `≥ ${formatPrice(total)}` : "N/A";
+  }
+  return formatPrice(total);
+}
+
+/**
+ * One summary row per level of a station, with running totals from level 1.
+ * Levels are already sorted ascending by parseStations.
+ */
+export function summarizeLevels(
+  station: HideoutStation,
+  itemsById: ReadonlyMap<string, HideoutItem>,
+): LevelSummary[] {
+  let cumulativeCost = 0;
+  let cumulativeMissing = 0;
+  let cumulativeTime = 0;
+
+  return station.levels.map((level) => {
+    const { total, missing } = levelCost(level.itemRequirements, itemsById);
+    cumulativeCost += total;
+    cumulativeMissing += missing;
+    cumulativeTime += level.constructionTime;
+
+    return {
+      level: level.level,
+      constructionTime: level.constructionTime,
+      itemCount: level.itemRequirements.length,
+      firCount: level.itemRequirements.filter((r) => r.foundInRaid).length,
+      cost: total,
+      missing,
+      cumulativeCost,
+      cumulativeMissing,
+      cumulativeTime,
+    };
+  });
+}
+
+/**
+ * Station levels that list `stationId` at exactly `level` as a requirement,
+ * in in-game station order.
+ */
+export function dependentsOf(
+  stations: HideoutStation[],
+  stationId: string,
+  level: number,
+): StationDependent[] {
+  const result: StationDependent[] = [];
+  for (const station of stations) {
+    for (const l of station.levels) {
+      if (
+        l.stationRequirements.some(
+          (r) => r.stationId === stationId && r.level === level,
+        )
+      ) {
+        result.push({
+          stationId: station.id,
+          stationName: station.name,
+          level: l.level,
+        });
+      }
+    }
+  }
+  return result;
 }
