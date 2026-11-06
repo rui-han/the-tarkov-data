@@ -1,6 +1,7 @@
 "use client";
 
 import Nav from "@/components/navigation/Nav";
+import StaleDataBanner from "./StaleDataBanner";
 import { CssBaseline, ThemeProvider, Box } from "@mui/material";
 import { GameModeProvider } from "@/contexts/GameModeContext";
 import { darkTheme } from "./theme";
@@ -30,6 +31,8 @@ export default function TopLevelLayout({
               width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
             }}
           >
+            {/* shown only while pages run on a saved copy of the data */}
+            <StaleDataBanner />
             {children}
           </Box>
         </Box>
