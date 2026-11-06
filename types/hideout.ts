@@ -19,6 +19,7 @@ export interface HideoutLevel {
   traderRequirements: TraderRequirement[];
   itemRequirements: ItemRequirement[];
   skillRequirements: SkillRequirement[];
+  bonuses: HideoutBonus[];
 }
 
 export interface StationRequirement {
@@ -42,10 +43,31 @@ export interface ItemRequirement {
 
 export interface SkillRequirement {
   id: string;
+  /** raw name from the payload; may be empty */
   name: string;
+  /** id to look up in the skills list */
+  skillId: string;
   level: number;
 }
 
+/** A bonus a station level grants, e.g. "+15% experience rate" */
+export interface HideoutBonus {
+  id: string;
+  /** e.g. "ExperienceRate" */
+  type: string;
+  /** translated text; falls back to the type split into words */
+  label: string;
+  value: number | null;
+  /** skill (group) id, for bonuses that target one */
+  skillId: string;
+}
+
+/** A player skill, from the `skills` list that ships inside the items payload */
+export interface Skill {
+  id: string;
+  name: string;
+  imageLink?: string;
+}
 export interface Trader {
   id: string;
   name: string;

@@ -1,10 +1,12 @@
 import { toArray } from "@/lib/tarkovApi";
 import type {
+  HideoutBonus,
   HideoutItem,
   HideoutLevel,
   HideoutStation,
   ItemRequirement,
   LevelSummary,
+  Skill,
   StationDependent,
   Trader,
 } from "@/types/hideout";
@@ -32,6 +34,8 @@ const refId = (v: unknown): string =>
   typeof v === "string" ? v : isRecord(v) ? str(v.id) : "";
 const priceOrNull = (v: unknown): number | null =>
   typeof v === "number" && v > 0 ? v : null;
+const numOrNull = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
 
 /* ------------------------------------------------------------------ */
 /* translations & names                                               */
@@ -72,6 +76,15 @@ export function prettifyName(normalizedName: string): string {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+/** "ExperienceRate" -> "Experience Rate", "aim_drills" -> "Aim drills" */
+export function humanizeId(id: string): string {
+  return id
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase());
 }
 
 /**
@@ -130,6 +143,28 @@ function isFoundInRaid(attributes: unknown): boolean {
   return isRecord(attributes) && attributes.foundInRaid === true;
 }
 
+function parseBonuses(
+  raw: unknown,
+  levelId: string,
+  translations?: Translations,
+): HideoutBonus[] {
+  return records(raw)
+    .map((b, i) => {
+      const type = str(b.type);
+      const key = str(b.name);
+      return {
+        id: `${levelId}-bonus-${i}`,
+        type,
+        label:
+          translate(translations, key) ??
+          humanizeId(type || key.replace(/^hideout_/i, "")),
+        value: numOrNull(b.value),
+        skillId: refId(b.skill),
+      };
+    })
+    .filter((b) => b.label !== "");
+}
+
 function parseLevel(
   raw: UnknownRecord,
   stationId: string,
@@ -137,11 +172,12 @@ function parseLevel(
   translations?: Translations,
 ): HideoutLevel {
   const level = num(raw.level, index + 1);
+  const id = str(raw.id) || `${stationId}-${level}`;
   const descriptionKey = str(raw.description);
   const description = translate(translations, descriptionKey) ?? descriptionKey;
 
   return {
-    id: str(raw.id) || `${stationId}-${level}`,
+    id,
     level,
     constructionTime: num(raw.constructionTime),
     description: looksUntranslated(description) ? "" : description,
@@ -168,14 +204,16 @@ function parseLevel(
       }))
       .filter((r) => r.itemId !== ""),
     skillRequirements: records(raw.skillRequirements).map((r, i) => {
-      const skill = isRecord(r.skill) ? r.skill.name : r.skill;
-      const rawName = str(r.name) || str(skill);
+      const skillObject = isRecord(r.skill) ? r.skill : null;
+      const rawName = str(r.name) || str(skillObject?.name);
       return {
         id: str(r.id) || `skill-${i}`,
-        name: translate(translations, rawName) ?? (rawName || "Skill"),
+        name: translate(translations, rawName) ?? rawName,
+        skillId: refId(r.skill) || rawName,
         level: num(r.level, 1),
       };
     }),
+    bonuses: parseBonuses(raw.bonuses, id, translations),
   };
 }
 
@@ -407,4 +445,63 @@ export function dependentsOf(
     }
   }
   return result;
+}
+
+/* ------------------------------------------------------------------ */
+/* skills & bonuses                                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Skill id -> skill. The list sits next to `items` in the items payload:
+ * `{ items: {...}, skills: [{ id, name, normalizedName, imageLink }] }`.
+ * `name` is just the id ("AimDrills"), so the readable name comes from the
+ * dictionary, else from `normalizedName` ("aim-drills" -> "Aim Drills").
+ */
+export function parseSkills(
+  data: unknown,
+  translations?: Translations,
+): Map<string, Skill> {
+  const map = new Map<string, Skill>();
+  const list = isRecord(data) ? toArray<unknown>(data.skills) : [];
+
+  for (const raw of list) {
+    if (!isRecord(raw) || typeof raw.id !== "string") continue;
+    const normalizedName = str(raw.normalizedName);
+    map.set(raw.id, {
+      id: raw.id,
+      name:
+        translate(translations, str(raw.name)) ??
+        (normalizedName ? prettifyName(normalizedName) : humanizeId(raw.id)),
+      imageLink: str(raw.imageLink) || undefined,
+    });
+  }
+  return map;
+}
+
+/** Display name for a skill id; ids missing from the list are humanized. */
+export function skillLabel(
+  skillsById: ReadonlyMap<string, Skill>,
+  skillId: string,
+): string {
+  return skillsById.get(skillId)?.name ?? humanizeId(skillId);
+}
+
+/**
+ * Bonus types whose value is a fraction (0.15 = +15%). These are the ones
+ * confirmed against real data; every other type shows its raw number rather
+ * than a guessed unit.
+ */
+const PERCENT_BONUS_TYPES = new Set([
+  "ExperienceRate",
+  "SkillGroupLevelingBoost",
+]);
+
+/** "+15%", "+10", "-5%"; empty when the bonus has no value. */
+export function formatBonusValue(type: string, value: number | null): string {
+  if (value == null) return "";
+  const sign = value > 0 ? "+" : "";
+  if (PERCENT_BONUS_TYPES.has(type)) {
+    return `${sign}${Math.round(value * 1000) / 10}%`;
+  }
+  return `${sign}${value}`;
 }

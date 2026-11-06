@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Box, Typography } from "@mui/material";
-import type { HideoutLevel, HideoutStation, Trader } from "@/types/hideout";
+import type {
+  HideoutLevel,
+  HideoutStation,
+  Skill,
+  Trader,
+} from "@/types/hideout";
+import { humanizeId } from "@/lib/hideout";
 import FallbackImage from "./FallbackImage";
 
 interface PrerequisiteListProps {
@@ -8,6 +14,7 @@ interface PrerequisiteListProps {
   stationsById: ReadonlyMap<string, HideoutStation>;
   tradersById: ReadonlyMap<string, Trader>;
   tradersLoading: boolean;
+  skillsById: ReadonlyMap<string, Skill>;
 }
 
 const chipSx = {
@@ -34,6 +41,7 @@ export default function PrerequisiteList({
   stationsById,
   tradersById,
   tradersLoading,
+  skillsById,
 }: PrerequisiteListProps) {
   const { stationRequirements, traderRequirements, skillRequirements } = level;
 
@@ -111,13 +119,20 @@ export default function PrerequisiteList({
         );
       })}
 
-      {skillRequirements.map((req) => (
-        <Box key={req.id} sx={chipSx}>
-          <Typography variant="body2">
-            {req.name} lvl {req.level}
-          </Typography>
-        </Box>
-      ))}
+      {skillRequirements.map((req) => {
+        const skill = skillsById.get(req.skillId);
+        return (
+          <Box key={req.id} sx={chipSx}>
+            {skill?.imageLink && (
+              <FallbackImage sources={[skill.imageLink]} alt="" size={40} />
+            )}
+            <Typography variant="body2">
+              {skill?.name ?? (req.name || humanizeId(req.skillId) || "Skill")}{" "}
+              lvl {req.level}
+            </Typography>
+          </Box>
+        );
+      })}
     </Box>
   );
 }

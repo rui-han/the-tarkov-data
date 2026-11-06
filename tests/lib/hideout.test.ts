@@ -15,6 +15,10 @@ import {
   formatCost,
   summarizeLevels,
   dependentsOf,
+  parseSkills,
+  skillLabel,
+  humanizeId,
+  formatBonusValue,
 } from "@/lib/hideout";
 import type { HideoutItem, ItemRequirement } from "@/types/hideout";
 
@@ -382,5 +386,140 @@ describe("dependentsOf", () => {
   it("returns nothing when no level asks for it", () => {
     expect(dependentsOf(stations, "b", 1)).toEqual([]);
     expect(dependentsOf(stations, "zzz", 2)).toEqual([]);
+  });
+});
+
+describe("bonuses", () => {
+  const withBonuses = {
+    ...gym,
+    id: "b",
+    levels: [
+      {
+        ...gym.levels[0],
+        bonuses: [
+          {
+            type: "ExperienceRate",
+            name: "hideout_ExperienceRate",
+            value: 0.15,
+            passive: true,
+            production: false,
+          },
+          {
+            type: "SkillGroupLevelingBoost",
+            name: "hideout_SkillGroupLevelingBoost",
+            value: 0.3,
+            passive: true,
+            production: false,
+            skill: "Practical",
+          },
+        ],
+      },
+    ],
+  };
+
+  it("parses bonuses, falling back to the type split into words", () => {
+    const [station] = parseStations({ b: withBonuses });
+    expect(station.levels[0].bonuses).toEqual([
+      {
+        id: "6377a9b9a93bde8fa30eb79a-1-bonus-0",
+        type: "ExperienceRate",
+        label: "Experience Rate",
+        value: 0.15,
+        skillId: "",
+      },
+      {
+        id: "6377a9b9a93bde8fa30eb79a-1-bonus-1",
+        type: "SkillGroupLevelingBoost",
+        label: "Skill Group Leveling Boost",
+        value: 0.3,
+        skillId: "Practical",
+      },
+    ]);
+  });
+
+  it("uses the dictionary text when there is one", () => {
+    const [station] = parseStations(
+      { b: withBonuses },
+      { hideout_ExperienceRate: "Experience gain" },
+    );
+    expect(station.levels[0].bonuses[0].label).toBe("Experience gain");
+  });
+
+  it("is empty for levels without bonuses", () => {
+    const [station] = parseStations({ [gym.id]: gym });
+    expect(station.levels[0].bonuses).toEqual([]);
+  });
+});
+
+describe("formatBonusValue", () => {
+  it("shows fractions as percentages only for the known types", () => {
+    expect(formatBonusValue("ExperienceRate", 0.15)).toBe("+15%");
+    expect(formatBonusValue("SkillGroupLevelingBoost", 0.3)).toBe("+30%");
+    expect(formatBonusValue("ExperienceRate", -0.1)).toBe("-10%");
+    // unknown unit: raw number, no guessed %
+    expect(formatBonusValue("StashSize", 10)).toBe("+10");
+    expect(formatBonusValue("TextBonus", null)).toBe("");
+  });
+});
+
+describe("skills", () => {
+  const payload = {
+    items: {},
+    skills: [
+      {
+        id: "AimDrills",
+        name: "AimDrills",
+        normalizedName: "aim-drills",
+        imageLink: "https://example.com/aim.webp",
+      },
+      { id: "Assault", name: "Assault", normalizedName: "assault-rifles" },
+    ],
+  };
+
+  it("builds readable names from normalizedName", () => {
+    const skills = parseSkills(payload);
+    expect(skills.get("AimDrills")).toMatchObject({
+      name: "Aim Drills",
+      imageLink: "https://example.com/aim.webp",
+    });
+    expect(skills.get("Assault")?.name).toBe("Assault Rifles");
+  });
+
+  it("prefers the dictionary", () => {
+    const skills = parseSkills(payload, { AimDrills: "Aim drills (EN)" });
+    expect(skills.get("AimDrills")?.name).toBe("Aim drills (EN)");
+  });
+
+  it("returns an empty map when there are no skills", () => {
+    expect(parseSkills(null).size).toBe(0);
+    expect(parseSkills({ items: {} }).size).toBe(0);
+  });
+
+  it("humanizes ids that are missing from the list", () => {
+    const skills = parseSkills(payload);
+    expect(skillLabel(skills, "AimDrills")).toBe("Aim Drills");
+    expect(skillLabel(skills, "Practical")).toBe("Practical");
+    expect(humanizeId("SkillGroupLevelingBoost")).toBe(
+      "Skill Group Leveling Boost",
+    );
+  });
+
+  it("reads the skill id of a skill requirement", () => {
+    const [station] = parseStations({
+      s: {
+        ...gym,
+        id: "s",
+        levels: [
+          {
+            ...gym.levels[0],
+            skillRequirements: [{ id: "r1", skill: "Strength", level: 3 }],
+          },
+        ],
+      },
+    });
+    expect(station.levels[0].skillRequirements[0]).toMatchObject({
+      skillId: "Strength",
+      level: 3,
+    });
   });
 });

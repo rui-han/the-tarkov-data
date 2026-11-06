@@ -7,6 +7,7 @@ import { useCrafts } from "@/hooks/useCrafts";
 import {
   useHideoutStations,
   useItemMap,
+  useSkillMap,
   useTraderMap,
 } from "@/hooks/useHideoutData";
 import {
@@ -23,6 +24,7 @@ import ItemRequirementsTable from "@/components/hideout/ItemRequirementsTable";
 import LevelOverview from "@/components/hideout/LevelOverview";
 import LevelRelations from "@/components/hideout/LevelRelations";
 import PrerequisiteList from "@/components/hideout/PrerequisiteList";
+import BonusList from "@/components/hideout/BonusList";
 // MUI
 import {
   Alert,
@@ -44,6 +46,8 @@ function HideoutStationView({ params }: HideoutParams) {
 
   const { hideoutStations, error, isLoading } = useHideoutStations();
   const { tradersById, isLoading: tradersLoading } = useTraderMap();
+  // names and icons of skills; never blocks the page
+  const { skillsById } = useSkillMap();
   // crafts only add a "N crafts unlocked" line, so they never block the page
   const { crafts } = useCrafts();
 
@@ -260,7 +264,10 @@ function HideoutStationView({ params }: HideoutParams) {
               stationsById={stationsById}
               tradersById={tradersById}
               tradersLoading={tradersLoading}
+              skillsById={skillsById}
             />
+
+            <BonusList bonuses={levelData.bonuses} skillsById={skillsById} />
 
             <Box sx={{ textAlign: "left" }}>
               <ItemRequirementsTable

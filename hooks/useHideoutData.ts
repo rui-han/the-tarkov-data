@@ -3,7 +3,12 @@
 import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
-import { parseItems, parseStations, parseTraders } from "@/lib/hideout";
+import {
+  parseItems,
+  parseSkills,
+  parseStations,
+  parseTraders,
+} from "@/lib/hideout";
 
 /** Hideout stations, normalized and sorted in in-game order. */
 export function useHideoutStations() {
@@ -55,4 +60,19 @@ export function useItemMap(itemIds: ReadonlySet<string>) {
     [data, itemIds, translations],
   );
   return { itemsById, error, isLoading };
+}
+
+/**
+ * Skill id -> skill. The list ships inside the items payload, so this shares
+ * its download with useItemMap through the SWR cache. Never blocks a page:
+ * until it arrives, skill ids are shown in a humanized form.
+ */
+export function useSkillMap() {
+  const { data, error, isLoading } = useTarkovData<unknown>("items");
+  const { translations } = useTranslations("items");
+  const skillsById = useMemo(
+    () => parseSkills(data, translations),
+    [data, translations],
+  );
+  return { skillsById, error, isLoading };
 }
