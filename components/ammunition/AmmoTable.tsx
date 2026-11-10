@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Ammo, Order, AmmoTableProps } from "@/types/ammo";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { favoriteErrorMessage, useFavorites } from "@/hooks/useFavorites";
@@ -12,19 +13,29 @@ import AmmoTableHead from "./AmmoTableHead";
 import AmmoTablePagination from "./AmmoTablePagination";
 import AmmoTableRow from "./AmmoTableRow";
 // utils
-import { filterAndSortAmmo } from "@/utils/ammo-utils";
+import {
+  ammoQueryString,
+  filterAndSortAmmo,
+  parseSortKey,
+  parseSortOrder,
+} from "@/utils/ammo-utils";
 // MUI
 import {
+  Alert,
+  Box,
+  Button,
+  Chip,
   Grid,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableRow,
-  Snackbar,
-  Alert,
+  Typography,
 } from "@mui/material";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 
 // favorite button + the columns of AmmoTableHead
 const COLUMN_COUNT = 9;
@@ -32,23 +43,38 @@ const COLUMN_COUNT = 9;
 export default function AmmoTable({ ammo }: AmmoTableProps) {
   // get user data from auth0
   const { user } = useUser();
+  // the view (search, caliber, sort, favorites only) lives in the URL so it
+  // can be shared; it is read once when the page opens
+  const searchParams = useSearchParams();
 
   // hook to manage favorites (shared with the items page and dashboard)
   const {
-    favorites: userFavoriteAmmo, // all favorites; lookups are by itemId
+    favoriteIds,
+    isLoaded: favoritesLoaded,
     loadFavorites: getUsersFavoriteAmmo,
     addFavorite: handleFavoriteAmmo,
     removeFavorite: handleRemoveFavoriteAmmo,
   } = useFavorites();
 
   // caliber filter state
-  const [currentCaliber, setCurrentCaliber] = useState("");
+  const [currentCaliber, setCurrentCaliber] = useState(
+    () => searchParams?.get("caliber") ?? "",
+  );
   // search input state (raw) and its debounced value (used for filtering)
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState(
+    () => searchParams?.get("q") ?? "",
+  );
   const debouncedInputText = useDebouncedValue(inputText, 300);
+  const [favoritesOnly, setFavoritesOnly] = useState(
+    () => searchParams?.get("fav") === "1",
+  );
   // sorting states
-  const [order, setOrder] = useState<Order>("desc");
-  const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
+  const [order, setOrder] = useState<Order>(() =>
+    parseSortOrder(searchParams?.get("dir")),
+  );
+  const [orderBy, setOrderBy] = useState<keyof Ammo>(() =>
+    parseSortKey(searchParams?.get("sort")),
+  );
   // pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -70,6 +96,28 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
   useEffect(() => {
     setPage(0);
   }, [debouncedInputText]);
+
+  // a caliber that doesn't exist (a stale link, or after switching game mode)
+  // would silently show nothing
+  useEffect(() => {
+    if (currentCaliber && !ammo.some((a) => a.caliber === currentCaliber)) {
+      setCurrentCaliber("");
+    }
+  }, [ammo, currentCaliber]);
+
+  // keep the address bar in sync with the view. The native history API
+  // updates the URL without a server round trip or a new history entry.
+  useEffect(() => {
+    const query = ammoQueryString({
+      query: debouncedInputText,
+      caliber: currentCaliber,
+      favoritesOnly,
+      sortKey: orderBy,
+      order,
+    });
+    const url = `${window.location.pathname}${query ? `?${query}` : ""}`;
+    window.history.replaceState(null, "", url);
+  }, [debouncedInputText, currentCaliber, favoritesOnly, orderBy, order]);
 
   // handle table head sorting
   const handleRequestSort = useCallback(
@@ -104,16 +152,42 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
     [],
   );
 
+  // "favorites only" needs a logged-in user and a loaded favorites list;
+  // until then the full list is shown
+  const showFavoritesToggle = Boolean(user);
+  const favoritesFilterOn =
+    favoritesOnly && showFavoritesToggle && favoritesLoaded;
+
   // filter and sort the ammo data to be displayed
   const filteredAndSortedAmmo = useMemo(() => {
-    return filterAndSortAmmo(
+    const list = filterAndSortAmmo(
       ammo,
       currentCaliber,
       debouncedInputText,
       order,
       orderBy,
     );
-  }, [ammo, currentCaliber, debouncedInputText, order, orderBy]);
+    return favoritesFilterOn
+      ? list.filter((a) => favoriteIds.has(a.item.id))
+      : list;
+  }, [
+    ammo,
+    currentCaliber,
+    debouncedInputText,
+    order,
+    orderBy,
+    favoritesFilterOn,
+    favoriteIds,
+  ]);
+
+  // total counts for pagination
+  const totalRows = filteredAndSortedAmmo.length;
+
+  // never stay on a page that no longer exists (e.g. after unfavoriting the
+  // last row of the last page)
+  useEffect(() => {
+    if (page > 0 && page * rowsPerPage >= totalRows) setPage(0);
+  }, [page, rowsPerPage, totalRows]);
 
   // data to be displayed in the current table page
   const visibleRows = useMemo(() => {
@@ -123,13 +197,22 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
     );
   }, [filteredAndSortedAmmo, page, rowsPerPage]);
 
-  // total counts for pagination
-  const totalRows = filteredAndSortedAmmo.length;
-
   // Avoid a layout jump on the last page of a longer list. The first page
   // doesn't need a filler: a short result list shouldn't leave a big gap.
   const emptyRows =
     page > 0 ? Math.max(0, rowsPerPage - visibleRows.length) : 0;
+
+  const filtersActive =
+    inputText.trim() !== "" ||
+    currentCaliber !== "" ||
+    (favoritesOnly && showFavoritesToggle);
+
+  const clearFilters = useCallback(() => {
+    setInputText("");
+    setCurrentCaliber("");
+    setFavoritesOnly(false);
+    setPage(0);
+  }, []);
 
   // handle favorite icon click. Resolves to true if the favorite status was
   // actually updated, so the row can roll back its optimistic UI on failure.
@@ -142,7 +225,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
         return false;
       }
 
-      const isFavorite = userFavoriteAmmo.some((fav) => fav.itemId === itemId);
+      const isFavorite = favoriteIds.has(itemId);
 
       try {
         if (isFavorite) {
@@ -164,7 +247,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
         return false;
       }
     },
-    [user, userFavoriteAmmo, handleFavoriteAmmo, handleRemoveFavoriteAmmo],
+    [user, favoriteIds, handleFavoriteAmmo, handleRemoveFavoriteAmmo],
   );
 
   // handle snackbar close
@@ -174,21 +257,64 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
 
   return (
     <Grid width="90%" maxWidth="1400px">
-      {/* filter buttons*/}
-      <AmmoTableFilter
-        ammo={ammo}
-        currentCaliber={currentCaliber}
-        onFilterButtonClick={handleFilterButtonClick}
-      />
+      {/* search, caliber filter and the shortcuts for both */}
+      <Paper sx={{ my: 3, p: { xs: 2, sm: 3 } }} elevation={3}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Box sx={{ flex: "1 1 320px" }}>
+            <AmmoSearchbar value={inputText} setInputText={setInputText} />
+          </Box>
 
-      {/* ammo search bar */}
-      <AmmoSearchbar setInputText={setInputText} />
+          {showFavoritesToggle && (
+            <Chip
+              icon={<FavoriteIcon />}
+              label="Favorites only"
+              clickable
+              color={favoritesOnly ? "primary" : "default"}
+              variant={favoritesOnly ? "filled" : "outlined"}
+              aria-pressed={favoritesOnly}
+              onClick={() => {
+                setFavoritesOnly((v) => !v);
+                setPage(0);
+              }}
+            />
+          )}
+
+          {filtersActive && (
+            <Button color="inherit" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </Box>
+
+        <AmmoTableFilter
+          ammo={ammo}
+          currentCaliber={currentCaliber}
+          onFilterButtonClick={handleFilterButtonClick}
+        />
+
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          aria-live="polite"
+          sx={{ display: "block", mt: 2 }}
+        >
+          {totalRows.toLocaleString("en-US")} of{" "}
+          {ammo.length.toLocaleString("en-US")} rounds
+        </Typography>
+      </Paper>
 
       {/* the data table */}
       <TableContainer
         sx={{
-          padding: "2rem",
-          mt: 4,
+          p: { xs: 1, sm: "2rem" },
+          mt: 2,
           overflowX: "auto", // scroll x on small screens
         }}
         component={Paper}
@@ -212,9 +338,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
               <AmmoTableRow
                 key={ammoData.item.id}
                 ammoData={ammoData}
-                isFavorite={userFavoriteAmmo.some(
-                  (fav) => fav.itemId === ammoData.item.id,
-                )}
+                isFavorite={favoriteIds.has(ammoData.item.id)}
                 handleFavoriteClick={handleFavoriteClick}
                 user={user}
               />

@@ -91,3 +91,58 @@ export function getAmmoPropertyColor(
   }
   return "inherit";
 }
+
+/* ------------------------------------------------------------------ */
+/* the view kept in the URL                                           */
+/* ------------------------------------------------------------------ */
+
+export const DEFAULT_SORT_KEY: keyof Ammo = "damage";
+export const DEFAULT_SORT_ORDER: Order = "desc";
+
+/** Columns the table can be sorted by (names are intentionally not sortable). */
+export const SORTABLE_KEYS: ReadonlyArray<keyof Ammo> = [
+  "damage",
+  "penetrationPower",
+  "armorClass",
+  "armorDamage",
+  "accuracyModifier",
+  "recoilModifier",
+  "fleaPrice",
+];
+
+/** Unknown or missing values fall back to the default sort column. */
+export function parseSortKey(value: string | null | undefined): keyof Ammo {
+  return SORTABLE_KEYS.find((key) => key === value) ?? DEFAULT_SORT_KEY;
+}
+
+export function parseSortOrder(value: string | null | undefined): Order {
+  return value === "asc" || value === "desc" ? value : DEFAULT_SORT_ORDER;
+}
+
+export interface AmmoViewState {
+  query: string;
+  caliber: string;
+  favoritesOnly: boolean;
+  sortKey: keyof Ammo;
+  order: Order;
+}
+
+/**
+ * Query string for the current view. Only what differs from the defaults is
+ * included, so a plain /ammunition stays clean.
+ */
+export function ammoQueryString(state: AmmoViewState): string {
+  const params = new URLSearchParams();
+  const query = state.query.trim();
+  if (query) params.set("q", query);
+  if (state.caliber) params.set("caliber", state.caliber);
+  if (state.favoritesOnly) params.set("fav", "1");
+  if (
+    state.sortKey !== DEFAULT_SORT_KEY ||
+    state.order !== DEFAULT_SORT_ORDER
+  ) {
+    params.set("sort", state.sortKey);
+    params.set("dir", state.order);
+  }
+  return params.toString();
+}

@@ -4,6 +4,9 @@ import {
   filterAndSortAmmo,
   getComparator,
   getAmmoPropertyColor,
+  ammoQueryString,
+  parseSortKey,
+  parseSortOrder,
 } from "@/utils/ammo-utils";
 
 // Build a minimal, structurally-compatible Ammo object without importing the
@@ -154,5 +157,47 @@ describe("sorting rows without a value", () => {
         (a) => a.fleaPrice,
       ),
     ).toEqual([300, 100, null]);
+  });
+});
+
+describe("the view in the URL", () => {
+  const base = {
+    query: "",
+    caliber: "",
+    favoritesOnly: false,
+    sortKey: "damage",
+    order: "desc",
+  } as const;
+
+  it("is empty for the defaults", () => {
+    expect(ammoQueryString(base)).toBe("");
+  });
+
+  it("includes only what differs from the defaults", () => {
+    expect(ammoQueryString({ ...base, query: "  m855  " })).toBe("q=m855");
+    expect(ammoQueryString({ ...base, order: "asc" })).toBe(
+      "sort=damage&dir=asc",
+    );
+    expect(
+      ammoQueryString({
+        query: "m855 a1",
+        caliber: "Caliber762x39",
+        favoritesOnly: true,
+        sortKey: "penetrationPower",
+        order: "asc",
+      }),
+    ).toBe(
+      "q=m855+a1&caliber=Caliber762x39&fav=1&sort=penetrationPower&dir=asc",
+    );
+  });
+
+  it("falls back to the defaults for unknown sort values", () => {
+    expect(parseSortKey("penetrationPower")).toBe("penetrationPower");
+    expect(parseSortKey("item")).toBe("damage"); // names are not sortable
+    expect(parseSortKey("junk")).toBe("damage");
+    expect(parseSortKey(null)).toBe("damage");
+    expect(parseSortOrder("asc")).toBe("asc");
+    expect(parseSortOrder("sideways")).toBe("desc");
+    expect(parseSortOrder(undefined)).toBe("desc");
   });
 });

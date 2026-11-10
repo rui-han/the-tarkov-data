@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { armorClassOf, parseAmmo } from "@/lib/ammo";
+import { armorClassOf, caliberLabel, parseAmmo } from "@/lib/ammo";
 
 const ID = "5c0d5e4486f77478390952fe";
 
@@ -128,5 +128,17 @@ describe("parseAmmo", () => {
   it("accepts an array and skips junk entries", () => {
     expect(parseAmmo([raw("a"), null, { name: "no id" }, 5])).toHaveLength(1);
     expect(parseAmmo(null)).toEqual([]);
+  });
+});
+
+describe("caliberLabel", () => {
+  it("drops the prefix and separates trailing letters after the size", () => {
+    expect(caliberLabel("Caliber556x45NATO")).toBe("556x45 NATO");
+    expect(caliberLabel("Caliber9x19PARA")).toBe("9x19 PARA");
+    expect(caliberLabel("Caliber1143x23ACP")).toBe("1143x23 ACP");
+    expect(caliberLabel("Caliber762x54R")).toBe("762x54R");
+    expect(caliberLabel("Caliber12g")).toBe("12g");
+    expect(caliberLabel("Caliber40mmRU")).toBe("40mmRU");
+    expect(caliberLabel("Caliber")).toBe("");
   });
 });

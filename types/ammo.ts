@@ -39,6 +39,8 @@ export interface AmmoTableProps {
 
 export interface AmmoSearchbarProps {
   setInputText: Dispatch<SetStateAction<string>>;
+  /** when given, the search box shows this text (controlled); otherwise it keeps its own */
+  value?: string;
 }
 
 export type Order = "asc" | "desc";

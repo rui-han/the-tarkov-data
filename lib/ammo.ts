@@ -22,6 +22,16 @@ export function armorClassOf(penetrationPower: number): number {
   return Math.min(6, Math.max(0, Math.floor(penetrationPower / 10)));
 }
 
+/**
+ * "Caliber556x45NATO" -> "556x45 NATO". A single trailing letter stays
+ * attached ("762x54R"), and names without an "x" size are left alone.
+ */
+export function caliberLabel(caliber: string): string {
+  return caliber
+    .replace(/^Caliber/, "")
+    .replace(/(x\d+)([A-Za-z]{2,})$/, "$1 $2");
+}
+
 /** Name used until (or without) the translation dictionary. */
 function fallbackName(normalizedName: string): string {
   return normalizedName
