@@ -11,7 +11,7 @@ const AmmoTablePagination = ({
   return (
     <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"
         count={totalRows}
         rowsPerPage={rowsPerPage}

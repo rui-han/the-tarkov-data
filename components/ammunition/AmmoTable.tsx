@@ -26,6 +26,9 @@ import {
   Alert,
 } from "@mui/material";
 
+// favorite button + the columns of AmmoTableHead
+const COLUMN_COUNT = 9;
+
 export default function AmmoTable({ ammo }: AmmoTableProps) {
   // get user data from auth0
   const { user } = useUser();
@@ -48,7 +51,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
   const [orderBy, setOrderBy] = useState<keyof Ammo>("damage");
   // pagination states
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   // snackbar states
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -123,8 +126,10 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
   // total counts for pagination
   const totalRows = filteredAndSortedAmmo.length;
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows = rowsPerPage - visibleRows.length;
+  // Avoid a layout jump on the last page of a longer list. The first page
+  // doesn't need a filler: a short result list shouldn't leave a big gap.
+  const emptyRows =
+    page > 0 ? Math.max(0, rowsPerPage - visibleRows.length) : 0;
 
   // handle favorite icon click. Resolves to true if the favorite status was
   // actually updated, so the row can roll back its optimistic UI on failure.
@@ -193,7 +198,7 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
           sx={{
             mt: "2vh",
             border: "3px solid #9a8866",
-            minWidth: 650,
+            minWidth: 900,
           }}
           size="small"
         >
@@ -214,9 +219,16 @@ export default function AmmoTable({ ammo }: AmmoTableProps) {
                 user={user}
               />
             ))}
+            {totalRows === 0 && (
+              <TableRow>
+                <TableCell colSpan={COLUMN_COUNT} align="center" sx={{ py: 4 }}>
+                  No ammunition matches your filters.
+                </TableCell>
+              </TableRow>
+            )}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={7} />
+                <TableCell colSpan={COLUMN_COUNT} />
               </TableRow>
             )}
           </TableBody>

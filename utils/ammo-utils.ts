@@ -1,29 +1,37 @@
 import { Order, Item, Ammo } from "@/types/ammo";
 
-// basic comparator used to compare two elements (a and b, eg. M855A1 and M995)
-// based on a specified property (orderBy, eg. damage)
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (orderBy == "item") return 0; // we don't sort names
-  if (b[orderBy] < a[orderBy]) {
-    return -1; // b should come before a in the sorted order
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0; // elements are considered equal in terms of the sorting criteria
-}
+type SortValue = number | string | Item | null | undefined;
 
-// generate a comparator function based on the desired sorting order (order) and the property (orderBy)
+// generate a comparator function based on the desired sorting order (order) and the property (orderBy).
+// Rows without a value (e.g. no flea price) always go last, in both directions.
 export function getComparator<Key extends keyof any>(
   order: Order, // "asc" | "desc"
   orderBy: Key,
-): (
-  a: { [key in Key]: number | string | Item },
-  b: { [key in Key]: number | string | Item },
-) => number {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+): (a: { [key in Key]: SortValue }, b: { [key in Key]: SortValue }) => number {
+  return (a, b) => {
+    if (orderBy === "item") return 0; // we don't sort names
+
+    const va = a[orderBy];
+    const vb = b[orderBy];
+    const aMissing = va == null;
+    const bMissing = vb == null;
+    if (aMissing || bMissing) {
+      return aMissing && bMissing ? 0 : aMissing ? 1 : -1;
+    }
+
+    const x = va as number | string;
+    const y = vb as number | string;
+    const cmp = x < y ? -1 : x > y ? 1 : 0; // ascending
+    return order === "desc" ? -cmp || 0 : cmp;
+  };
+}
+
+/** Every word of the search text must appear in the ammo's search text. */
+function matchesText(ammoItem: Ammo, inputText: string): boolean {
+  const words = inputText.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const haystack = (ammoItem.searchText || ammoItem.item.name).toLowerCase();
+  return words.every((word) => haystack.includes(word));
 }
 
 /**
@@ -31,13 +39,9 @@ export function getComparator<Key extends keyof any>(
  *
  * @param ammoItem - The individual ammo item to check against filters
  * @param currentCaliber - Currently selected caliber filter (empty string means no filter)
- * @param inputText - Search text to match against ammo name (case insensitive)
+ * @param inputText - Search words (case insensitive); every word has to match the name or short name
  * @returns boolean - True if the item should be included, false if it should be filtered out
  *
- * The function implements three filter scenarios:
- * 1. Both caliber and search text are provided (AND condition)
- * 2. Only caliber is provided
- * 3. Only search text is provided
  * If no filters are active, returns true for all items
  */
 export function filterAmmo(
@@ -45,17 +49,8 @@ export function filterAmmo(
   currentCaliber: string,
   inputText: string,
 ): boolean {
-  if (currentCaliber && inputText) {
-    return (
-      ammoItem.caliber === currentCaliber &&
-      ammoItem.item.name.toLowerCase().includes(inputText.toLowerCase())
-    );
-  } else if (currentCaliber) {
-    return ammoItem.caliber === currentCaliber;
-  } else if (inputText) {
-    return ammoItem.item.name.toLowerCase().includes(inputText.toLowerCase());
-  }
-  return true;
+  if (currentCaliber && ammoItem.caliber !== currentCaliber) return false;
+  return matchesText(ammoItem, inputText);
 }
 
 /**
@@ -67,10 +62,6 @@ export function filterAmmo(
  * @param order - Sort order ('asc' or 'desc')
  * @param orderBy - Property to sort by (e.g., 'damage', 'penetrationPower')
  * @returns Ammo[] - A new array containing filtered and sorted ammo items
- *
- * This function performs two operations in sequence:
- * 1. Filters the input array using the filterAmmo function
- * 2. Sorts the filtered results using the getComparator function
  *
  * Note: Creates a shallow copy of the input array to avoid mutating the original data
  */

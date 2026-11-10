@@ -53,9 +53,7 @@ describe("filterAmmo", () => {
     }) as any;
     expect(filterAmmo(ammo, "Caliber556x45NATO", "m855")).toBe(true);
     expect(filterAmmo(ammo, "Caliber9x19PARA", "m855")).toBe(false);
-    expect(filterAmmo(ammo, "Caliber556x45NATO", "does-not-exist")).toBe(
-      false,
-    );
+    expect(filterAmmo(ammo, "Caliber556x45NATO", "does-not-exist")).toBe(false);
   });
 });
 
@@ -118,5 +116,43 @@ describe("getAmmoPropertyColor", () => {
 
   it("returns green for negative recoil (better)", () => {
     expect(getAmmoPropertyColor(-5, "recoil")).toBe("green");
+  });
+});
+
+describe("filterAmmo (search words)", () => {
+  const ammo = makeAmmo({
+    item: { id: "1", name: "5.56x45mm M855A1", inspectImageLink: "" },
+    searchText: "5.56x45mm m855a1 m855a1 556x45mm m855a1",
+  }) as any;
+
+  it("requires every word and matches the short name", () => {
+    expect(filterAmmo(ammo, "", "m855a1 5.56")).toBe(true);
+    expect(filterAmmo(ammo, "", "m855a1 m995")).toBe(false);
+  });
+
+  it("ignores extra whitespace", () => {
+    expect(filterAmmo(ammo, "", "   ")).toBe(true);
+    expect(filterAmmo(ammo, "", "  m855a1  ")).toBe(true);
+  });
+});
+
+describe("sorting rows without a value", () => {
+  const list = [
+    makeAmmo({ fleaPrice: 100 }),
+    makeAmmo({ fleaPrice: null }),
+    makeAmmo({ fleaPrice: 300 }),
+  ] as any[];
+
+  it("always puts missing values last", () => {
+    expect(
+      filterAndSortAmmo(list, "", "", "asc", "fleaPrice").map(
+        (a) => a.fleaPrice,
+      ),
+    ).toEqual([100, 300, null]);
+    expect(
+      filterAndSortAmmo(list, "", "", "desc", "fleaPrice").map(
+        (a) => a.fleaPrice,
+      ),
+    ).toEqual([300, 100, null]);
   });
 });

@@ -10,30 +10,14 @@ import { visuallyHidden } from "@mui/utils";
 
 // table head content
 const headCells: readonly HeadCell[] = [
-  {
-    id: "item",
-    label: "Name",
-  },
-  {
-    id: "damage",
-    label: "Damage",
-  },
-  {
-    id: "penetrationPower",
-    label: "Penetration",
-  },
-  {
-    id: "armorDamage",
-    label: "Armor Damage",
-  },
-  {
-    id: "accuracyModifier",
-    label: "Accuracy",
-  },
-  {
-    id: "recoilModifier",
-    label: "Recoil",
-  },
+  { id: "item", label: "Name" },
+  { id: "damage", label: "Damage" },
+  { id: "penetrationPower", label: "Penetration" },
+  { id: "armorClass", label: "Armor class ≈" },
+  { id: "armorDamage", label: "Armor Damage" },
+  { id: "accuracyModifier", label: "Accuracy" },
+  { id: "recoilModifier", label: "Recoil" },
+  { id: "fleaPrice", label: "Flea price" },
 ];
 
 export default function AmmoTableHead(props: AmmoTableHeadProps) {
@@ -49,7 +33,7 @@ export default function AmmoTableHead(props: AmmoTableHeadProps) {
         {/* dummy table head cell for favorite button */}
         <TableCell sx={{ backgroundColor: "#1a120b" }}></TableCell>
         {headCells.map((headCell) => {
-          // names are intentionally never sorted (see descendingComparator),
+          // names are intentionally never sorted (see getComparator),
           // so the Name column is a plain label instead of a sort control
           const isSortable = headCell.id !== "item";
 
@@ -60,7 +44,13 @@ export default function AmmoTableHead(props: AmmoTableHeadProps) {
                 fontWeight: "bold",
                 backgroundColor: "#1a120b",
               }}
-              align={headCell.label === "Name" ? "left" : "center"}
+              align={
+                headCell.id === "item"
+                  ? "left"
+                  : headCell.id === "fleaPrice"
+                  ? "right"
+                  : "center"
+              }
               key={headCell.id}
               sortDirection={orderBy === headCell.id ? order : false}
             >

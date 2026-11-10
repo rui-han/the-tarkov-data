@@ -10,11 +10,21 @@ export interface Ammo {
   ammoType: string;
   projectileCount: number;
   item: Item;
+  /** short name, e.g. "M855A1"; empty when not available */
+  shortName: string;
+  /** small icon for the table; empty when not available */
+  iconLink: string;
   damage: number;
   penetrationPower: number;
+  /** highest armor class the penetration roughly matches (pen / 10), 0 to 6 */
+  armorClass: number;
   armorDamage: number;
   accuracyModifier: number;
   recoilModifier: number;
+  /** last lowest flea price of one round; null when it isn't sold */
+  fleaPrice: number | null;
+  /** lowercased text used by the search box */
+  searchText: string;
 }
 
 export interface Item {

@@ -2,65 +2,28 @@
 
 import { useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
-import { toArray } from "@/lib/tarkovApi";
-import { Ammo } from "@/types/ammo";
+import { useTranslations } from "@/hooks/useTranslations";
+import { parseAmmo } from "@/lib/ammo";
 
-interface AmmoItemProperties {
-  caliber?: string;
-  ammoType?: string;
-  projectileCount?: number;
-  damage?: number;
-  penetrationPower?: number;
-  armorDamage?: number;
-  accuracyModifier?: number;
-  recoilModifier?: number;
-}
-
-interface RawItem {
-  id: string;
-  normalizedName: string;
-  inspectImageLink?: string;
-  types: string[];
-  properties?: AmmoItemProperties | null;
-}
-
-interface ItemsResponse {
-  items?: unknown; // an id-keyed object (or an array); toArray handles both
-}
-
+/**
+ * All ammunition for the game mode picked in the nav bar, with real names from
+ * the items dictionary. Shares its downloads with the Items and Dashboard
+ * pages through the SWR cache.
+ */
 export function useAmmoData() {
-  const { data, error, isLoading } = useTarkovData<ItemsResponse>("items");
+  const { data, error, isLoading } = useTarkovData<unknown>("items");
+  const dictionary = useTranslations("items");
 
-  const ammo = useMemo<Ammo[]>(
-    () =>
-      toArray<RawItem>(data?.items)
-        // "ammo" is one of the ItemType enum values, so this is the official
-        // discriminator for ammo items (see the "types" field on Item)
-        .filter((item) => item.types?.includes("ammo") && item.properties)
-        .map((item) => {
-          const props = item.properties!;
-          return {
-            caliber: props.caliber ?? "",
-            ammoType: props.ammoType ?? "bullet",
-            projectileCount: props.projectileCount ?? 1,
-            item: {
-              id: item.id,
-              name: item.normalizedName
-                .replaceAll("-", " ")
-                .replaceAll("1270", "12/70")
-                .replaceAll("2070", "20/70")
-                .toUpperCase(),
-              inspectImageLink: item.inspectImageLink ?? "",
-            },
-            damage: props.damage ?? 0,
-            penetrationPower: props.penetrationPower ?? 0,
-            armorDamage: props.armorDamage ?? 0,
-            accuracyModifier: props.accuracyModifier ?? 0,
-            recoilModifier: props.recoilModifier ?? 0,
-          };
-        }),
-    [data],
+  const ammo = useMemo(
+    () => parseAmmo(data, dictionary.translations),
+    [data, dictionary.translations],
   );
 
-  return { ammo, error, isLoading };
+  return {
+    ammo,
+    error,
+    // wait for the dictionary so names don't flash from fallback to real,
+    // but never block on a dictionary that failed
+    isLoading: isLoading || (dictionary.isLoading && !dictionary.error),
+  };
 }

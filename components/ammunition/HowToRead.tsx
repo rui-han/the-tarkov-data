@@ -1,92 +1,71 @@
-import {
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
+import { Box, Link as MuiLink, Typography } from "@mui/material";
 
-const data = [
-  {
-    effectivenessLevel: "0  Pointless",
-    bulletsStopped: "20+",
-    explanation: "Can't penetrate in any reasonable amount of hits",
-    bgColor: "#b3242580",
-  },
-  {
-    effectivenessLevel: "1  It's possible, but...",
-    bulletsStopped: "13 to 20",
-    explanation:
-      "Typically doesn't penetrate at all for a large number of hits, or starts with a very low chance and barely increases",
-    bgColor: "#dd333380",
-  },
-  {
-    effectivenessLevel: "2  Magdump only",
-    bulletsStopped: "9 to 13",
-    explanation:
-      "Has a very low or no penetration chance initially and very slowly gains chance",
-    bgColor: "#EB6C0D80",
-  },
-  {
-    effectivenessLevel: "3  Slightly effective",
-    bulletsStopped: "5 to 9",
-    explanation:
-      "Has a low penetration chance initially and slowly gains chance, or quickly damages armor until it penetrates",
-    bgColor: "#ac660080",
-  },
-  {
-    effectivenessLevel: "4  Effective",
-    bulletsStopped: "3 to 5",
-    explanation:
-      "Starts with a low-medium penetration chance but quickly increases",
-    bgColor: "#FB9C0E80",
-  },
-  {
-    effectivenessLevel: "5  Very effective",
-    bulletsStopped: "1 to 3",
-    explanation:
-      "Penetrates a large percent of the time initially, often quickly going to > 90%",
-    bgColor: "#00640080",
-  },
-  {
-    effectivenessLevel: "6  Usually ignores",
-    bulletsStopped: "<1",
-    explanation: "Initially penetrates > 80% of the time",
-    bgColor: "#00990080",
-  },
+const columns: Array<[label: string, text: string]> = [
+  [
+    "Damage",
+    "Damage of one projectile. Shotgun rounds show pellets × damage per pellet.",
+  ],
+  [
+    "Penetration",
+    "Penetration power. The higher it is, the better the round goes through armor.",
+  ],
+  [
+    "Armor class ≈",
+    "The highest armor class this round's penetration roughly matches (penetration ÷ 10, capped at class 6). It is a rule of thumb for comparing rounds, not a chance: the real chance also depends on the armor's durability, and damaged armor is easier to penetrate.",
+  ],
+  [
+    "Armor Damage",
+    "How much durability the round strips from armor it hits. Together with penetration and the armor's material it decides how fast armor wears down.",
+  ],
+  [
+    "Accuracy / Recoil",
+    "Modifiers applied to the weapon. Green is better, red is worse.",
+  ],
+  [
+    "Flea price",
+    "Last lowest flea market offer for one round (N/A when it isn't sold). It is a snapshot and can lag behind the game.",
+  ],
 ];
 
 export default function HowToRead() {
   return (
-    <TableContainer
-      component={Paper}
-      sx={{ width: "90%", m: "3vh" }}
-      elevation={4}
-    >
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell align="center">Effectiveness Level</TableCell>
-            <TableCell align="center">
-              Average Amount of Bullets Stopped
-            </TableCell>
-            <TableCell align="center">Explanation</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((data, index) => (
-            <TableRow key={index}>
-              <TableCell sx={{ backgroundColor: data.bgColor }}>
-                {data.effectivenessLevel}
-              </TableCell>
-              <TableCell align="center">{data.bulletsStopped}</TableCell>
-              <TableCell>{data.explanation}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Box sx={{ width: "100%" }}>
+      <Box component="dl" sx={{ m: 0 }}>
+        {columns.map(([label, text]) => (
+          <Box key={label} sx={{ mb: 1.5 }}>
+            <Typography component="dt" variant="subtitle2">
+              {label}
+            </Typography>
+            <Typography component="dd" variant="body2" sx={{ m: 0 }}>
+              {text}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+        Want to know how many bullets an armor stops? The community ammo chart
+        rates every round against each armor class (effectiveness levels 0 to
+        6). This site does not compute those levels; see{" "}
+        <MuiLink
+          href="https://www.eft-ammo.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
+        >
+          the ammo chart on eft-ammo.com
+        </MuiLink>{" "}
+        and its{" "}
+        <MuiLink
+          href="https://www.eft-ammo.com/armor-and-penetration"
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
+        >
+          armor and penetration guide
+        </MuiLink>
+        .
+      </Typography>
+    </Box>
   );
 }
