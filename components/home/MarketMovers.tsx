@@ -165,8 +165,8 @@ export default function MarketMovers() {
         Biggest flea price changes over the last 48 hours. Cheap or thinly
         traded items are ignored because they swing wildly.
       </Typography>
-      <Link href="/items" style={{ textDecoration: "none" }}>
-        <Button size="small" color="inherit" variant="outlined">
+      <Link href="/items" color="inherit" style={{ textDecoration: "none" }}>
+        <Button size="small" variant="outlined">
           Browse all items
         </Button>
       </Link>

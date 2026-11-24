@@ -16,7 +16,7 @@ const ammo = [
 ];
 
 describe("AmmoTableFilter", () => {
-  it("lists every caliber with its count, bullets and others alike", () => {
+  it("lists every caliber once, bullets and others alike", () => {
     render(
       <AmmoTableFilter
         ammo={ammo}
@@ -26,16 +26,12 @@ describe("AmmoTableFilter", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "556x45 NATO (2)" }),
+      screen.getByRole("button", { name: "556x45 NATO" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "762x39 (1)" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "12g (1)" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "40x46 (1)" }),
-    ).toBeInTheDocument();
-    // "All calibers" plus the four calibers above
+    expect(screen.getByRole("button", { name: "762x39" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "12g" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "40x46" })).toBeInTheDocument();
+    // "All calibers" plus the four calibers above (556x45 NATO appears once)
     expect(screen.getAllByRole("button")).toHaveLength(5);
   });
 
@@ -50,7 +46,7 @@ describe("AmmoTableFilter", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "762x39 (1)" }));
+    await user.click(screen.getByRole("button", { name: "762x39" }));
     expect(onClick).toHaveBeenLastCalledWith("Caliber762x39");
 
     rerender(
@@ -60,12 +56,12 @@ describe("AmmoTableFilter", () => {
         onFilterButtonClick={onClick}
       />,
     );
-    expect(screen.getByRole("button", { name: "762x39 (1)" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "762x39" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
 
-    await user.click(screen.getByRole("button", { name: "762x39 (1)" }));
+    await user.click(screen.getByRole("button", { name: "762x39" }));
     expect(onClick).toHaveBeenLastCalledWith("");
   });
 

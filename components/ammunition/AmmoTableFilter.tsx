@@ -3,29 +3,17 @@ import { Box, Chip, Typography } from "@mui/material";
 import { caliberLabel } from "@/lib/ammo";
 import type { Ammo, AmmoTableFilterProps } from "@/types/ammo";
 
-interface CaliberCount {
-  caliber: string;
-  count: number;
-}
-
-/** Calibers with how many rounds each has; calibers without a label are skipped. */
-function countCalibers(rounds: Ammo[]): CaliberCount[] {
-  const counts = new Map<string, number>();
+/** Distinct calibers, sorted; calibers without a label are skipped. */
+function listCalibers(rounds: Ammo[]): string[] {
+  const calibers = new Set<string>();
   for (const round of rounds) {
-    if (!caliberLabel(round.caliber).trim()) continue;
-    counts.set(round.caliber, (counts.get(round.caliber) ?? 0) + 1);
+    if (caliberLabel(round.caliber).trim()) calibers.add(round.caliber);
   }
-  return [...counts]
-    .map(([caliber, count]) => ({ caliber, count }))
-    .sort((a, b) =>
-      caliberLabel(a.caliber).localeCompare(
-        caliberLabel(b.caliber),
-        undefined,
-        {
-          numeric: true,
-        },
-      ),
-    );
+  return [...calibers].sort((a, b) =>
+    caliberLabel(a).localeCompare(caliberLabel(b), undefined, {
+      numeric: true,
+    }),
+  );
 }
 
 const AmmoTableFilter = ({
@@ -37,8 +25,8 @@ const AmmoTableFilter = ({
   // ammo type we don't know about still gets its filter button
   const { bullets, others } = useMemo(
     () => ({
-      bullets: countCalibers(ammo.filter((a) => a.ammoType === "bullet")),
-      others: countCalibers(ammo.filter((a) => a.ammoType !== "bullet")),
+      bullets: listCalibers(ammo.filter((a) => a.ammoType === "bullet")),
+      others: listCalibers(ammo.filter((a) => a.ammoType !== "bullet")),
     }),
     [ammo],
   );
@@ -48,7 +36,7 @@ const AmmoTableFilter = ({
   const toggle = (caliber: string) =>
     onFilterButtonClick(caliber === currentCaliber ? "" : caliber);
 
-  const renderGroup = (title: string, calibers: CaliberCount[]) =>
+  const renderGroup = (title: string, calibers: string[]) =>
     calibers.length === 0 ? null : (
       <Box sx={{ mt: 2 }}>
         <Typography
@@ -59,12 +47,12 @@ const AmmoTableFilter = ({
           {title}
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {calibers.map(({ caliber, count }) => {
+          {calibers.map((caliber) => {
             const selected = caliber === currentCaliber;
             return (
               <Chip
                 key={caliber}
-                label={`${caliberLabel(caliber)} (${count})`}
+                label={caliberLabel(caliber)}
                 size="small"
                 clickable
                 color={selected ? "primary" : "default"}
