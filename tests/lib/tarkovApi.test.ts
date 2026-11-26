@@ -10,6 +10,7 @@ import { hasCached, loadCached, saveCached } from "@/lib/responseCache";
 import { getStaleEntries, isStale, resetStale } from "@/lib/cacheStatus";
 import {
   REQUEST_TIMEOUT_MS,
+  STATUS_TIMEOUT_MS,
   TarkovFetchError,
   canUseSavedCopy,
   fetchTarkovJson,
@@ -193,5 +194,29 @@ describe("canUseSavedCopy", () => {
     expect(canUseSavedCopy(new TarkovFetchError("x", 429))).toBe(true);
     expect(canUseSavedCopy(new TarkovFetchError("x", 404))).toBe(false);
     expect(canUseSavedCopy(new TarkovFetchError("x", 403))).toBe(false);
+  });
+});
+
+describe("the status endpoint", () => {
+  it("gives up on a hung request instead of waiting forever", async () => {
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_, reject) => {
+          init.signal?.addEventListener("abort", () =>
+            reject(Object.assign(new Error("Aborted"), { name: "AbortError" })),
+          );
+        }),
+    );
+
+    const outcome = expect(fetchTarkovJson("status")).rejects.toThrow(
+      "Aborted",
+    );
+    await vi.advanceTimersByTimeAsync(STATUS_TIMEOUT_MS + 1);
+    await outcome;
+
+    // there is no saved copy to look for
+    expect(hasCached).not.toHaveBeenCalled();
+    expect(loadCached).not.toHaveBeenCalled();
   });
 });

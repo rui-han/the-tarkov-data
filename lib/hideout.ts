@@ -41,9 +41,14 @@ const numOrNull = (v: unknown): number | null =>
 /* translations & names                                               */
 /* ------------------------------------------------------------------ */
 
+/** One shared empty dictionary, so "no translations yet" has a stable identity. */
+export const EMPTY_TRANSLATIONS: Translations = Object.freeze(
+  {} as Record<string, unknown>,
+);
+
 /** The `*_en` files are plain key -> text objects; anything else is ignored. */
 export function parseTranslations(data: unknown): Translations {
-  return isRecord(data) ? data : {};
+  return isRecord(data) ? data : EMPTY_TRANSLATIONS;
 }
 
 /** Look a key up in a dictionary; undefined if missing or not a string. */

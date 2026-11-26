@@ -3,7 +3,12 @@
 import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
+import { memoizeParse } from "@/lib/memo";
 import { parseMaps, parseTasks } from "@/lib/tasks";
+
+// parsed once per payload and shared by every component and page visit
+const parseTasksOnce = memoizeParse(parseTasks);
+const parseMapsOnce = memoizeParse(parseMaps);
 
 /**
  * All tasks for the game mode picked in the nav bar, normalized, with
@@ -14,7 +19,7 @@ export function useTasks() {
   const dictionary = useTranslations("tasks");
 
   const tasks = useMemo(
-    () => parseTasks(data, dictionary.translations),
+    () => parseTasksOnce(data, dictionary.translations),
     [data, dictionary.translations],
   );
 
@@ -47,7 +52,7 @@ export function useMapMap() {
   const { data, error, isLoading } = useTarkovData<unknown>("maps");
   const { translations } = useTranslations("maps");
   const mapsById = useMemo(
-    () => parseMaps(data, translations),
+    () => parseMapsOnce(data, translations),
     [data, translations],
   );
   return { mapsById, error, isLoading };

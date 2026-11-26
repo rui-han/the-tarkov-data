@@ -3,6 +3,10 @@
 import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { parseCrafts } from "@/lib/crafts";
+import { memoizeParse } from "@/lib/memo";
+
+// parsed once per payload and shared by every component and page visit
+const parseCraftsOnce = memoizeParse(parseCrafts);
 
 /**
  * All crafts for the game mode picked in the nav bar. Crafts have no text
@@ -11,7 +15,7 @@ import { parseCrafts } from "@/lib/crafts";
 export function useCrafts() {
   const { data, error, isLoading } = useTarkovData<unknown>("crafts");
 
-  const crafts = useMemo(() => parseCrafts(data), [data]);
+  const crafts = useMemo(() => parseCraftsOnce(data), [data]);
 
   // request succeeded but nothing usable came back
   const shapeError =

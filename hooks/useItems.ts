@@ -4,6 +4,10 @@ import { useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
 import { parseItemList } from "@/lib/items";
+import { memoizeParse } from "@/lib/memo";
+
+// parsed once per payload and shared by every component and page visit
+const parseItemListOnce = memoizeParse(parseItemList);
 
 /**
  * All items for the game mode picked in the nav bar, normalized, with
@@ -14,7 +18,7 @@ export function useItems() {
   const dictionary = useTranslations("items");
 
   const items = useMemo(
-    () => parseItemList(data, dictionary.translations),
+    () => parseItemListOnce(data, dictionary.translations),
     [data, dictionary.translations],
   );
 

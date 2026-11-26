@@ -19,6 +19,7 @@ import {
   skillLabel,
   humanizeId,
   formatBonusValue,
+  EMPTY_TRANSLATIONS,
 } from "@/lib/hideout";
 import type { HideoutItem, ItemRequirement } from "@/types/hideout";
 
@@ -109,6 +110,10 @@ describe("translations", () => {
     expect(parseTranslations(hideoutEn)).toBe(hideoutEn);
     expect(parseTranslations(null)).toEqual({});
     expect(parseTranslations([1, 2])).toEqual({});
+  });
+  it("returns one shared empty dictionary when there is none", () => {
+    expect(parseTranslations(null)).toBe(EMPTY_TRANSLATIONS);
+    expect(parseTranslations(undefined)).toBe(EMPTY_TRANSLATIONS);
   });
 });
 

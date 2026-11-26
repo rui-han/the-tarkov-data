@@ -4,6 +4,10 @@ import { useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
 import { parseAmmo } from "@/lib/ammo";
+import { memoizeParse } from "@/lib/memo";
+
+// parsed once per payload and shared by every component and page visit
+const parseAmmoOnce = memoizeParse(parseAmmo);
 
 /**
  * All ammunition for the game mode picked in the nav bar, with real names from
@@ -15,7 +19,7 @@ export function useAmmoData() {
   const dictionary = useTranslations("items");
 
   const ammo = useMemo(
-    () => parseAmmo(data, dictionary.translations),
+    () => parseAmmoOnce(data, dictionary.translations),
     [data, dictionary.translations],
   );
 

@@ -9,6 +9,12 @@ import {
   parseStations,
   parseTraders,
 } from "@/lib/hideout";
+import { memoizeParse } from "@/lib/memo";
+
+// parsed once per payload and shared by every component and page visit
+const parseStationsOnce = memoizeParse(parseStations);
+const parseTradersOnce = memoizeParse(parseTraders);
+const parseSkillsOnce = memoizeParse(parseSkills);
 
 /** Hideout stations, normalized and sorted in in-game order. */
 export function useHideoutStations() {
@@ -16,7 +22,7 @@ export function useHideoutStations() {
   const { translations } = useTranslations("hideout");
 
   const hideoutStations = useMemo(
-    () => parseStations(data, translations),
+    () => parseStationsOnce(data, translations),
     [data, translations],
   );
 
@@ -42,7 +48,7 @@ export function useTraderMap() {
   const { data, error, isLoading } = useTarkovData<unknown>("traders");
   const { translations } = useTranslations("traders");
   const tradersById = useMemo(
-    () => parseTraders(data, translations),
+    () => parseTradersOnce(data, translations),
     [data, translations],
   );
   return { tradersById, error, isLoading };
@@ -71,7 +77,7 @@ export function useSkillMap() {
   const { data, error, isLoading } = useTarkovData<unknown>("items");
   const { translations } = useTranslations("items");
   const skillsById = useMemo(
-    () => parseSkills(data, translations),
+    () => parseSkillsOnce(data, translations),
     [data, translations],
   );
   return { skillsById, error, isLoading };

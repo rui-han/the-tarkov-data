@@ -1,8 +1,31 @@
 "use client";
 
-import useSWR from "swr";
+import useSWR, { type SWRConfiguration } from "swr";
 import { useGameMode } from "@/contexts/GameModeContext";
 import { fetchTarkovJson, type GameMode } from "@/lib/tarkovApi";
+
+/** The big static files change slowly: a response counts as fresh this long. */
+export const FRESH_MS = 10 * 60_000;
+const POLL_DEDUPE_MS = 10_000;
+
+/**
+ * SWR options for a json.tarkov.dev request.
+ *
+ * - Static files: a response is reused for FRESH_MS, so moving between pages
+ *   doesn't re-download multi-MB files, and reconnecting doesn't either.
+ * - Polled data (server status): the dedupe window must be shorter than the
+ *   interval or the poll would be deduped away, and a reconnect does refresh
+ *   it.
+ */
+export function tarkovSwrConfig(refreshInterval?: number): SWRConfiguration {
+  const polled = Boolean(refreshInterval);
+  return {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: polled,
+    dedupingInterval: polled ? POLL_DEDUPE_MS : FRESH_MS,
+    refreshInterval,
+  };
+}
 
 /**
  * Loads a json.tarkov.dev endpoint.
@@ -34,13 +57,7 @@ export function useTarkovData<T>(
   const { data, error, isLoading } = useSWR<T>(
     enabled ? [endpoint, gameMode, lang ?? null] : null,
     () => fetchTarkovJson<T>(endpoint, { gameMode, lang }),
-    {
-      revalidateOnFocus: false,
-      // identical requests within the window hit the cache; polled data needs
-      // a window shorter than its interval or the poll would be deduped away
-      dedupingInterval: refreshInterval ? 10_000 : 60_000,
-      refreshInterval,
-    },
+    tarkovSwrConfig(refreshInterval),
   );
 
   // a disabled key reports isLoading=false, but for the caller we are still

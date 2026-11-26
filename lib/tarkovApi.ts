@@ -31,6 +31,12 @@ const JSON_TARKOV_BASE = "https://json.tarkov.dev";
  */
 export const REQUEST_TIMEOUT_MS = 30_000;
 
+/**
+ * `status` is never saved, so there is nothing to show instead, but a hung
+ * request must not wait forever either: SWR keeps the last good status.
+ */
+export const STATUS_TIMEOUT_MS = 10_000;
+
 interface FetchTarkovJsonOptions {
   gameMode?: GameMode;
   lang?: string; // only supported by endpoints with translations: true
@@ -94,18 +100,22 @@ function unwrap<T>(json: unknown): T {
   return (data ?? json) as T;
 }
 
+/**
+ * `timeoutMs` resolves to the time limit for this request, or null for "wait
+ * as long as it takes". It is a promise because whether a saved copy exists
+ * is only known after a (fast) IndexedDB lookup.
+ */
 async function fetchText(
   path: string,
-  hasSavedCopy: Promise<boolean>,
+  timeoutMs: Promise<number | null>,
 ): Promise<string> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   let finished = false;
 
-  // Only give up on a slow server when there is a saved copy to show instead.
-  void hasSavedCopy.then((has) => {
-    if (has && !finished) {
-      timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  void timeoutMs.then((ms) => {
+    if (ms != null && !finished) {
+      timer = setTimeout(() => controller.abort(), ms);
     }
   });
 
@@ -135,10 +145,11 @@ async function fetchText(
  * Fetch a static JSON snapshot for a given domain from json.tarkov.dev and
  * unwrap the `{ data: {...} }` envelope.
  *
- * Every successful response is also saved in the browser. When the API cannot
- * be reached (see `canUseSavedCopy`), that saved copy is returned instead and
- * flagged through `cacheStatus`, so the UI can say the data may be out of
- * date. `status` is never saved: a saved "OK" would be wrong during an outage.
+ * Every successful response is also saved in the browser (at most once an
+ * hour, see responseCache). When the API cannot be reached (see
+ * `canUseSavedCopy`), that saved copy is returned instead and flagged through
+ * `cacheStatus`, so the UI can say the data may be out of date. `status` is
+ * never saved: a saved "OK" would be wrong during an outage.
  */
 export async function fetchTarkovJson<T>(
   endpoint: string,
@@ -146,10 +157,14 @@ export async function fetchTarkovJson<T>(
 ): Promise<T> {
   const path = tarkovPath(endpoint, gameMode, lang);
   const cacheable = endpoint !== "status";
-  const hasSavedCopy = cacheable ? hasCached(path) : Promise.resolve(false);
+
+  const timeoutMs: Promise<number | null> = cacheable
+    ? // only give up on a slow server when there is a copy to show instead
+      hasCached(path).then((has) => (has ? REQUEST_TIMEOUT_MS : null))
+    : Promise.resolve(STATUS_TIMEOUT_MS);
 
   try {
-    const text = await fetchText(path, hasSavedCopy);
+    const text = await fetchText(path, timeoutMs);
     const json: unknown = JSON.parse(text);
 
     if (cacheable) {

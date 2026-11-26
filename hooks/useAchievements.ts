@@ -4,6 +4,10 @@ import { useEffect, useMemo } from "react";
 import { useTarkovData } from "@/hooks/useTarkovData";
 import { useTranslations } from "@/hooks/useTranslations";
 import { parseAchievements } from "@/lib/achievements";
+import { memoizeParse } from "@/lib/memo";
+
+// parsed once per payload and shared by every component and page visit
+const parseAchievementsOnce = memoizeParse(parseAchievements);
 
 /**
  * Achievements for the game mode picked in the nav bar. They are part of the
@@ -15,7 +19,7 @@ export function useAchievements() {
   const dictionary = useTranslations("tasks");
 
   const achievements = useMemo(
-    () => parseAchievements(data, dictionary.translations),
+    () => parseAchievementsOnce(data, dictionary.translations),
     [data, dictionary.translations],
   );
 
