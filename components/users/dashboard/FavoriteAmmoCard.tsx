@@ -355,9 +355,9 @@ export default function FavoriteAmmoCard({
           Remove from favorites?
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body1">
-            Are you sure you want to remove "{ammo.item.name}" from your
-            favorites?
+        <Typography variant="body1">
+            Are you sure you want to remove &quot;{ammo.item.name}&quot; from
+            your favorites?
           </Typography>
         </DialogContent>
         <DialogActions>

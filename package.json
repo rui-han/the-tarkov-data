@@ -8,8 +8,11 @@
     "start": "next start",
     "vercel-build": "prisma generate && prisma db push && next build",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:contract": "vitest run --config vitest.contract.config.ts",
+    "check": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.5.0",
@@ -36,6 +39,8 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "fake-indexeddb": "^6.2.8",
     "jsdom": "^25.0.1",
     "typescript": "^5.9.3",

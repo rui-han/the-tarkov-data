@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # the Prisma client is generated code; the type check needs it
+      - run: npx prisma generate
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Placeholders so the Auth0 and Prisma modules can load while Next
+          # collects the routes. Nothing connects to anything.
+          AUTH0_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
+          AUTH0_BASE_URL: "http://localhost:3000"
+          AUTH0_ISSUER_BASE_URL: "https://example.us.auth0.com"
+          AUTH0_CLIENT_ID: "ci"
+          AUTH0_CLIENT_SECRET: "ci"
+          POSTGRES_PRISMA_URL: "postgresql://ci:ci@localhost:5432/ci"
+          POSTGRES_URL_NON_POOLING: "postgresql://ci:ci@localhost:5432/ci"

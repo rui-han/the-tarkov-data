@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <UserProvider>
         <body>
-          <TopLevelLayout children={children} />
+          <TopLevelLayout>{children}</TopLevelLayout>
           <SpeedInsights />
         </body>
       </UserProvider>

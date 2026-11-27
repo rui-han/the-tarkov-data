@@ -1,0 +1,16 @@
+{
+  "extends": "next/core-web-vitals",
+  "ignorePatterns": [".next/", "node_modules/"],
+  "overrides": [
+    {
+      "files": [
+        "components/users/LoginButton.tsx",
+        "components/users/LogoutButton.tsx",
+        "components/home/WatchlistCta.tsx"
+      ],
+      "rules": {
+        "@next/next/no-html-link-for-pages": "off"
+      }
+    }
+  ]
+}
