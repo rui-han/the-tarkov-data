@@ -332,3 +332,18 @@ describe("sortTasks", () => {
     expect(ids(tasks)).toEqual(before);
   });
 });
+
+describe("links from the data source", () => {
+  it("drops anything that is not a plain http(s) URL", () => {
+    const [task] = parseTasks({
+      tasks: [
+        raw("x", {
+          wikiLink: "javascript:alert(1)",
+          taskImageLink: "//evil.example/x.png",
+        }),
+      ],
+    });
+    expect(task.wikiLink).toBeUndefined();
+    expect(task.taskImageLink).toBeUndefined();
+  });
+});

@@ -10,6 +10,7 @@ import type {
   StationDependent,
   Trader,
 } from "@/types/hideout";
+import { safeUrl } from "./safeUrl";
 
 /** Roubles are an item too; one rouble is worth exactly one rouble. */
 export const ROUBLES_ID = "5449016a4bdc2d6f028b456f";
@@ -234,7 +235,7 @@ function parseStation(
     name: displayName(str(raw.name), normalizedName, id, translations),
     normalizedName,
     areaType: typeof raw.areaType === "number" ? raw.areaType : null,
-    imageLink: str(raw.imageLink) || undefined,
+    imageLink: safeUrl(raw.imageLink),
     levels: records(raw.levels)
       .map((l, i) => parseLevel(l, id, i, translations))
       .sort((a, b) => a.level - b.level),
@@ -286,7 +287,7 @@ export function parseTraders(
       id: raw.id,
       name: displayName(str(raw.name), normalizedName, raw.id, translations),
       normalizedName,
-      imageLink: str(raw.imageLink) || undefined,
+      imageLink: safeUrl(raw.imageLink),
     });
   }
   return map;
@@ -316,7 +317,7 @@ export function parseItems(
         raw.id,
         translations,
       ),
-      iconLink: str(raw.iconLink) || str(raw.gridImageLink) || undefined,
+      iconLink: safeUrl(raw.iconLink) ?? safeUrl(raw.gridImageLink),
       lowPrice: priceOrNull(raw.low24hPrice) ?? priceOrNull(raw.lastLowPrice),
       avgPrice: priceOrNull(raw.avg24hPrice),
     });
@@ -477,7 +478,7 @@ export function parseSkills(
       name:
         translate(translations, str(raw.name)) ??
         (normalizedName ? prettifyName(normalizedName) : humanizeId(raw.id)),
-      imageLink: str(raw.imageLink) || undefined,
+      imageLink: safeUrl(raw.imageLink),
     });
   }
   return map;

@@ -16,6 +16,7 @@ import type {
   TaskRewards,
   TaskSortKey,
 } from "@/types/task";
+import { safeUrl } from "./safeUrl";
 
 /** Filter value meaning "tasks that aren't tied to a map" */
 export const ANY_MAP = "__any__";
@@ -134,8 +135,8 @@ export function parseTasks(data: unknown, translations?: Translations): Task[] {
       mapId: refId(raw.map) || null,
       minPlayerLevel: num(raw.minPlayerLevel, 1),
       experience: num(raw.experience),
-      taskImageLink: str(raw.taskImageLink) || undefined,
-      wikiLink: str(raw.wikiLink) || undefined,
+      taskImageLink: safeUrl(raw.taskImageLink),
+      wikiLink: safeUrl(raw.wikiLink),
       kappaRequired: raw.kappaRequired === true,
       lightkeeperRequired: raw.lightkeeperRequired === true,
       factionName: str(raw.factionName) || "Any",

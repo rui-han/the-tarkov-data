@@ -319,3 +319,20 @@ describe("pickMovers", () => {
     expect(pickMovers([])).toEqual({ rising: [], falling: [] });
   });
 });
+
+describe("links from the data source", () => {
+  it("drops anything that is not a plain http(s) URL", () => {
+    const [item] = parseItemList({
+      items: [
+        raw("x", {
+          wikiLink: "javascript:alert(1)",
+          iconLink: "data:image/svg+xml;base64,AAAA",
+          gridImageLink: "https://example.com/grid.webp",
+        }),
+      ],
+    });
+    expect(item.wikiLink).toBeUndefined();
+    expect(item.iconLink).toBeUndefined();
+    expect(item.gridImageLink).toBe("https://example.com/grid.webp");
+  });
+});

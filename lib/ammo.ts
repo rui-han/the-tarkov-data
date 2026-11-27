@@ -1,6 +1,7 @@
 import { toArray } from "@/lib/tarkovApi";
 import { looksUntranslated, translate, type Translations } from "@/lib/hideout";
 import type { Ammo } from "@/types/ammo";
+import { safeUrl } from "./safeUrl";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -79,10 +80,10 @@ export function parseAmmo(data: unknown, translations?: Translations): Ammo[] {
       item: {
         id: raw.id,
         name,
-        inspectImageLink: str(raw.inspectImageLink),
+        inspectImageLink: safeUrl(raw.inspectImageLink) ?? "",
       },
       shortName,
-      iconLink: str(raw.iconLink) || str(raw.gridImageLink),
+      iconLink: safeUrl(raw.iconLink) ?? safeUrl(raw.gridImageLink) ?? "",
       damage: num(props.damage),
       penetrationPower,
       armorClass: armorClassOf(penetrationPower),

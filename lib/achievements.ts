@@ -13,6 +13,7 @@ import type {
   AchievementSortKey,
   FilterOption,
 } from "@/types/achievement";
+import { safeUrl } from "./safeUrl";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -114,7 +115,7 @@ export function parseAchievements(
       adjustedPlayersCompletedPercent: numOrNull(
         raw.adjustedPlayersCompletedPercent,
       ),
-      imageLink: str(raw.imageLink) || undefined,
+      imageLink: safeUrl(raw.imageLink),
       searchText: `${name} ${description} ${normalizedName.replace(
         /-/g,
         " ",

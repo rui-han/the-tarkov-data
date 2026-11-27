@@ -6,6 +6,7 @@ import {
   type Translations,
 } from "@/lib/hideout";
 import type { Item, ItemSortKey, SortOrder, TraderSell } from "@/types/item";
+import { safeUrl } from "./safeUrl";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -102,9 +103,9 @@ export function parseItemList(
       types,
       category: categoryOf(types),
       weight: numOrNull(raw.weight),
-      iconLink: str(raw.iconLink) || undefined,
-      gridImageLink: str(raw.gridImageLink) || undefined,
-      wikiLink: str(raw.wikiLink) || undefined,
+      iconLink: safeUrl(raw.iconLink),
+      gridImageLink: safeUrl(raw.gridImageLink),
+      wikiLink: safeUrl(raw.wikiLink),
       noFlea: types.includes("noFlea"),
       lastLowPrice: positiveOrNull(raw.lastLowPrice),
       avg24hPrice: positiveOrNull(raw.avg24hPrice),
