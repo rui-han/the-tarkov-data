@@ -70,14 +70,15 @@ export default function LevelRelations({
           >
             Unlocks
           </Typography>
-          <Link
+          <Button
+            component={Link}
             href={`/crafts?station=${encodeURIComponent(stationId)}`}
-            style={{ textDecoration: "none" }}
+            size="small"
+            variant="outlined"
+            color="inherit"
           >
-            <Button size="small" variant="outlined">
-              {craftCount} craft{craftCount > 1 ? "s" : ""} at this level
-            </Button>
-          </Link>
+            {craftCount} craft{craftCount > 1 ? "s" : ""} at this level
+          </Button>
         </Box>
       )}
     </Box>

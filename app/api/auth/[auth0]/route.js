@@ -1,6 +1,8 @@
 import { handleAuth, handleCallback } from "@auth0/nextjs-auth0";
 import prisma from "@/prisma/db";
 
+export const dynamic = "force-dynamic";
+
 // No rate limiting here: this runs only after Auth0 has authenticated the
 // user, so it can't be hit by arbitrary traffic.
 const afterCallback = async (_req, session) => {

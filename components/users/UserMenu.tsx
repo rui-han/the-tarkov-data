@@ -15,7 +15,7 @@ import { Settings, Dashboard } from "@mui/icons-material";
 
 import LogoutButton from "./LogoutButton";
 
-export default function UserProfile() {
+export default function UserMenu() {
   const { user, error, isLoading } = useUser();
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
 
@@ -35,6 +35,7 @@ export default function UserProfile() {
       <>
         <IconButton
           onClick={handleClick}
+          aria-label="Open user menu"
           aria-controls={open ? "user-menu" : undefined}
           aria-haspopup="true"
           aria-expanded={open ? "true" : undefined}
@@ -53,22 +54,12 @@ export default function UserProfile() {
           onClick={handleClose}
           onClose={handleClose}
         >
-          {/* TODO dashboard */}
-          <Link
-            href="/dashboard"
-            style={{
-              color: "inherit",
-              textDecoration: "inherit",
-              padding: 0,
-            }}
-          >
-            <MenuItem>
-              <ListItemIcon>
-                <Dashboard />
-              </ListItemIcon>
-              Dashboard
-            </MenuItem>
-          </Link>
+          <MenuItem component={Link} href="/dashboard">
+            <ListItemIcon>
+              <Dashboard />
+            </ListItemIcon>
+            Dashboard
+          </MenuItem>
           {/* TODO settings  */}
           <MenuItem>
             <ListItemIcon>

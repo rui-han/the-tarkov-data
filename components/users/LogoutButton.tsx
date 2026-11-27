@@ -1,23 +1,16 @@
-import { ListItemIcon, MenuItem, Button } from "@mui/material";
+import { ListItemIcon, MenuItem } from "@mui/material";
 import { Logout } from "@mui/icons-material";
 
 export default function LogoutButton() {
   return (
-    <>
-      <MenuItem>
-        <ListItemIcon>
-          <Logout />
-        </ListItemIcon>
-        {/*  Next linting rules might suggest using the Link component instead of an anchor tag. 
-    The Link component is meant to perform client-side transitions between pages. 
-    As the link points to an API route and not to a page, you should keep it as an anchor tag. */}
-        <a
-          href="/api/auth/logout"
-          style={{ color: "inherit", textDecoration: "none" }}
-        >
-          Log Out
-        </a>
-      </MenuItem>
-    </>
+    // This goes to an API route, not to a page, so it must stay a plain anchor
+    // (not <Link>, which is for client-side page transitions). MUI renders an
+    // <a> for `component="a"`, and the whole row is the click target.
+    <MenuItem component="a" href="/api/auth/logout">
+      <ListItemIcon>
+        <Logout />
+      </ListItemIcon>
+      Log Out
+    </MenuItem>
   );
 }

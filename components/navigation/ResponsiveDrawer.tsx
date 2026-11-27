@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // components
 import ServerStatus, { ServerStatusBadge } from "./ServerStatus";
 import RaidTime from "./RaidTime";
+import { isPlainLeftClick } from "@/lib/clicks";
 
 // MUI
 import {
@@ -77,7 +79,6 @@ export default function ResponsiveDrawer({
   expanded = true,
 }: ResponsiveDrawerProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   /**
    * Track which route is currently navigating
@@ -93,16 +94,16 @@ export default function ResponsiveDrawer({
   }, [pathname]);
 
   /**
-   * Handle internal navigation
+   * The items are real links, so Next.js does the navigation (and prefetching).
+   * This only adds the spinner and closes the mobile drawer.
    */
-  const handleNavigate = useCallback(
-    (to: string) => {
-      setLoadingPath(to);
-      router.push(to);
-      onNavigate?.();
-    },
-    [router, onNavigate],
-  );
+  const handleNavClick = (event: React.MouseEvent<HTMLElement>, to: string) => {
+    // "open in a new tab" and similar clicks are the browser's job
+    if (!isPlainLeftClick(event)) return;
+    // already on this page: nothing will change, so there is nothing to wait for
+    if (pathname !== to) setLoadingPath(to);
+    onNavigate?.();
+  };
 
   /**
    * Handle external link click
@@ -136,8 +137,13 @@ export default function ResponsiveDrawer({
           {drawerItems.map((item) => (
             <ListItem key={item.to} disablePadding>
               <ListItemButton
-                onClick={() => handleNavigate(item.to)}
+                component={Link}
+                href={item.to}
+                onClick={(event: React.MouseEvent<HTMLElement>) =>
+                  handleNavClick(event, item.to)
+                }
                 selected={isActive(item.to)}
+                aria-current={pathname.startsWith(item.to) ? "page" : undefined}
                 sx={{ my: 0.5, borderRadius: 1 }}
               >
                 <ListItemIcon>

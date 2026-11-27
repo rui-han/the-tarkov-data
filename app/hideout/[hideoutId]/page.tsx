@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { HideoutParams } from "@/types/hideout";
+// hooks
 import { useCrafts } from "@/hooks/useCrafts";
 import {
   useHideoutStations,
@@ -10,12 +11,14 @@ import {
   useSkillMap,
   useTraderMap,
 } from "@/hooks/useHideoutData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import {
   collectItemIds,
   dependentsOf,
   formatCost,
   formatDuration,
   summarizeLevels,
+  // lib
 } from "@/lib/hideout";
 import { craftsAtLevel } from "@/lib/crafts";
 // components
@@ -67,6 +70,8 @@ function HideoutStationView({ params }: HideoutParams) {
     [hideoutStations],
   );
   const station = stationsById.get(hideoutId);
+
+  useDocumentTitle(station ? `${station.name} – Hideout` : undefined);
 
   // The level lives in the URL (?level=3), so it can be shared and survives a
   // refresh. Missing or unknown values fall back to the first level.

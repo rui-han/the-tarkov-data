@@ -38,14 +38,14 @@ export default function WatchlistCta() {
 
       {!isLoading &&
         (user ? (
-          <Link href="/dashboard" style={{ textDecoration: "none" }}>
-            <Button variant="contained">Open dashboard</Button>
-          </Link>
+          <Button component={Link} href="/dashboard" variant="contained">
+            Open dashboard
+          </Button>
         ) : (
-          // API route, not a page: keep a plain anchor (see README)
-          <a href="/api/auth/login" style={{ textDecoration: "none" }}>
-            <Button variant="contained">Log in</Button>
-          </a>
+          // API route, not a page: MUI renders a plain anchor for `href`
+          <Button href="/api/auth/login" variant="contained">
+            Log in
+          </Button>
         ))}
     </Paper>
   );

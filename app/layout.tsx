@@ -1,19 +1,20 @@
-import { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import TopLevelLayout from "@/components/layout/TopLevelLayout";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "The Tarkov Data",
-  description: "All the data and information you need for EFT.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description:
+    "Ammunition stats, flea prices, tasks, hideout upgrades and crafts for Escape from Tarkov.",
+  openGraph: { type: "website", siteName: SITE_NAME },
 };
 
-// Force every route under this layout to render dynamically (per request)
-// instead of being statically generated at build time. Nearly every page
-// depends on live data from the Tarkov.dev GraphQL API (via the nav bar's
-// ServerStatus component alone), so a transient outage/503 from that API
-// during `next build` would otherwise fail the entire deployment.
-export const dynamic = "force-dynamic";
+export const viewport: Viewport = {
+  themeColor: "#1d1d1f",
+};
 
 export default function RootLayout({
   children,
